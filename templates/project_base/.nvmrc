@@ -1,0 +1,2 @@
+# Set your default Node version
+{{.UsedNodeVersion}}

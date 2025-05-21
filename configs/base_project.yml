@@ -1,0 +1,62 @@
+###############################################################################
+# Base Project Configuration File
+#
+# This file defines metadata and versioning used by goboot to scaffold a new Go project.
+# All values are injected into templated files and may also be used for documentation, version stamping, CI/CD, and more.
+#
+# Safe to commit — no secrets, purely structural.
+# Required by goboot's generator logic.
+###############################################################################
+
+# ------------------------------------------------------------------------------
+# Project Identity
+# ------------------------------------------------------------------------------
+
+# Primary project URL (GitHub/GitLab repository home url used by go.mod)
+project_url: "https://github.com/projects"
+
+# Project name (used in CLI, directory names, package names)
+project_name: "IntroProject"
+
+# ------------------------------------------------------------------------------
+# Language / Toolchain Versions
+# ------------------------------------------------------------------------------
+
+# Go version used for local development, CI, and .tool-versions
+used_go_version: "1.24.3"
+
+# Optional Node.js version (for tooling, static site, doc generation, etc.)
+used_node_version: "20"
+
+# ------------------------------------------------------------------------------
+# Date and Release Windows
+# ------------------------------------------------------------------------------
+
+# Release window for current roadmap goals (e.g., "Q2 2025")
+release_current_window: "Q2 2026"
+
+# Upcoming development window (e.g., "Q4 2025")
+release_upcoming_window: "Q4 2026"
+
+# Long-term milestone or vision target year (e.g., "2028")
+release_long_term: "2028"
+
+# ------------------------------------------------------------------------------
+# Ownership / Attribution
+# ------------------------------------------------------------------------------
+
+# Primary author or maintainer (used in LICENSE, NOTICE)
+author: "IT Timo"
+
+# ------------------------------------------------------------------------------
+# Git Identity (Used for badges, links, and release URLs)
+# ------------------------------------------------------------------------------
+
+# Determine whether to use GitHub or GitLab as the primary host for the project
+git_provider: "gitlab"
+
+# GitHub username or organization (used in shields.io and GitHub links)
+github_user: "it-timo"
+
+# GitLab username or group (used in shields.io and GitLab links)
+gitlab_user: "it-timo"

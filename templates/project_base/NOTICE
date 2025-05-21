@@ -1,0 +1,8 @@
+Copyright (c) {{.CurrentYear}} {{.Author}}
+
+This product includes software developed using the goboot project scaffolding tool.
+
+Licensed under the MIT License. See the LICENSE file for details.
+
+This project may include open source components licensed under their respective licenses.
+Full attribution will be listed in THIRD_PARTY.md as dependencies are added.

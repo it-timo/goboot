@@ -1,0 +1,106 @@
+###############################################################################
+# GITATTRIBUTES FOR THE {{.CapsProjectName}} PROJECT
+# Enforces consistent line endings, language detection, and diff behavior
+# across development environments and CI systems.
+###############################################################################
+
+# -----------------------------------------------------------------------------
+# ⚙️ Text Files — Use LF endings
+# -----------------------------------------------------------------------------
+
+# Source code
+*.go        text eol=lf
+
+# Configuration and infra
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.toml      text eol=lf
+*.ini       text eol=lf
+*.conf      text eol=lf
+*.env       text eol=lf
+*.cfg       text eol=lf
+
+# Scripts
+*.sh        text eol=lf
+*.bash      text eol=lf
+*.zsh       text eol=lf
+
+# Markdown and docs
+*.md        text eol=lf
+*.txt       text eol=lf
+*.adoc      text eol=lf
+*.rst       text eol=lf
+
+# CI/CD and templating
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+*.editorconfig text eol=lf
+*.dockerignore text eol=lf
+*.Makefile  text eol=lf
+Dockerfile   text eol=lf
+
+# GitHub/GitLab templates
+.github/**  text eol=lf
+.gitlab/**  text eol=lf
+
+# -----------------------------------------------------------------------------
+# 🧱 Binary Files — Prevent Git from diffing or converting line endings
+# -----------------------------------------------------------------------------
+
+# Images
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.svg       binary
+*.ico       binary
+
+# Archives and compressed formats
+*.zip       binary
+*.gz        binary
+*.bz2       binary
+*.xz        binary
+*.tar       binary
+*.7z        binary
+
+# Font and media assets (optional future use)
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.eot       binary
+*.mp3       binary
+*.mp4       binary
+*.webm      binary
+
+# -----------------------------------------------------------------------------
+# 🎨 Linguist Overrides — GitHub language detection
+# -----------------------------------------------------------------------------
+
+# Mark markdown as Markdown (avoid language confusion)
+*.md        linguist-language=Markdown
+
+# Treat YAML as configuration, not data
+*.yml       linguist-language=YAML
+*.yaml      linguist-language=YAML
+
+# Prevent vendored files from skewing language stats
+vendor/**   linguist-vendored
+third_party/** linguist-vendored
+
+# -----------------------------------------------------------------------------
+# 🧾 Licensing & Metadata (if using REUSE or SPDX)
+# -----------------------------------------------------------------------------
+
+REUSE.toml  text eol=lf
+LICENSE     text eol=lf
+NOTICE      text eol=lf
+THIRD_PARTY.md text eol=lf
+
+# -----------------------------------------------------------------------------
+# 🧪 Test Fixtures
+# -----------------------------------------------------------------------------
+
+test/testdata/** text eol=lf
+*.snap           text eol=lf
+
