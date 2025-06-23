@@ -1,6 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/it-timo/goboot/pkg/types"
+)
 
 // ServiceConfig represents a modular configuration component used by goboot.
 //
@@ -28,7 +32,7 @@ type ServiceConfigMeta struct {
 	// ID is the stable identifier for the config module.
 	ID string `yaml:"id"` // e.g., "base_project"
 	// ConfPath is the path to the config file to load.
-	ConfPath string `yaml:"conf_path"` // e.g., "./configs/base_project.yml"
+	ConfPath string `yaml:"confPath"` // e.g., "./configs/base_project.yml"
 	// Enabled indicates whether the service should be enabled.
 	Enabled bool `yaml:"enabled"`
 }
@@ -45,12 +49,16 @@ func (scm *ServiceConfigMeta) IsEnabled() bool {
 //
 // This supports future extensibility as new config types are introduced.
 type Manager struct {
-	services map[string]ServiceConfig
+	services   map[string]ServiceConfig
+	registrars map[string]ServiceConfig
 }
 
 // NewConfigManager returns a new instance of Manager with an initialized internal registry.
 func NewConfigManager() *Manager {
-	return &Manager{services: make(map[string]ServiceConfig)}
+	return &Manager{
+		services:   make(map[string]ServiceConfig),
+		registrars: make(map[string]ServiceConfig),
+	}
 }
 
 // Register adds a ServiceConfig to the manager after validating it.
@@ -62,23 +70,44 @@ func (cm *Manager) Register(cfg ServiceConfig) error {
 		return fmt.Errorf("failed to validate config: %w", err)
 	}
 
-	cm.services[cfg.ID()] = cfg
+	switch cfg.ID() {
+	case types.ServiceNameBaseProject:
+		cm.registrars[cfg.ID()] = cfg
+	default:
+		cm.services[cfg.ID()] = cfg
+	}
 
 	return nil
 }
 
-// Unregister removes a registered ServiceConfig by its ID.
+// UnregisterService removes a registered ServiceConfig by its ID.
 //
 // No-op if the ID is not found.
-func (cm *Manager) Unregister(id string) {
+func (cm *Manager) UnregisterService(id string) {
 	delete(cm.services, id)
 }
 
-// Get retrieves a registered ServiceConfig by its ID.
+// UnregisterRegistrar removes a registered ServiceConfig by its ID.
+//
+// No-op if the ID is not found.
+func (cm *Manager) UnregisterRegistrar(id string) {
+	delete(cm.registrars, id)
+}
+
+// GetService retrieves a registered ServiceConfig by its ID.
 //
 // The second return value indicates whether the config was found.
-func (cm *Manager) Get(id string) (ServiceConfig, bool) {
+func (cm *Manager) GetService(id string) (ServiceConfig, bool) {
 	cfg, ok := cm.services[id]
+
+	return cfg, ok
+}
+
+// GetRegistrar retrieves a registered ServiceConfig by its ID.
+//
+// The second return value indicates whether the config was found.
+func (cm *Manager) GetRegistrar(id string) (ServiceConfig, bool) {
+	cfg, ok := cm.registrars[id]
 
 	return cfg, ok
 }

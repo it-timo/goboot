@@ -1,9 +1,9 @@
 # goboot Project Roadmap
 
-This roadmap defines the **planned evolution and goals** of the `goboot` project — a CLI tool 
+This roadmap defines the **planned evolution and goals** of the `goboot` project — a CLI tool
 and scaffolding framework that aims to provide industrial-grade, flexible Go project setups.
 
-Currently, the project is **in foundational development**. 
+Currently, the project is **in foundational development**.
 Features are introduced incrementally through versioned releases.
 
 ---
@@ -28,7 +28,7 @@ Each milestone incrementally adds functionality and structure. Until `v1.0.0`, b
 | Version  | Focus Area                             | Key Additions                                                |
 |----------|----------------------------------------|--------------------------------------------------------------|
 | `v0.0.0` | Bootstrap Setup                        | CLI entry point, basic config, README, LICENSE               |
-| `v0.0.1` | Local Tooling & Linting                | GolangCI config, Makefile, Taskfile, lint/format             |
+| `v0.0.1` | Local Tooling & Linting                | GolangCI config, Makefile, Taskfile, scripts, lint/format    |
 | `v0.0.2` | Tests & Utilities                      | `/pkg/utils`, `/test`, bootstrap/test/version scripts        |
 | `v0.0.3` | Multi-Command CLI Base                 | `goboot init`, `goboot run`, `goboot validate` structure     |
 | `v0.1.0` | CI Integration                         | GitHub/GitLab workflows, YAML lint, test runners             |
@@ -47,6 +47,7 @@ Each milestone incrementally adds functionality and structure. Until `v1.0.0`, b
 
 ## 🛠️ Technical Goals (Q2 – Q3 2025)
 
+- [x] Tooling layer: Makefile, Taskfile, scripts, linting, formatting
 - [ ] Template engine (placeholder parser)
 - [ ] Finalize `pkg`, `config` and logger strategies
 - [ ] Harden CLI init/check/validate flow
@@ -77,4 +78,4 @@ Each milestone incrementally adds functionality and structure. Until `v1.0.0`, b
 
 ---
 
-_This document evolves with the project._
+*This document evolves with the project.*

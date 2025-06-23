@@ -10,9 +10,9 @@ All features and milestones are tracked by the version and implemented in clearl
 
 `{{.ProjectName}}` is built on the following foundations:
 
-* Modular, composable templates for scalable Go projects
-* Clean project hygiene from the first commit
-* Extensible design for packages and project-specific customization
+- Modular, composable templates for scalable Go projects
+- Clean project hygiene from the first commit
+- Extensible design for packages and project-specific customization
 
 ---
 
@@ -30,16 +30,16 @@ Each version introduces a complete, working layer of features. Versions follow s
 
 ## 🎯 Near-Term Goals ({{.ReleaseCurrentWindow}})
 
-* [ ] Goals
+- [ ] Goals
 
 ---
 
 ## 🧭 Mid-Term Goals ({{.ReleaseUpcomingWindow}})
 
-* [ ] Goals
+- [ ] Goals
 
 ---
 
 ## 🚀 Long-Term Goals ({{.ReleaseLongTerm}}+)
 
-* [ ] Goals
+- [ ] Goals

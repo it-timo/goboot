@@ -1,7 +1,7 @@
 # 📁 Project Structure — `{{.ProjectName}}`
 
-This document describes the directory and file structure used in `{{.ProjectName}}`, 
-intended as a consistent, high-standard Go project layout. 
+This document describes the directory and file structure used in `{{.ProjectName}}`,
+intended as a consistent, high-standard Go project layout.
 All components listed here are **expected to exist and be functional** when released.
 
 ---
@@ -30,16 +30,16 @@ All components listed here are **expected to exist and be functional** when rele
 
 Contains CLI entry points.
 
-* `{{.ProjectName}}`: The root executable command.
-* Subdirectories may define other command-line tools or utilities as needed.
+- `{{.ProjectName}}`: The root executable command.
+- Subdirectories may define other command-line tools or utilities as needed.
 
 ### `pkg/`
 
 Reusable Go packages structured for modularity.
 
-* `config/`: Configuration loading and validation logic.
-* `utils/`: Generic helper functions used across the codebase.
-* `{{.ProjectName}}/`: Core project logic, structured by domain.
+- `config/`: Configuration loading and validation logic.
+- `utils/`: Generic helper functions used across the codebase.
+- `{{.ProjectName}}/`: Core project logic, structured by domain.
 
 ---
 
@@ -47,7 +47,7 @@ Reusable Go packages structured for modularity.
 
 This layout follows these principles:
 
-* **Clarity**: All files and folders serve a clear, active role.
-* **Modularity**: Separation by domain and concern.
-* **No placeholders**: All items are meaningful and ready to be used.
-* **Best Practices First**: Includes tooling and metadata expected in real-world projects.
+- **Clarity**: All files and folders serve a clear, active role.
+- **Modularity**: Separation by domain and concern.
+- **No placeholders**: All items are meaningful and ready to be used.
+- **Best Practices First**: Includes tooling and metadata expected in real-world projects.

@@ -1,0 +1,33 @@
+#  -----------------------------------------------------------------------------
+#  .pre-commit-config.yaml — Developer checks before commits for `goroot`
+#  -----------------------------------------------------------------------------
+#
+#  All changes must be made by the developer — no auto-magic or format rewriting.
+#  -----------------------------------------------------------------------------
+
+repos:
+  #  Linters
+  - repo: local
+    hooks:
+      - id: golint
+        name: golint
+        entry: golangci-lint run ./...
+        language: system
+
+      - id: yamllint
+        name: yamllint
+        entry: yamllint .
+        language: system
+        types: [yaml]
+
+      - id: checkmake
+        name: checkmake
+        entry: checkmake Makefile
+        language: system
+        types: [makefile]
+
+      - id: markdownlint
+        name: markdownlint
+        entry: docker run --rm -v "$PWD:/workdir" -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 "**/*.md"
+        language: system
+        types: [markdown]

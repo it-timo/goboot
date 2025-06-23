@@ -13,56 +13,61 @@ import (
 // It injects values into templates (e.g., README, LICENSE, CI configs) and governs
 // how project-specific identity and versioning are rendered.
 type BaseProjectConfig struct {
+	// SourcePath is the path where the project will walk to get the template files.
+	SourcePath string `yaml:"sourcePath"`
+
 	// ProjectURL is the full repository URL (e.g., "https://github.com/user/project").
 	// Used in go.mod and README links.
-	ProjectURL string `yaml:"project_url"`
+	ProjectURL string `yaml:"projectUrl"`
 
 	// ProjectName is the main identifier for the project (e.g., "goboot").
 	// Used in CLI entry points, module path, and template files.
-	ProjectName string `yaml:"project_name"`
+	ProjectName string `yaml:"projectName"`
 
 	// CapsProjectName is the uppercase variant of ProjectName (e.g., "GOBOOT").
 	// Used in headers, LICENSE, and NOTICE.
-	CapsProjectName string `yaml:"caps_project_name"`
+	CapsProjectName string `yaml:"capsProjectName"`
 
 	// LowerProjectName is the lowercase variant (e.g., "goboot").
 	// Used for safe filenames, Docker images, etc.
-	LowerProjectName string `yaml:"lower_project_name"`
+	LowerProjectName string `yaml:"lowerProjectName"`
 
 	// UsedGoVersion specifies the Go version to write into config files (e.g., "1.22.2").
-	UsedGoVersion string `yaml:"used_go_version"`
+	UsedGoVersion string `yaml:"usedGoVersion"`
 
 	// UsedNodeVersion specifies the Node.js version for optional tooling (e.g., "20.11.1").
-	UsedNodeVersion string `yaml:"used_node_version"`
+	UsedNodeVersion string `yaml:"usedNodeVersion"`
 
 	// CurrentYear is injected into LICENSE and NOTICE. If not set, it defaults to the current system year.
-	CurrentYear int `yaml:"current_year"`
+	CurrentYear int `yaml:"currentYear"`
 
 	// ReleaseCurrentWindow is the current roadmap target (e.g., "Q2 2025").
-	ReleaseCurrentWindow string `yaml:"release_current_window"`
+	ReleaseCurrentWindow string `yaml:"releaseCurrentWindow"`
 
 	// ReleaseUpcomingWindow defines the next milestone window (e.g., "Q4 2025").
-	ReleaseUpcomingWindow string `yaml:"release_upcoming_window"`
+	ReleaseUpcomingWindow string `yaml:"releaseUpcomingWindow"`
 
 	// ReleaseLongTerm defines a long-term year-based goal horizon (e.g., "2028").
-	ReleaseLongTerm string `yaml:"release_long_term"`
+	ReleaseLongTerm string `yaml:"releaseLongTerm"`
 
 	// The Author is the project creator/owner, injected into LICENSE and docs.
 	Author string `yaml:"author"`
 
 	// GitProvider determines how to render related templates and links.
-	GitProvider string `yaml:"git_provider"`
+	GitProvider string `yaml:"gitProvider"`
 
 	// GitHubUser is the GitHub username or org (used in badges and URLs).
-	GitHubUser string `yaml:"github_user"`
+	GitHubUser string `yaml:"githubUser"`
 
 	// GitLabUser is the GitLab username or group (used in badges and URLs).
-	GitLabUser string `yaml:"gitlab_user"`
+	GitLabUser string `yaml:"gitlabUser"`
 }
 
-// newBaseProjectConfig returns a newly initialized, empty BaseProjectConfig.
-func newBaseProjectConfig() *BaseProjectConfig {
-	return &BaseProjectConfig{}
+// newBaseProjectConfig returns a newly initialized BaseProjectConfig with the project name.
+func newBaseProjectConfig(projectName string) *BaseProjectConfig {
+	return &BaseProjectConfig{
+		ProjectName: projectName,
+	}
 }
 
 // ID returns a stable identifier for this config.
@@ -79,35 +84,40 @@ func (bp *BaseProjectConfig) ReadConfig(confPath string) error {
 // Validate verifies the BaseProjectConfig for use in scaffolding.
 //
 // It returns an error if required values are missing/invalid, or calls fillNeededInfos.
+//nolint:cyclop // flat validation logic preferred for clarity and extensibility.
 func (bp *BaseProjectConfig) Validate() error {
 	var missing []string
 
+	if strings.TrimSpace(bp.SourcePath) == "" {
+		missing = append(missing, "sourcePath")
+	}
+
 	if strings.TrimSpace(bp.ProjectURL) == "" {
-		missing = append(missing, "project_url")
+		missing = append(missing, "projectUrl")
 	}
 
 	if strings.TrimSpace(bp.ProjectName) == "" {
-		missing = append(missing, "project_name")
+		missing = append(missing, "projectName")
 	}
 
 	if strings.TrimSpace(bp.UsedGoVersion) == "" {
-		missing = append(missing, "used_go_version")
+		missing = append(missing, "usedGoVersion")
 	}
 
 	if strings.TrimSpace(bp.UsedNodeVersion) == "" {
-		missing = append(missing, "used_node_version")
+		missing = append(missing, "usedNodeVersion")
 	}
 
 	if strings.TrimSpace(bp.ReleaseCurrentWindow) == "" {
-		missing = append(missing, "release_current_window")
+		missing = append(missing, "releaseCurrentWindow")
 	}
 
 	if strings.TrimSpace(bp.ReleaseUpcomingWindow) == "" {
-		missing = append(missing, "release_upcoming_window")
+		missing = append(missing, "releaseUpcomingWindow")
 	}
 
 	if strings.TrimSpace(bp.ReleaseLongTerm) == "" {
-		missing = append(missing, "release_long_term")
+		missing = append(missing, "releaseLongTerm")
 	}
 
 	if strings.TrimSpace(bp.Author) == "" {
@@ -116,11 +126,11 @@ func (bp *BaseProjectConfig) Validate() error {
 
 	if strings.TrimSpace(bp.GitProvider) == "github" {
 		if strings.TrimSpace(bp.GitHubUser) == "" {
-			missing = append(missing, "github_user")
+			missing = append(missing, "githubUser")
 		}
 	} else if strings.TrimSpace(bp.GitProvider) == "gitlab" {
 		if strings.TrimSpace(bp.GitLabUser) == "" {
-			missing = append(missing, "gitlab_user")
+			missing = append(missing, "gitlabUser")
 		}
 	}
 

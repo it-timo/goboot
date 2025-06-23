@@ -9,30 +9,46 @@
 
 ## 📦 What is `goboot`?
 
-> `goboot` is a deterministic scaffolding tool that provides a clean, modular foundation for real-world Go projects 
+> `goboot` is a deterministic scaffolding tool that provides a clean, modular foundation for real-world Go projects
 > — including applications, tools, and infrastructure code.
 >
 > It’s **not** a framework. It’s **not** an IDE.
-> Instead, `goboot` is built for OSS maintainers, contributors, 
+> Instead, `goboot` is built for OSS maintainers, contributors,
 > and enterprise teams who care about long-term project hygiene, structure, and reproducibility.
 >
 > This repository focuses on **layered, progressive structure scaffolding**, not one-click demos or opinionated code generation.
 >
-> The goal isn’t just to get you started — it’s to help you grow Go projects that remain clean, consistent, 
+> The goal isn’t just to get you started — it’s to help you grow Go projects that remain clean, consistent,
 > and scalable over time.
 
 ---
 
-## 📁 Current Scope (v0.0.0)
+## 📁 Current State (v0.0.1)
 
-This initial version (`v0.0.0`) establishes:
+This version (`v0.0.1`) includes:
 
-- A minimal CLI entry point (`cmd/goboot/main.go`)
-- Basic configuration loading (`pkg/config`)
-- Early repository scaffolding (`README.md`, `LICENSE`, `ROADMAP.md`)
-- A clearly versioned development path under [ROADMAP.md](./ROADMAP.md)
+- CLI entry point: `cmd/goboot/main.go`
+- Configuration logic: `pkg/config/`
+- Core engine: `pkg/goboot/`
+- First service example: `pkg/baseProject/`
+- Shared types: `pkg/types/`
+- Utility helpers: `pkg/utils/`
+- Configuration files: `configs/goboot.yml`, `configs/base_project.yml`
+- Project templates: `templates/project_base/`
+- Architecture decisions: `doc/adr/`
+- Visuals: `doc/img/`, `doc/diagram/`
+- GitHub funding: `.github/FUNDING.yml`
+- Central docs: `README.md`, `ROADMAP.md`, `VERSIONING.md`, `WORKFLOW.md`, `LICENSE`, `NOTICE`
+- Dev files: `.editorconfig`, `.gitignore`, `.gitattributes`, `.env.example`, `.env.ci`, `.nvmrc`, `.version`
+- **New in v0.0.1:**  
+  - `Makefile` for common tasks  
+  - `Taskfile.yml` for task runner support  
+  - `.golangci.yml` for Go linting configuration  
+  - `.markdownlint.yaml` for Markdown linting  
+  - `.yamllint.yaml` for YAML linting  
+  - `scripts/` directory for developer scripts (e.g., lint)
 
-> 👉 This project is in **early planning and layout phase**. Expect placeholder logic and evolving structure.
+> The project is in an **early layout and planning phase**. The structure is minimal but already modular and documented.
 
 ---
 
@@ -52,15 +68,23 @@ You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 
 ### Requirements
 
-- Go 1.24+
-- Make (for later local scripts)
+- [Go 1.24+](https://go.dev/doc/install)
+- [Make](https://www.gnu.org/software/make/) (optional, for `Makefile` tasks)
+- [Task](https://taskfile.dev) (optional, for `Taskfile.yml` tasks)
+- [GolangCI-Lint](https://golangci-lint.run/) (for Go linting, see `.golangci.yml`)
+- [Yamllint](https://yamllint.readthedocs.io/) (for YAML linting, see `.yamllint.yaml`)
+- [Checkmake](https://github.com/mrtazz/checkmake) (for Makefile linting)
+- [Docker](https://www.docker.com/) (for running Markdown linting via container)
+- [Markdownlint](https://github.com/DavidAnson/markdownlint) (for Markdown linting, see `.markdownlint.yaml`)
 
 ### Clone and Explore
 
 ```bash
 git clone https://github.com/it-timo/goboot.git
 cd goboot
-go run ./cmd/goboot
+make lint
+# or, using Task
+task lint
 ```
 
 There’s not much output yet — but that’s intentional.
@@ -71,13 +95,12 @@ There’s not much output yet — but that’s intentional.
 
 This repository uses:
 
-* [ROADMAP.md](./ROADMAP.md) for planned milestones
-* [VERSIONING.md](./VERSIONING.md) for semantic version handling
-* [WORKFLOW.md](./WORKFLOW.md) to define long-term contribution and CI logic
-* [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) to track how the folder layout evolves over time
-* [doc/adr/](./doc/adr) for architecture decisions in ADR format
-* [doc/img/](./doc/img) for flow visualizations
-
+- [ROADMAP.md](./ROADMAP.md) for planned milestones
+- [VERSIONING.md](./VERSIONING.md) for semantic version handling
+- [WORKFLOW.md](./WORKFLOW.md) to define long-term contribution and CI logic
+- [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) to track how the folder layout evolves over time
+- [doc/adr/](./doc/adr) for architecture decisions in ADR format
+- [doc/img/](./doc/img) for flow visualizations
 
 These documents evolve alongside the project.
 

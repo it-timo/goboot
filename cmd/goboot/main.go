@@ -21,13 +21,15 @@ import (
 // Can be overridden using --config CLI flag.
 var configPath string
 
-// init parses CLI flags before the main execution begins.
-func init() {
+// parseFlags parses CLI flags before the main execution begins.
+func parseFlags() {
 	flag.StringVar(&configPath, "config", "./configs/goboot.yml", "Path to the goboot config file")
 	flag.Parse()
 }
 
 func main() {
+	parseFlags()
+
 	// Step 1: Load and validate goboot configuration from YAML.
 	cfg := config.NewGoBoot(configPath)
 

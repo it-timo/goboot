@@ -1,62 +1,67 @@
 ###############################################################################
-# Base Project Configuration File
+#  Base Project Configuration File
 #
-# This file defines metadata and versioning used by goboot to scaffold a new Go project.
-# All values are injected into templated files and may also be used for documentation, version stamping, CI/CD, and more.
+#  This file defines metadata and versioning used by goboot to scaffold a new Go project.
+#  All values are injected into templated files and may also be used for documentation,
+#  version stamping, CI/CD, and more.
 #
-# Safe to commit — no secrets, purely structural.
-# Required by goboot's generator logic.
+#  Safe to commit — no secrets, purely structural.
+#  Required by goboot's generator logic.
 ###############################################################################
 
-# ------------------------------------------------------------------------------
-# Project Identity
-# ------------------------------------------------------------------------------
+#  ------------------------------------------------------------------------------
+#  General Configuration
+#  ------------------------------------------------------------------------------
 
-# Primary project URL (GitHub/GitLab repository home url used by go.mod)
-project_url: "https://github.com/projects"
+#  Directory where the templates will be read from
+sourcePath: "templates/project_base"
 
-# Project name (used in CLI, directory names, package names)
-project_name: "IntroProject"
+#  ------------------------------------------------------------------------------
+#  Project Identity
+#  ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# Language / Toolchain Versions
-# ------------------------------------------------------------------------------
+#  Primary project URL (GitHub/GitLab repository home url used by go.mod)
+projectUrl: "https://github.com/projects"
 
-# Go version used for local development, CI, and .tool-versions
-used_go_version: "1.24.3"
+#  ------------------------------------------------------------------------------
+#  Language / Toolchain Versions
+#  ------------------------------------------------------------------------------
 
-# Optional Node.js version (for tooling, static site, doc generation, etc.)
-used_node_version: "20"
+#  Go version used for local development, CI, and .tool-versions
+usedGoVersion: "1.24.3"
 
-# ------------------------------------------------------------------------------
-# Date and Release Windows
-# ------------------------------------------------------------------------------
+#  Optional Node.js version (for tooling, static site, doc generation, etc.)
+usedNodeVersion: "20"
 
-# Release window for current roadmap goals (e.g., "Q2 2025")
-release_current_window: "Q2 2026"
+#  ------------------------------------------------------------------------------
+#  Date and Release Windows
+#  ------------------------------------------------------------------------------
 
-# Upcoming development window (e.g., "Q4 2025")
-release_upcoming_window: "Q4 2026"
+#  Release window for current roadmap goals (e.g., "Q2 2025")
+releaseCurrentWindow: "Q2 2026"
 
-# Long-term milestone or vision target year (e.g., "2028")
-release_long_term: "2028"
+#  Upcoming development window (e.g., "Q4 2025")
+releaseUpcomingWindow: "Q4 2026"
 
-# ------------------------------------------------------------------------------
-# Ownership / Attribution
-# ------------------------------------------------------------------------------
+#  Long-term milestone or vision target year (e.g., "2028")
+releaseLongTerm: "2028"
 
-# Primary author or maintainer (used in LICENSE, NOTICE)
+#  ------------------------------------------------------------------------------
+#  Ownership / Attribution
+#  ------------------------------------------------------------------------------
+
+#  Primary author or maintainer (used in LICENSE, NOTICE)
 author: "IT Timo"
 
-# ------------------------------------------------------------------------------
-# Git Identity (Used for badges, links, and release URLs)
-# ------------------------------------------------------------------------------
+#  ------------------------------------------------------------------------------
+#  Git Identity (Used for badges, links, and release URLs)
+#  ------------------------------------------------------------------------------
 
-# Determine whether to use GitHub or GitLab as the primary host for the project
-git_provider: "gitlab"
+#  Determine whether to use GitHub or GitLab as the primary host for the project
+gitProvider: "gitlab"
 
-# GitHub username or organization (used in shields.io and GitHub links)
-github_user: "it-timo"
+#  GitHub username or organization (used in shields.io and GitHub links)
+githubUser: "it-timo"
 
-# GitLab username or group (used in shields.io and GitLab links)
-gitlab_user: "it-timo"
+#  GitLab username or group (used in shields.io and GitLab links)
+gitlabUser: "it-timo"

@@ -9,13 +9,15 @@ It prioritizes simplicity, clarity, and clean layering during the initial stages
 
 ## 📦 Project Standards
 
-| Area          | Practice                                                             |
-|---------------|----------------------------------------------------------------------|
-| Structure     | Use `cmd/`, `pkg/`, `configs/`, `templates/`, and `doc/` directories |
-| Versioning    | Semantic versioning (`v0.x.x`) with clearly defined milestones       |
-| Licensing     | MIT license in `LICENSE` and `NOTICE`                                |
-| Documentation | Markdown-based (`README.md`, `ROADMAP.md`, ADRs)                     |
-| Philosophy    | No runtime magic, minimal indirection, deterministic scaffolding     |
+| Area          | Practice                                                                         |
+|---------------|----------------------------------------------------------------------------------|
+| Structure     | Use `cmd/`, `pkg/`, `configs/`, `templates/`, and `doc/` directories             |
+| Versioning    | Semantic versioning (`v0.x.x`) with clearly defined milestones                   |
+| Licensing     | MIT license in `LICENSE` and `NOTICE`                                            |
+| Documentation | Markdown-based (`README.md`, `ROADMAP.md`, ADRs)                                 |
+| Tooling       | `Makefile`, `Taskfile.yml`, and `scripts/` for common tasks                      |
+| Linting       | `golangci-lint` for Go linting, `markdownlint` for Markdown, `yamllint` for YAML |
+| Philosophy    | No runtime magic, minimal indirection, deterministic scaffolding                 |
 
 ---
 
@@ -62,14 +64,15 @@ chore: Prepare v0.0.1 release tag
 
 This project uses:
 
-* [`ROADMAP.md`](./ROADMAP.md) — Development layers and milestones
-* [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) — Directory design rationale
-* [`doc/adr/`](./doc/adr) — Architecture decisions (ADRs)
+- [`ROADMAP.md`](./ROADMAP.md) — Development layers and milestones
+- [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) — Directory design rationale
+- [`doc/adr/`](./doc/adr) — Architecture decisions (ADRs)
 
 ---
 
 ## ⚠️ Notes
 
-* This is a **developer tool**, not a runtime framework
-* All logic must be explicit, safe, and maintainable
-* Avoid runtime "magic," reflection, or abstract factories
+- This is a **developer tool**, not a runtime framework
+- All logic must be explicit, safe, and maintainable
+- Avoid runtime "magic," reflection, or abstract factories
+- **Use `make lint`, `task lint`, `scripts/lint`, `markdownlint`, and `yamllint` before submitting PRs**

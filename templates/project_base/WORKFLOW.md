@@ -60,12 +60,13 @@ git checkout -b fix/short-name
 ## 4. Release Checklist
 
 1. Finalize and merge changes
-2. Bump version manually or via script
+2. Bump the version manually or via script
 
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
+
 3. Update `CHANGELOG.md`
 4. Create a GitHub release with highlights
 
@@ -73,17 +74,21 @@ git checkout -b fix/short-name
 
 ## 5. Changelog Format (Example)
 
-```
+```md
 ## v1.2.0 - 2025-05-20
+
 ### Added
+
 - `--unix` mode for socket-only apps
 - Metrics export via `--metrics`
 
 ### Fixed
+
 - Crash on empty config
 - Incorrect CLI error on an invalid flag
 
 ### Changed
+
 - Default config path moved to `~/.config/toolname`
 ```
 
@@ -95,8 +100,9 @@ Use [`ROADMAP.md`](./ROADMAP.md) or GitHub Projects for planning.
 
 Example roadmap block:
 
-```
+```md
 ## Upcoming Features
+
 - [ ] Plugin system
 - [ ] Config validator
 - [ ] Sponsor-only templates
@@ -106,8 +112,8 @@ Example roadmap block:
 
 ## 7. CLI Tool Release Checklist
 
-* [ ] `--help` flag is descriptive
-* [ ] Reasonable defaults work without configuration
-* [ ] Flags: `--version`, `--config` supported
-* [ ] Edge case tests added
-* [ ] README includes install/run instructions
+- [ ] `--help` flag is descriptive
+- [ ] Reasonable defaults work without configuration
+- [ ] Flags: `--version`, `--config` supported
+- [ ] Edge case tests added
+- [ ] README includes install/run instructions

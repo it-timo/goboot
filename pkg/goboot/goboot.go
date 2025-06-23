@@ -11,10 +11,13 @@ that encapsulate feature-specific behavior.
 package goboot
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	"github.com/it-timo/goboot/pkg/baseProject"
+	"github.com/it-timo/goboot/pkg/baselint"
+	"github.com/it-timo/goboot/pkg/baselocal"
+	"github.com/it-timo/goboot/pkg/baseproject"
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/types"
 )
@@ -57,32 +60,23 @@ func NewGoBoot(config *config.GoBoot) *GoBoot {
 // Returns an error if any declared service is unknown or registration fails.
 func (gb *GoBoot) RegisterServices() error {
 	if gb.cfg.Services == nil {
-		return fmt.Errorf("no services declared in config")
+		return errors.New("no services declared in config")
 	}
 
 	// creates the target dir if not exist.
-	err := os.MkdirAll(gb.cfg.TargetPath, os.ModePerm)
+	err := os.MkdirAll(gb.cfg.TargetPath, types.DirPerm)
 	if err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
-	for _, meta := range gb.cfg.Services {
-		if !meta.IsEnabled() {
-			continue
-		}
+	err = gb.registerPreServices()
+	if err != nil {
+		return fmt.Errorf("failed to register pre services: %w", err)
+	}
 
-		fmt.Printf("loading service %s\n", meta.ID)
-
-		switch meta.ID {
-		case types.ServiceNameBaseProject:
-			err = gb.ServiceMgr.register(baseProject.NewBaseProject(gb.cfg.TargetPath))
-			if err != nil {
-				return fmt.Errorf("failed to register base_project service: %w", err)
-			}
-		// Future services can be added here.
-		default:
-			return fmt.Errorf("unknown service ID: %s", meta.ID)
-		}
+	err = gb.registerMainServices()
+	if err != nil {
+		return fmt.Errorf("failed to register main services: %w", err)
 	}
 
 	return nil
@@ -96,4 +90,72 @@ func (gb *GoBoot) RegisterServices() error {
 // If a service has no config, it is skipped.
 func (gb *GoBoot) RunServices() error {
 	return gb.ServiceMgr.runAll()
+}
+
+// registerPreServices registers foundational services that need to exist before other services can be used.
+//
+// This typically includes internal infrastructure providers (e.g., script registrars).
+// These services must be registered early to allow other services to hook into them.
+//
+// Returns an error if any registration fails.
+func (gb *GoBoot) registerPreServices() error {
+	for _, meta := range gb.cfg.Services {
+		if !meta.IsEnabled() {
+			continue
+		}
+
+		switch meta.ID {
+		case types.ServiceNameBaseLocal:
+			baseLocal := baselocal.NewBaseLocal(gb.cfg.TargetPath)
+
+			err := gb.ServiceMgr.register(baseLocal)
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", types.ServiceNameBaseLocal, err)
+			}
+		default:
+			// skip all services that are not explicitly defined.
+			continue
+		}
+
+		fmt.Printf("loaded pre-service %s\n", meta.ID)
+	}
+
+	return nil
+}
+
+// registerMainServices registers the primary generation services defined in the config.
+//
+// Each enabled service is instantiated and registered using its unique service ID.
+// Registration fails if the service is unknown or if instantiation fails.
+//
+// Returns an error if any service fails to register.
+func (gb *GoBoot) registerMainServices() error {
+	for _, meta := range gb.cfg.Services {
+		if !meta.IsEnabled() {
+			continue
+		}
+
+		switch meta.ID {
+		case types.ServiceNameBaseProject:
+			err := gb.ServiceMgr.register(baseproject.NewBaseProject(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", types.ServiceNameBaseProject, err)
+			}
+		case types.ServiceNameBaseLint:
+			err := gb.ServiceMgr.register(baselint.NewBaseLint(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", types.ServiceNameBaseLint, err)
+			}
+		case types.ServiceNameBaseLocal:
+			// skip it, because it's registered in pre-service.
+			continue
+		// Future services can be added here.
+		default:
+			return fmt.Errorf("unknown service ID: %s", meta.ID)
+		}
+
+		fmt.Printf("loaded service %s\n", meta.ID)
+	}
+
+	return nil
 }

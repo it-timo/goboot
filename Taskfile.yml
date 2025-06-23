@@ -1,0 +1,65 @@
+#  -----------------------------------------------------------------------------
+#  🛠 Taskfile — Developer Commands for `goboot`
+#  -----------------------------------------------------------------------------
+#
+#  This file defines reproducible and documented task aliases for common workflows.
+#  It is used by the `go-task` tool (https://taskfile.dev/) and acts as a modern
+#  alternative to Makefiles — with cleaner syntax, native YAML support, and built-in shell integration.
+#
+#  These tasks are intended to:
+#    - Simplify setup and usage for contributors
+#    - Ensure consistent linting and testing across environments
+#    - Act as automation hooks for CI pipelines or local workflows.
+#
+#  This file is part of the `goboot` template project and may require
+#  adaptation in downstream OSS or private forks.
+
+version: "3"
+
+# -----------------------------------------------------------------------------
+# 🔄 Dynamic variables
+# -----------------------------------------------------------------------------
+vars:
+  VERSION:
+    sh: cat .version  #  Reads a version from a file (used for builds and prints)
+
+#  -----------------------------------------------------------------------------
+#  📋 Defined Tasks
+#  -----------------------------------------------------------------------------
+tasks:
+  default:
+    desc: Run build, lint, and test (default task)
+    deps: [build, lint, test]  #  Combines common developer workflows
+
+  build:
+    desc: Build the Go binary
+    cmd: go build -ldflags="-X main.version={{.VERSION}}" -o bin/goboot ./cmd/goboot
+    #  - `-X`: inject version string into the `main.version` variable
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run                           #  Static analysis for Go code
+      - yamllint .                                  #  YAML syntax and formatting
+      - checkmake Makefile                          #  Lint for Makefile syntax / conventions
+      - docker run -v "$PWD":/workdir -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 "**/*.md"
+      - |
+        bash -c '
+          docker run --rm \
+            -v "$PWD":/workdir \
+            -w /workdir \
+            ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 \
+            markdownlint $(find . -type f -wholename "*.md")
+        '
+      #  Markdown lint via container — avoids local install and ensures a pinned version
+
+  test:
+    desc: Run all tests
+    cmd: >
+      go test -race -timeout=9m -coverprofile coverage.txt \
+      $(go list ./... | grep -v /test/noauto) && \
+      go tool cover -func=coverage.txt; rm -f coverage.txt
+
+  version:
+    desc: Print current version
+    cmd: 'echo "Current version: {{.VERSION}}"'

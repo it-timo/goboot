@@ -1,49 +1,62 @@
 ###############################################################################
-# Root Generation Configuration
+#  Root Generation Configuration
 #
-# This file controls the execution of the goboot scaffolding engine.
-# It specifies where to generate the project and which modular services to run.
+#  This file controls the execution of the goboot scaffolding engine.
+#  It specifies where to generate the project and which modular services to run.
 #
-# Every listed service-entry, references to a separate configuration file (e.g., base_project.yml)
-# that defines the logic and metadata for generating a specific part of the project.
+#  Every listed service-entry, references to a separate configuration file (e.g., base_project.yml)
+#  that defines the logic and metadata for generating a specific part of the project.
 #
-# This file is safe to commit. It does not contain secrets or runtime environment values.
+#  This file is safe to commit. It does not contain secrets or runtime environment values.
 #
-# Structure:
-#   - `target_path`: where the output project will be created
-#   - `services`: modular logic units to run (e.g., base_project, ci_setup, docker, etc.)
+#  Structure:
+#    - `target_path`: where the output project will be created
+#    - `services`: modular logic units to run (e.g., base_project, ci_setup, docker, etc.)
 #
-# See also:
-#   - configs/base_project.yml (base project metadata)
-#   - ROADMAP.md (feature goals and service expansion plan)
-#   - WORKFLOW.md (release and structure lifecycle)
+#  See also:
+#    - configs/base_project.yml (base project metadata)
+#    - ROADMAP.md (feature goals and service expansion plan)
+#    - WORKFLOW.md (release and structure lifecycle)
 #
-# NOTE:
-# Service execution order is deterministic and defined inside goboot itself.
-# Services like "base_project" are always run first because they scaffold the target structure.
-# Configs should not define order — goboot ensures correctness and avoids unpredictable behavior.
+#  NOTE:
+#  Service execution order is deterministic and defined inside goboot itself.
+#  Services like "base_project" are always run first because they scaffold the target structure.
+#  Configs should not define order — goboot ensures correctness and avoids unpredictable behavior.
 ###############################################################################
 
-# ------------------------------------------------------------------------------
-# General Configuration
-# ------------------------------------------------------------------------------
+#  ------------------------------------------------------------------------------
+#  General Configuration
+#  ------------------------------------------------------------------------------
 
-# Directory where the project will be generated
-target_path: "outputs"
+#  Directory where the templates will be read from
+targetPath: "outputs"
 
-# ------------------------------------------------------------------------------
-# Modular Services Configuration
-# ------------------------------------------------------------------------------
+#  ------------------------------------------------------------------------------
+#  Project Identity
+#  ------------------------------------------------------------------------------
 
-# Each service entry defines:
-#   - A stable service ID
-#   - A path to a service-specific config file
-#   - Whether the service should be included in this run
+#  Project name (used in CLI, directory names, package names, ...)
+projectName: "IntroProject"
+
+#  ------------------------------------------------------------------------------
+#  Modular Services Configuration
+#  ------------------------------------------------------------------------------
+
+#  Each service entry defines:
+#    - A stable service ID
+#    - A path to a service-specific config file
+#    - Whether the service should be included in this run
 #
-# Disabled services will be skipped without error.
-# Service IDs must match known handlers in the goboot binary.
+#  Disabled services will be skipped without error.
+#  Service IDs must match known handlers in the goboot binary.
 
 services:
-  - id: "base_project"                      # Unique service identifier (must match internal constant)
-    conf_path: "./configs/base_project.yml" # Path to the YAML config file for this service
-    enabled: true                           # Enable or disable this module
+  - id: "base_project"                      #  Unique service identifier (must match internal constant)
+    confPath: "./configs/base_project.yml"  #  Path to the YAML config file for this service
+    enabled: true                           #  Enable or disable this module
+  - id: "base_lint"
+    confPath: "./configs/base_lint.yml"
+    enabled: true
+  - id: "base_local"
+    confPath: "./configs/base_local.yml"
+    enabled: true

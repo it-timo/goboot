@@ -1,0 +1,28 @@
+###############################################################################
+#  Base Local Configuration File
+#
+#  This file defines metadata used by goboot to scaffold the local script setup.
+#  All values are injected into templated files and may also be used for documentation, scripts, and more.
+#
+#  Safe to commit — no secrets, purely structural.
+#  Required by goboot's local logic.
+###############################################################################
+
+#  ------------------------------------------------------------------------------
+#  General Configuration
+#  ------------------------------------------------------------------------------
+
+#  Directory where the templates will be read from
+sourcePath: "templates/local_base"
+
+#  ------------------------------------------------------------------------------
+#  Modular Local Configuration
+#  ------------------------------------------------------------------------------
+
+#  Every entry automatically enables the possibilities of creation.
+#  Will actually only be rendered if content is provided to the local service.
+fileList:
+  - make
+  - task
+  - script
+  - commit

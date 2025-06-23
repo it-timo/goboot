@@ -38,16 +38,20 @@ type GoBoot struct {
 	// configPath is the path to the main goboot YAML config file (e.g., ./configs/goboot.yml).
 	configPath string
 
+	// ProjectName is the identifier for the project (e.g., "goboot").
+	// Used in headings, comments, and other rendered metadata.
+	ProjectName string `yaml:"projectName"`
+
+	// TargetPath is the path to the project target / output.
+	TargetPath string `yaml:"targetPath"`
+
+	// Services is a list of external service config declarations to load (e.g., base_project, linting).
+	Services []ServiceConfigMeta `yaml:"services"`
+
 	// ConfManager holds validated and registered configuration modules.
 	//
 	// It provides access to modular service configs during generation.
 	ConfManager *Manager
-
-	// TargetPath is the path to the project target / output.
-	TargetPath string `yaml:"target_path"`
-
-	// Services is a list of external service config declarations to load (e.g., base_project, linting).
-	Services []ServiceConfigMeta `yaml:"services"`
 }
 
 // NewGoBoot creates a new GoBoot instance with the given base configuration path.
@@ -79,7 +83,7 @@ func (gb *GoBoot) Init() error {
 
 		fmt.Printf("loading service config for %q\n", svc.ID)
 
-		cfg := createServiceConfig(svc.ID)
+		cfg := createServiceConfig(svc.ID, gb.ProjectName)
 		if cfg == nil || (reflect.ValueOf(cfg).Kind() == reflect.Ptr && reflect.ValueOf(cfg).IsNil()) {
 			return fmt.Errorf("invalid or nil config returned for service ID: %q", svc.ID)
 		}
@@ -111,11 +115,15 @@ func (gb *GoBoot) readConfig() error {
 // This maps string identifiers (e.g., "base_project") to their concrete implementations.
 //
 // Only configs listed here can be used during runtime.
-func createServiceConfig(id string) ServiceConfig {
+func createServiceConfig(id, projectName string) ServiceConfig {
 	switch id {
 	case types.ServiceNameBaseProject:
-		return newBaseProjectConfig()
-	// Extend with more cases for additional service types
+		return newBaseProjectConfig(projectName)
+	case types.ServiceNameBaseLint:
+		return newBaseLintConfig(projectName)
+	case types.ServiceNameBaseLocal:
+		return newBaseLocalConfig(projectName)
+	// Extend with more cases for additional service types.
 	default:
 		return nil
 	}
@@ -130,7 +138,7 @@ func readYMLConfig(confPath string, cfg interface{}) error {
 		return fmt.Errorf("failed to resolve config path: %w", err)
 	}
 
-	data, err := os.ReadFile(curPath)
+	data, err := os.ReadFile(curPath) // #nosec G304 -- the path is user-defined and expected to be dynamic.
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}

@@ -48,18 +48,19 @@ go run ./cmd/{{.ProjectName}}
 
 This repository includes the following planning documents:
 
-* [ROADMAP.md](./ROADMAP.md) — Feature planning and milestone tracking
-* [VERSIONING.md](./VERSIONING.md) — Semantic versioning and release rules
-* [WORKFLOW.md](./WORKFLOW.md) — Contributor and CI process
+- [ROADMAP.md](./ROADMAP.md) — Feature planning and milestone tracking
+- [VERSIONING.md](./VERSIONING.md) — Semantic versioning and release rules
+- [WORKFLOW.md](./WORKFLOW.md) — Contributor and CI process
 
 ---
 
 ## 📦 Releases
 
+All releases are tagged and listed under:
 {{- if eq .GitProvider "github" }}
-All releases are tagged and listed under the [Releases](https://github.com/{{.GitHubUser}}/{{.LowerProjectName}}/releases) page.
+[Releases](https://github.com/{{.GitHubUser}}/{{.LowerProjectName}}/releases)
 {{- else if eq .GitProvider "gitlab" }}
-All releases are tagged and listed under the [Releases](https://gitlab.com/{{.GitLabUser}}/{{.LowerProjectName}}/-/releases) page.
+[Releases](https://gitlab.com/{{.GitLabUser}}/{{.LowerProjectName}}/-/releases)
 {{- end }}
 
 To see current goals, refer to [`ROADMAP.md`](./ROADMAP.md).
@@ -75,5 +76,5 @@ Additional notices may be found in [NOTICE](./NOTICE) if applicable.
 
 ## 🙌 Acknowledgements
 
-This project was scaffolded using [goboot](https://github.com/it-timo/goboot), 
+This project was scaffolded using [goboot](https://github.com/it-timo/goboot),
 a CLI tool for generating reproducible Go project structures.
