@@ -1,0 +1,29 @@
+###############################################################################
+#  Base Test Configuration File
+#
+#  This file defines metadata used by goboot to scaffold the testing setup.
+#  All values are injected into templated files and may also be used for documentation, CI/CD, and more.
+#
+#  Safe to commit — no secrets, purely structural.
+#  Required by goboot's testing logic.
+###############################################################################
+
+#  ------------------------------------------------------------------------------
+#  General Configuration
+#  ------------------------------------------------------------------------------
+
+#  Directory where the templates will be read from.
+sourcePath: "templates/test_base"
+
+#  ------------------------------------------------------------------------------
+#  Test Configuration
+#  ------------------------------------------------------------------------------
+
+#  Use style for test files; currently only "ginkgo" and "go" are supported.
+useStyle: "ginkgo"
+
+#  Command to run tests. Can be empty and will be filled in such case with the default value.
+testCmd: |-
+  go test -race -timeout=5m -coverprofile=coverage.txt ./... &&
+  go tool cover -func=coverage.txt;
+  rm -f coverage.txt

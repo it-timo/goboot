@@ -9,15 +9,16 @@ It prioritizes simplicity, clarity, and clean layering during the initial stages
 
 ## 📦 Project Standards
 
-| Area          | Practice                                                                         |
-|---------------|----------------------------------------------------------------------------------|
-| Structure     | Use `cmd/`, `pkg/`, `configs/`, `templates/`, and `doc/` directories             |
-| Versioning    | Semantic versioning (`v0.x.x`) with clearly defined milestones                   |
-| Licensing     | MIT license in `LICENSE` and `NOTICE`                                            |
-| Documentation | Markdown-based (`README.md`, `ROADMAP.md`, ADRs)                                 |
-| Tooling       | `Makefile`, `Taskfile.yml`, and `scripts/` for common tasks                      |
-| Linting       | `golangci-lint` for Go linting, `markdownlint` for Markdown, `yamllint` for YAML |
-| Philosophy    | No runtime magic, minimal indirection, deterministic scaffolding                 |
+| Area          | Practice                                                                                   |
+|---------------|--------------------------------------------------------------------------------------------|
+| Structure     | Use `cmd/`, `pkg/`, `configs/`, `templates/`, and `doc/` directories                       |
+| Versioning    | Semantic versioning (`v0.x.x`) with clearly defined milestones                             |
+| Licensing     | MIT license in `LICENSE` and `NOTICE`                                                      |
+| Documentation | Markdown-based (`README.md`, `ROADMAP.md`, ADRs)                                           |
+| Tooling       | `Makefile`, `Taskfile.yml`, and `scripts/` for common tasks                                |
+| Linting       | Dockerized `golangci-lint`, `yamllint`, `checkmake`, `markdownlint`, `shellcheck`, `shfmt` |
+| Testing       | BDD-style suites with Ginkgo/Gomega via `make test` (race + coverage)                      |
+| Philosophy    | No runtime magic, minimal indirection, deterministic scaffolding                           |
 
 ---
 
@@ -25,12 +26,12 @@ It prioritizes simplicity, clarity, and clean layering during the initial stages
 
 ### 🔀 Branching
 
-| Type       | Prefix    |
-|------------|-----------|
-| Features   | `feat/*`  |
-| Fixes      | `fix/*`   |
-| Chores     | `chore/*` |
-| Planning   | `docs/*`  |
+| Type       | Prefix    | Description                                    |
+|------------|-----------|------------------------------------------------|
+| Features   | `feat/*`  | New features or enhancements                   |
+| Fixes      | `fix/*`   | Bug fixes                                      |
+| Chores     | `chore/*` | Maintenance tasks (e.g., updates, refactoring) |
+| Planning   | `docs/*`  | Documentation updates                          |
 
 > All work happens on branches. Merge into `main` only when stable and reviewed.
 
@@ -43,7 +44,7 @@ feat: Add support for base project target dir
 fix: Correct YAML parsing edge case
 docs: Add ADR for service registration
 chore: Prepare v0.0.1 release tag
-````
+```
 
 ---
 
@@ -54,8 +55,8 @@ chore: Prepare v0.0.1 release tag
 3. Create annotated tag:
 
    ```bash
-   git tag v0.0.1 -m "Release v0.0.1 — Adds base_project rendering logic"
-   git push origin v0.0.1
+   git tag v0.0.2 -m "Release v0.0.2 — Adds testing scaffold and coverage"
+   git push origin v0.0.2
    ```
 
 ---
@@ -75,4 +76,7 @@ This project uses:
 - This is a **developer tool**, not a runtime framework
 - All logic must be explicit, safe, and maintainable
 - Avoid runtime "magic," reflection, or abstract factories
-- **Use `make lint`, `task lint`, `scripts/lint`, `markdownlint`, and `yamllint` before submitting PRs**
+- Linting is designed to be **containerized**:
+  - `make lint` runs all linters via Docker (no local installs needed; includes shellcheck/shfmt)
+- Run `make test` (Ginkgo/Gomega suites) before submitting PRs
+- **Use all `make`, `task` and `scripts` files before submitting PRs**

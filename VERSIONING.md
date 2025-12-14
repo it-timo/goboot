@@ -13,18 +13,18 @@ with a **structured feature build-up** during its `v0.x.x` phase.
 
 ## 🔁 Pre-1.0 Logic
 
-Versions below `v1.0.0` **do not imply instability** — instead, they represent a **deliberate,
-layered rollout of features** and foundational tooling.
+Versions below `v1.0.0` represent a deliberate,
+layered rollout of features, tooling, and project hygiene.
 
-| Version Range | Purpose                                                |
-|---------------|--------------------------------------------------------|
-| `v0.0.x`      | Structural setup: config, CI, lint, testing, basics    |
-| `v0.1.x`      | Infrastructure: contributors, community, docs          |
-| `v0.2.x`      | Packaging: Docker, release systems                     |
-| `v0.3.x`      | Contribution: issue templates, reuse, conduct          |
-| `v0.4.x`      | Security: dependency checks, code scanning             |
-| `v0.5.x`      | Benchmarking support                                   |
-| `v1.0.0`+     | Feature-ready CLI, stable bootstrapping system         |
+| Version Range | Purpose                                                        |
+|---------------|----------------------------------------------------------------|
+| `v0.0.x`      | Structural core: services, config, linting, testing, FS safet  |
+| `v0.1.x`      | CI/CD & infrastructure: pipelines, release flow, templates     |
+| `v0.2.x`      | Packaging: Docker images, release artifacts                    |
+| `v0.3.x`      | Contribution: issue templates, governance, community docs      |
+| `v0.4.x`      | Supply chain & security checks                                 |
+| `v0.5.x`      | Benchmarking & performance                                     |
+| `v1.0.0`+     | Stable public CLI with backward compatibility guarantees       |
 
 The project intentionally uses `v0.x.x` **to incrementally ship working layers** —
 not as placeholders or “unstable previews.”

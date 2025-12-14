@@ -6,28 +6,57 @@
 #  -----------------------------------------------------------------------------
 
 repos:
-  #  Linters
   - repo: local
     hooks:
       - id: golint
-        name: golint
-        entry: golangci-lint run ./...
+        name: golangci-lint (docker)
+        entry: bash -lc 'docker run --rm -v "$PWD:/app" -w /app golangci/golangci-lint:v2.7.1 golangci-lint run ./...'
         language: system
+        pass_filenames: false
 
       - id: yamllint
-        name: yamllint
-        entry: yamllint .
+        name: yamllint (docker)
+        entry: bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir pipelinecomponents/yamllint:0.35.9 yamllint .'
         language: system
-        types: [yaml]
+        pass_filenames: false
 
       - id: checkmake
-        name: checkmake
-        entry: checkmake Makefile
+        name: checkmake (docker)
+        entry: bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir cytopia/checkmake:latest-0.5 Makefile'
         language: system
-        types: [makefile]
+        pass_filenames: false
 
       - id: markdownlint
-        name: markdownlint
-        entry: docker run --rm -v "$PWD:/workdir" -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 "**/*.md"
+        name: markdownlint (docker)
+        entry: bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 "**/*.md"'
         language: system
-        types: [markdown]
+        pass_filenames: false
+
+      - id: shellcheck
+        name: shellcheck (docker)
+        entry: >
+          bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir koalaman/shellcheck:v0.11.0
+          -x $(find . -type f -name "*.sh" -not -path "./templates/*")'
+        language: system
+        pass_filenames: false
+
+      - id: shfmt
+        name: shfmt (check only, docker)
+        entry: >
+          bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir mvdan/shfmt:v3.12.0
+          -d -i 2 -ci $(find . -type f -name "*.sh" -not -path "./templates/*")'
+        language: system
+        pass_filenames: false
+
+      - id: base_test
+        name: go test
+        entry: >
+          bash -lc '
+            set -euo pipefail
+            TEST_PKGS="$(go list ./... | grep -v "/test/noauto" | grep -v "/templates")"
+            go test -race -timeout=9m -coverprofile=coverage.txt ${TEST_PKGS}
+            go tool cover -func=coverage.txt
+            rm -f coverage.txt
+          '
+        language: system
+        pass_filenames: false

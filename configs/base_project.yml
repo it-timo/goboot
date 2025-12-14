@@ -17,18 +17,11 @@
 sourcePath: "templates/project_base"
 
 #  ------------------------------------------------------------------------------
-#  Project Identity
-#  ------------------------------------------------------------------------------
-
-#  Primary project URL (GitHub/GitLab repository home url used by go.mod)
-projectUrl: "https://github.com/projects"
-
-#  ------------------------------------------------------------------------------
 #  Language / Toolchain Versions
 #  ------------------------------------------------------------------------------
 
 #  Go version used for local development, CI, and .tool-versions
-usedGoVersion: "1.24.3"
+usedGoVersion: "1.25.5"
 
 #  Optional Node.js version (for tooling, static site, doc generation, etc.)
 usedNodeVersion: "20"
@@ -60,8 +53,5 @@ author: "IT Timo"
 #  Determine whether to use GitHub or GitLab as the primary host for the project
 gitProvider: "gitlab"
 
-#  GitHub username or organization (used in shields.io and GitHub links)
-githubUser: "it-timo"
-
-#  GitLab username or group (used in shields.io and GitLab links)
-gitlabUser: "it-timo"
+#  Git username or organization (used in shields.io and GitHub/GitLab links)
+gitUser: "it-timo"

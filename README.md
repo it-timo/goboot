@@ -23,32 +23,19 @@
 
 ---
 
-## 📁 Current State (v0.0.1)
+## 📁 Current State (v0.0.2)
 
-This version (`v0.0.1`) includes:
+`v0.0.2` is the testing-first iteration with a hardened filesystem model.
 
-- CLI entry point: `cmd/goboot/main.go`
-- Configuration logic: `pkg/config/`
-- Core engine: `pkg/goboot/`
-- First service example: `pkg/baseProject/`
-- Shared types: `pkg/types/`
-- Utility helpers: `pkg/utils/`
-- Configuration files: `configs/goboot.yml`, `configs/base_project.yml`
-- Project templates: `templates/project_base/`
-- Architecture decisions: `doc/adr/`
-- Visuals: `doc/img/`, `doc/diagram/`
-- GitHub funding: `.github/FUNDING.yml`
-- Central docs: `README.md`, `ROADMAP.md`, `VERSIONING.md`, `WORKFLOW.md`, `LICENSE`, `NOTICE`
-- Dev files: `.editorconfig`, `.gitignore`, `.gitattributes`, `.env.example`, `.env.ci`, `.nvmrc`, `.version`
-- **New in v0.0.1:**  
-  - `Makefile` for common tasks  
-  - `Taskfile.yml` for task runner support  
-  - `.golangci.yml` for Go linting configuration  
-  - `.markdownlint.yaml` for Markdown linting  
-  - `.yamllint.yaml` for YAML linting  
-  - `scripts/` directory for developer scripts (e.g., lint)
+### Core Capabilities
 
-> The project is in an **early layout and planning phase**. The structure is minimal but already modular and documented.
+- **Modular Service Architecture**: Logic is split into isolated services
+(`baseproject`, `baselint`, `basetest`) with strict contracts.
+- **Dockerized Tooling**: All linters run via Docker by default — no local dependency hell.
+- **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
+- **BDD Testing**: Full Ginkgo/Gomega suite covering ~90% of the codebase.
+
+> For a detailed breakdown of the file layout, see [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md).
 
 ---
 
@@ -83,11 +70,16 @@ You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 git clone https://github.com/it-timo/goboot.git
 cd goboot
 make lint
+make test
 # or, using Task
 task lint
+task test
 ```
 
-There’s not much output yet — but that’s intentional.
+> `make test` runs the BDD suites (Ginkgo/Gomega) with race detection and coverage,
+> excluding `/test/noauto` and `/templates` packages by default. See [`TESTING.md`](./TESTING.md) for details.
+
+There’s still no “one-click project generator” here — the goal is deterministic scaffolding with visible layers.
 
 ---
 

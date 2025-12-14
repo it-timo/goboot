@@ -19,9 +19,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"reflect"
+	"strings"
 
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 
 	"gopkg.in/yaml.v3"
 )
@@ -41,6 +41,10 @@ type GoBoot struct {
 	// ProjectName is the identifier for the project (e.g., "goboot").
 	// Used in headings, comments, and other rendered metadata.
 	ProjectName string `yaml:"projectName"`
+
+	// RepoURL is the full repository URL (e.g., "https://github.com/user/project").
+	// Used in go.mod and README links.
+	RepoURL string `yaml:"repoUrl"`
 
 	// TargetPath is the path to the project target / output.
 	TargetPath string `yaml:"targetPath"`
@@ -76,6 +80,11 @@ func (gb *GoBoot) Init() error {
 		return fmt.Errorf("failed to read goboot config: %w", err)
 	}
 
+	err = gb.validateBase()
+	if err != nil {
+		return fmt.Errorf("invalid goboot config: %w", err)
+	}
+
 	for _, svc := range gb.Services {
 		if !svc.IsEnabled() {
 			continue
@@ -84,11 +93,11 @@ func (gb *GoBoot) Init() error {
 		fmt.Printf("loading service config for %q\n", svc.ID)
 
 		cfg := createServiceConfig(svc.ID, gb.ProjectName)
-		if cfg == nil || (reflect.ValueOf(cfg).Kind() == reflect.Ptr && reflect.ValueOf(cfg).IsNil()) {
+		if cfg == nil {
 			return fmt.Errorf("invalid or nil config returned for service ID: %q", svc.ID)
 		}
 
-		err = cfg.ReadConfig(svc.ConfPath)
+		err = cfg.ReadConfig(svc.ConfPath, gb.RepoURL)
 		if err != nil {
 			return fmt.Errorf("failed to read config for %q: %w", svc.ID, err)
 		}
@@ -108,6 +117,56 @@ func (gb *GoBoot) readConfig() error {
 	return readYMLConfig(gb.configPath, gb)
 }
 
+// validateBase checks the top-level goboot config for required fields and enabled service paths.
+//
+// It ensures projectName, targetPath, and each enabled service's confPath are present.
+//
+//nolint:cyclop // flat logic preferred for clarity and extensibility.
+func (gb *GoBoot) validateBase() error {
+	var missing []string
+
+	if strings.TrimSpace(gb.ProjectName) == "" {
+		missing = append(missing, "projectName")
+	}
+
+	if strings.TrimSpace(gb.TargetPath) == "" {
+		missing = append(missing, "targetPath")
+	}
+
+	var importPathMissing bool
+
+	for _, svc := range gb.Services {
+		if !svc.IsEnabled() {
+			continue
+		}
+
+		// Pre check for known dependencies to reduce error noise.
+		isExempt := svc.ID == goboottypes.ServiceNameBaseProject ||
+			svc.ID == goboottypes.ServiceNameBaseLint ||
+			svc.ID == goboottypes.ServiceNameBaseTest
+
+		if !importPathMissing && !isExempt {
+			if strings.TrimSpace(gb.RepoURL) == "" {
+				importPathMissing = true
+
+				missing = append(missing, "repoUrl")
+
+				continue
+			}
+		}
+
+		if strings.TrimSpace(svc.ConfPath) == "" {
+			missing = append(missing, fmt.Sprintf("services[%s].confPath", svc.ID))
+		}
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
+	}
+
+	return nil
+}
+
 // createServiceConfig acts as the central mapping point for service config IDs.
 //
 // Each known ServiceConfig type must be registered here explicitly.
@@ -117,12 +176,14 @@ func (gb *GoBoot) readConfig() error {
 // Only configs listed here can be used during runtime.
 func createServiceConfig(id, projectName string) ServiceConfig {
 	switch id {
-	case types.ServiceNameBaseProject:
+	case goboottypes.ServiceNameBaseProject:
 		return newBaseProjectConfig(projectName)
-	case types.ServiceNameBaseLint:
+	case goboottypes.ServiceNameBaseLint:
 		return newBaseLintConfig(projectName)
-	case types.ServiceNameBaseLocal:
+	case goboottypes.ServiceNameBaseLocal:
 		return newBaseLocalConfig(projectName)
+	case goboottypes.ServiceNameBaseTest:
+		return newBaseTestConfig(projectName)
 	// Extend with more cases for additional service types.
 	default:
 		return nil

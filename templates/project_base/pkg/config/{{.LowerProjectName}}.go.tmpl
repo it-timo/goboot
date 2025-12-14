@@ -1,0 +1,104 @@
+/*
+Package config defines the configuration structures used by {{.ProjectName}}.
+
+It ...
+*/
+package config
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+// {{.ProjectName}}Config defines the configuration structure for {{.ProjectName}}.
+type {{.ProjectName}}Config struct {
+	// configPath is the path to the main {{.ProjectName}} YAML config file (e.g., ./configs/{{.LowerProjectName}}.yml).
+	configPath string `yaml:"-"`
+    // SomeVar is a placeholder for a configuration variable.
+	SomeVar string `yaml:"someVar"`
+}
+
+var (
+  ErrConfigNil      = errors.New("config is nil")
+  ErrConfigPathEmpty = errors.New("config path is empty")
+  ErrConfigInvalid  = errors.New("config invalid")
+)
+
+// New{{.ProjectName}}Config returns a config instance bound to a path.
+// The config is not loaded until Init() is called.
+func New{{.ProjectName}}Config(configPath string) *{{.ProjectName}}Config {
+	return &{{.ProjectName}}Config{
+		configPath: configPath,
+		SomeVar:    "",
+	}
+}
+
+// Init loads YAML, applies defaults, and validates.
+func (cfg *{{.ProjectName}}Config) Init() error {
+	if cfg == nil {
+		return ErrConfigNil
+	}
+	
+    if strings.TrimSpace(cfg.configPath) == "" {
+		return ErrConfigPathEmpty
+	}
+
+    // set defaults first, so YAML can override them.
+    cfg.setDefaults()
+
+    // clean the path and read the config file.
+	abs, err := filepath.Abs(filepath.Clean(cfg.configPath))
+	if err != nil {
+		return fmt.Errorf("failed to resolve config path: %w", err)
+	}
+
+    cfg.configPath = abs
+
+	data, err := os.ReadFile(abs) // #nosec G304 -- the path is user-defined and expected to be dynamic.
+	if err != nil {
+		return fmt.Errorf("failed to read config file %q: %w", cfg.configPath, err)
+    }
+
+	err = yaml.Unmarshal(data, cfg)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+    // validate the config.
+	err = cfg.validate()
+    if err != nil {
+		return fmt.Errorf("validate config %q: %w", cfg.configPath, err)
+	}
+
+	return nil
+}
+
+// setDefaults applies default values to the config.
+func (cfg *{{.ProjectName}}Config) setDefaults() {
+	// App defaults
+	if cfg.SomeVar == "" {
+		cfg.SomeVar = "default"
+	}
+}
+
+// validate checks the {{.ProjectName}} config for required fields.
+//
+// It ensures ... are present.
+func (cfg *{{.ProjectName}}Config) validate() error {
+	var missing []string
+
+	if strings.TrimSpace(cfg.SomeVar) == "" {
+		missing = append(missing, "someVar")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("%w: missing required fields: %s", ErrConfigInvalid, strings.Join(missing, ", "))
+	}
+
+	return nil
+}

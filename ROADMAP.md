@@ -1,81 +1,164 @@
-# goboot Project Roadmap
+# goboot — Project Roadmap
 
-This roadmap defines the **planned evolution and goals** of the `goboot` project — a CLI tool
-and scaffolding framework that aims to provide industrial-grade, flexible Go project setups.
+> Deterministic scaffolding for long-lived, production-grade Go repositories.
 
-Currently, the project is **in foundational development**.
-Features are introduced incrementally through versioned releases.
+This roadmap reflects the **post-2025 architectural direction** of goboot:
+a **service-oriented CLI generator** where each capability is an isolated, ADR-backed module with explicit contracts.
 
----
-
-## 🧱 Project Philosophy
-
-`goboot` is built with:
-
-- Modular, composable templates for scalable Go projects
-- Clean project hygiene from the first commit
-- Modular, layered feature releases
-- Top-tier engineering practices
-- Reproducible build and versioning systems
-- A clean, extensible design for plugin and template evolution
+goboot prioritizes **reproducibility, deletion-friendliness, and long-term maintainability**
+over convenience or one-click demos.
 
 ---
 
-## 🔖 Versioned Milestones
+## Design Principles (Invariant)
 
-Each milestone incrementally adds functionality and structure. Until `v1.0.0`, breaking changes may still occur.
+- Deterministic generation (same input → same output)
+- Explicit service composition via YAML
+- No reflection, no hidden globals, no magic defaults
+- Dockerized tooling for reproducible quality gates
+- Secure filesystem model (root confinement + path validation)
+- Documentation as architecture (ADR-driven design)
 
-| Version  | Focus Area                             | Key Additions                                                |
-|----------|----------------------------------------|--------------------------------------------------------------|
-| `v0.0.0` | Bootstrap Setup                        | CLI entry point, basic config, README, LICENSE               |
-| `v0.0.1` | Local Tooling & Linting                | GolangCI config, Makefile, Taskfile, scripts, lint/format    |
-| `v0.0.2` | Tests & Utilities                      | `/pkg/utils`, `/test`, bootstrap/test/version scripts        |
-| `v0.0.3` | Multi-Command CLI Base                 | `goboot init`, `goboot run`, `goboot validate` structure     |
-| `v0.1.0` | CI Integration                         | GitHub/GitLab workflows, YAML lint, test runners             |
-| `v0.1.1` | Community & Meta                       | CONTRIBUTORS, SUPPORT, FUNDING, SECURITY, CODEOWNERS         |
-| `v0.2.0` | Dockerization                          | Dockerfile, `.dockerignore`, `docker-compose.yml`, test base |
-| `v0.2.1` | Release Infrastructure                 | GoReleaser, release-local script, release CI setup           |
-| `v0.3.0` | Contribution Templates                 | Issue/PR/MR templates for GitHub & GitLab                    |
-| `v0.3.1` | Contributor Documentation & Compliance | CONTRIBUTING.md, REUSE.toml, HACKING.md, 3rd party           |
-| `v0.4.0` | Supply Chain & Security Checks         | CodeQL, depcheck, license-checker, `SECURITY_CONTACTS`       |
-| `v0.5.0` | Benchmarking Setup                     | Benchmarks for config/logger, BENCHMARKS.md                  |
-| `v1.0.0` | CLI Generator: Public Ready            | CHANGELOG, `.version`, template system foundation            |
-
-> 🚧 *Versions prior to `v1.0.0` are unstable and may change structure.*
+Generated projects are expected to be **lint-clean and test-passing on the first commit**.
 
 ---
 
-## 🛠️ Technical Goals (Q2 – Q3 2025)
+## Released Milestones
 
-- [x] Tooling layer: Makefile, Taskfile, scripts, linting, formatting
-- [ ] Template engine (placeholder parser)
-- [ ] Finalize `pkg`, `config` and logger strategies
-- [ ] Harden CLI init/check/validate flow
+### v0.0.0 — Bootstrap (Released)
 
----
-
-## 🔭 Midterm Goals (Q4 2025)
-
-- [ ] Docker image build and publish automation
-- [ ] GitHub/GitLab parity enforcement
-- [ ] Structural Profiles (OSS vs. Enterprise-style layouts)
+- CLI entrypoint and flag handling
+- YAML config loader
+- Initial project scaffolding
+- ADR framework introduced
 
 ---
 
-## 🧬 Long-Term Vision (2026+)
+### v0.0.1 — Tooling Baseline (Released)
 
-- [ ] Plugin-based CLI extensions
-- [ ] Template registry with extension support
-- [ ] Declarative init scripting and chaining
-
----
-
-## 🧬 Long-Term Vision (2027+)
-
-- [ ] Optional CLI frontend for scaffold preview or selection
-- [ ] GitHub/GitLab visual sync tool
-- [ ] Multi-user/team CI config injection
+- Dockerized linting stack (golangci-lint, yamllint, markdownlint, shellcheck, shfmt, checkmake)
+- Makefile and Taskfile generation
+- Pre-commit hooks (container-based)
+- Base services: `baseproject`, `baselint`, `baselocal`
+- Template system with strict `.tmpl` policy
 
 ---
 
-*This document evolves with the project.*
+### v0.0.2 — Testing & Validation (**Current**)
+
+- `basetest` service with automatic test scaffolding
+- stdlib or Ginkgo/Gomega BDD support
+- ~90% coverage with race detection
+- Conditional linter configuration (BDD-aware)
+- Hardened filesystem model
+- Internal utils/types refactor
+- End-to-end validation: generated projects pass all quality gates
+- 31 ADRs documenting architecture
+
+---
+
+## In Progress
+
+### v0.1.0 — CI/CD Foundation
+
+**Focus:** reproducible automation
+
+- CI pipeline for goboot itself
+  - lint, test, coverage
+- CI scaffolding for generated projects
+- Status badges (tests, coverage, lint)
+
+---
+
+## Planned Milestones
+
+### v0.1.1 — Structured Logging
+
+**Focus:** observability without noise
+
+- Replace `fmt` usage with structured logging
+- Configurable logging in generated projects
+- ADR update for log handling
+
+---
+
+### v0.2.0 — Containerization
+
+**Focus:** deployment-ready outputs
+
+- Dockerfile templates (multi-stage)
+- docker-compose for multi-service setups
+- Container-based integration testing
+- Local dev parity with CI
+
+---
+
+### v0.2.1 — Release Automation
+
+- GoReleaser integration
+- Automated versioning and changelogs
+- Binary distribution
+
+---
+
+### v0.3.0 — Template Profiles
+
+**Focus:** controlled flexibility
+
+- Profiles: minimal / standard / enterprise / OSS
+- Profile-specific lint/test baselines
+- Profile-aware documentation
+
+---
+
+### v0.4.0 — Governance & Contribution
+
+- Issue / PR templates
+- CODEOWNERS
+- SECURITY.md
+- Contribution workflows
+
+---
+
+### v0.5.0 — Supply Chain Security
+
+- CodeQL
+- License compliance scanning
+- Dependency vulnerability checks
+- SBOM generation
+
+---
+
+### v0.6.0 — Performance & Scale
+
+- Template rendering benchmarks
+- Config parsing performance
+- Large-project generation profiling
+- Parallel execution optimizations
+
+---
+
+## 1.0 Vision
+
+### v1.0.0 — Stable Public Release
+
+- Stable template registry
+- Hardened documentation
+- Public announcement
+
+**Exit criteria:**
+
+- ≥90% test coverage
+- No breaking changes for 6 months
+- Real-world usage across multiple projects
+- Performance baselines established
+
+---
+
+## Beyond 1.0
+
+- External service plugins
+- Community templates
+- `goboot doctor` (project health checks)
+- Optional TUI
+- Declarative init pipelines

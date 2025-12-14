@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
 // ServiceConfig represents a modular configuration component used by goboot.
@@ -17,7 +17,7 @@ type ServiceConfig interface {
 	ID() string
 
 	// ReadConfig loads the configuration from a source file.
-	ReadConfig(confPath string) error
+	ReadConfig(confPath string, repoURL string) error
 
 	// Validate verifies that the configuration is complete and semantically correct.
 	//
@@ -71,7 +71,7 @@ func (cm *Manager) Register(cfg ServiceConfig) error {
 	}
 
 	switch cfg.ID() {
-	case types.ServiceNameBaseProject:
+	case goboottypes.ServiceNameBaseProject:
 		cm.registrars[cfg.ID()] = cfg
 	default:
 		cm.services[cfg.ID()] = cfg

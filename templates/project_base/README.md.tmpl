@@ -1,0 +1,83 @@
+# {{.ProjectName}}
+
+> ...
+
+{{- if eq .GitProvider "github" }}
+[![License](https://img.shields.io/github/license/{{.GitUser}}/{{.LowerProjectName}})](LICENSE)
+[![Version](https://img.shields.io/github/v/release/{{.GitUser}}/{{.LowerProjectName}}?include_prereleases)](https://github.com/{{.GitUser}}/{{.LowerProjectName}}/releases)
+{{- else if eq .GitProvider "gitlab" }}
+[![License](https://img.shields.io/gitlab/license/{{.GitUser}}/{{.LowerProjectName}})](LICENSE)
+[![Version](https://img.shields.io/gitlab/v/release/{{.GitUser}}/{{.LowerProjectName}}?include_prereleases)](https://gitlab.com/{{.GitUser}}/{{.LowerProjectName}}/-/releases)
+{{- end }}
+
+---
+
+## 📦 Overview
+
+`{{.ProjectName}}` ...
+
+---
+
+## 📁 Project Structure
+
+This repository provides:
+
+- A CLI entry point (`/cmd/{{.LowerProjectName}}/main.go`)
+- Modular packages (`/pkg/...`) for domain and utility code
+- Core documentation (`README.md`, `ROADMAP.md`, `VERSIONING.md`, etc.)
+
+For a full breakdown, see [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) and [`ROADMAP.md`](./ROADMAP.md).
+
+---
+
+## 🚀 Usage
+
+This project follows a simple lifecycle:
+CLI → config initialization → service construction → execution.
+
+### Requirements
+
+- Go {{.UsedGoVersion}}+
+
+### Run
+
+```bash
+go run ./cmd/{{.ProjectName}}
+```
+
+---
+
+## 🧭 Project Planning
+
+This repository includes the following planning documents:
+
+- [ROADMAP.md](./ROADMAP.md) — Feature planning and milestone tracking
+- [VERSIONING.md](./VERSIONING.md) — Semantic versioning and release rules
+- [WORKFLOW.md](./WORKFLOW.md) — Contributor and CI process
+
+---
+
+## 📦 Releases
+
+All releases are tagged and listed under:
+{{- if eq .GitProvider "github" }}
+[Releases](https://github.com/{{.GitUser}}/{{.LowerProjectName}}/releases)
+{{- else if eq .GitProvider "gitlab" }}
+[Releases](https://gitlab.com/{{.GitUser}}/{{.LowerProjectName}}/-/releases)
+{{- end }}
+
+To see current goals, refer to [`ROADMAP.md`](./ROADMAP.md).
+
+---
+
+## ⚖ License
+
+Licensed under the MIT License. See [LICENSE](./LICENSE).
+Additional notices may be found in [NOTICE](./NOTICE) if applicable.
+
+---
+
+## 🙌 Acknowledgements
+
+This project was scaffolded using [goboot](https://github.com/it-timo/goboot),
+a CLI tool for generating reproducible Go project structures.
