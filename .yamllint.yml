@@ -3,14 +3,13 @@
 extends: default  #  Start from yamllint's default rules
 
 #  ignore specific template files which are invalid in the raw format
-ignore: |
-  templates/local_base/.pre-commit-config.yaml
-  templates/local_base/Taskfile.yml
+#  ignore: |
+#    templates/local_base/.pre-commit-config.yaml
 
 rules:
   #  --- Line length ---
   line-length:
-    max: 120                         #  Allow longer lines (e.g., badge URLs, messages)
+    max: 145                         #  Allow longer lines (e.g., badge URLs, messages)
     allow-non-breakable-words: true  #  Don't flag long words like URLs
 
   #  --- Document formatting ---

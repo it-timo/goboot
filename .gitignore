@@ -43,6 +43,7 @@ profile.*
 # Test output artifacts (keep folder, ignore outputs)
 testdata/*.out
 testdata/*.tmp
+outputs/
 
 # ------------------------------------------------------------------------------
 # 📦 Dependency / Toolchain
@@ -75,6 +76,7 @@ staticcheck.conf
 node_modules/      # in case frontend bits emerge
 coverage-reports/
 build-reports/
+.gocache/
 
 # ------------------------------------------------------------------------------
 # 🧠 OS & Filesystem Noise

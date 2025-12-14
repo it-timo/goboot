@@ -1,0 +1,15 @@
+# ==============================================================================
+# ShellCheck configuration for goboot
+#
+# Enforces correctness and portability for project shell scripts.
+# No auto-fixes. No stylistic bikeshedding.
+# ==============================================================================
+
+# Follow sourced files (equivalent to -x)
+external-sources=true
+
+# Target modern Bash explicitly
+shell=bash
+
+# Enable all optional checks
+enable=all

@@ -38,6 +38,9 @@ targetPath: "outputs"
 #  Project name (used in CLI, directory names, package names, ...)
 projectName: "IntroProject"
 
+#  Primary project URL (GitHub/GitLab repository home url used by go.mod and lint)
+repoUrl: "https://github.com/projects"
+
 #  ------------------------------------------------------------------------------
 #  Modular Services Configuration
 #  ------------------------------------------------------------------------------
@@ -56,6 +59,9 @@ services:
     enabled: true                           #  Enable or disable this module
   - id: "base_lint"
     confPath: "./configs/base_lint.yml"
+    enabled: true
+  - id: "base_test"
+    confPath: "./configs/base_test.yml"
     enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"

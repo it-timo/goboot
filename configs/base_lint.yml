@@ -12,15 +12,8 @@
 #  General Configuration
 #  ------------------------------------------------------------------------------
 
-#  Directory where the templates will be read from
+#  Directory where the templates will be read from.
 sourcePath: "templates/lint_base"
-
-#  ------------------------------------------------------------------------------
-#  Project Identity
-#  ------------------------------------------------------------------------------
-
-#  Repository import URL (used in linter config like depguard to enforce proper import usage)
-repoImportPath: "https://github.com/projects/introProject"
 
 #  ------------------------------------------------------------------------------
 #  Modular Linter Configuration
@@ -33,17 +26,39 @@ repoImportPath: "https://github.com/projects/introProject"
 #
 #  Disabled linter will be skipped without error.
 #  Linter names can't be empty but are only used to define fallback commands if internally defined.
-
+#  ROOT_DIR equals to the root directory of the project (pwd)
+#  DOCKER_RUN equals to: docker run --rm -v \"{{ROOT_DIR}}:/workdir\" -w /workdir
+#  SH_FILES equals to: $(find . -type f -name \"*.sh\")
 linters:
-  golang:                           #  name of the linter scope
-    cmd: "golangci-lint run ./..."  #  if not set, this command will be used
-    enabled: true                   #  enable state
+  golang:          #  name of the linter scope
+    cmd: |-
+      {{DOCKER_RUN}} golangci/golangci-lint:v2.7.1 golangci-lint run ./...
+    enabled: true  #  enable state
   yaml:
-    cmd: "yamllint ."
+    cmd: |-
+      {{DOCKER_RUN}} pipelinecomponents/yamllint:0.35.9 yamllint .
     enabled: true
   make:
-    cmd: "checkmake Makefile"
+    cmd: |-
+      {{DOCKER_RUN}} cytopia/checkmake:latest-0.5 Makefile
     enabled: true
   markdown:
-    cmd: "docker run -v \"$PWD\":/workdir -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 \"**/*.md\""
+    cmd: |-
+      {{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 markdownlint "**/*.md"
     enabled: true
+  shellcheck:
+    cmd: |-
+      {{DOCKER_RUN}} koalaman/shellcheck:v0.11.0 -x {{SH_FILES}}
+    enabled: true
+  shfmt:
+    cmd: |-
+      {{DOCKER_RUN}} mvdan/shfmt:v3.12.0 -d -i 2 -ci {{SH_FILES}}
+    enabled: true
+
+#  ------------------------------------------------------------------------------
+#  Allowed Packages
+#  ------------------------------------------------------------------------------
+allowedPackages:
+  - gopkg.in/yaml.v3
+  - github.com/onsi/ginkgo/v2
+  - github.com/onsi/gomega

@@ -1,0 +1,37 @@
+/*
+Package {{.LowerProjectName}} contains the project's core logic and serves as the
+foundation for its primary features.
+
+It ...
+*/
+package {{.LowerProjectName}}
+
+import (
+	"fmt"
+
+	"{{.RepoPath}}/pkg/config"
+)
+
+// Service represents the core application service.
+type Service struct {
+    // cfg is the configuration for the service.
+	cfg *config.{{.ProjectName}}Config
+}
+
+// New{{.ProjectName}} creates a new service instance.
+//
+// Validation is expected to have happened beforehand.
+func New{{.ProjectName}}(cfg *config.{{.ProjectName}}Config) *Service {
+	return &Service{
+		cfg: cfg,
+	}
+}
+
+// Run executes ...
+func (s *Service) Run() error {
+	// Example behavior
+	// (replace with real logic in generated projects)
+	fmt.Printf("Service running with SomeVar=%q\n", s.cfg.SomeVar)
+
+	return nil
+}

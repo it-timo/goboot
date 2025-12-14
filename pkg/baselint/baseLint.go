@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/it-timo/goboot/pkg/config"
-	"github.com/it-timo/goboot/pkg/types"
-	"github.com/it-timo/goboot/pkg/utils"
+	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
 // BaseLint implements the Service interface and encapsulates the execution logic
@@ -34,7 +35,7 @@ type BaseLint struct {
 	cfg       *config.BaseLintConfig // Validated service configuration.
 	targetDir string                 // Destination path for rendered files.
 	root      *os.Root               // Secure a root handle for a safe file writes.
-	script    types.Registrar        // Contains the Methods to run in base_local.
+	script    goboottypes.Registrar  // Contains the Methods to run in base_local.
 }
 
 // NewBaseLint constructs a new BaseLint instance for a given target directory and provided registrar.
@@ -50,7 +51,7 @@ func NewBaseLint(targetDir string) *BaseLint {
 // This allows services like base_local to collect command definitions from this service.
 //
 // It must be called before Run if script registration is desired.
-func (b *BaseLint) SetScriptReceiver(reg types.Registrar) {
+func (b *BaseLint) SetScriptReceiver(reg goboottypes.Registrar) {
 	b.script = reg
 }
 
@@ -59,7 +60,7 @@ func (b *BaseLint) SetScriptReceiver(reg types.Registrar) {
 // It matches the constant defined in the type package and must align with
 // the corresponding entry in the goboot config (e.g., "base_lint").
 func (b *BaseLint) ID() string {
-	return types.ServiceNameBaseLint
+	return goboottypes.ServiceNameBaseLint
 }
 
 // SetConfig assigns the base lint configuration.
@@ -76,7 +77,7 @@ func (b *BaseLint) SetConfig(cfg config.ServiceConfig) error {
 	b.cfg = baseCfg
 
 	// Ensure source and target paths are different (prevent accidental overwrite).
-	err := utils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
+	err := gobootutils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
 	if err != nil {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
@@ -92,10 +93,17 @@ func (b *BaseLint) SetConfig(cfg config.ServiceConfig) error {
 //
 // This assumes config has been validated during initialization.
 func (b *BaseLint) Run() error {
-	curRoot, err := utils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
+	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
 	}
+
+	defer func() {
+		err := curRoot.Close()
+		if err != nil {
+			fmt.Println("Failed to close root dir:", err)
+		}
+	}()
 
 	b.root = curRoot
 
@@ -117,6 +125,7 @@ func (b *BaseLint) Run() error {
 //   - Unknown linters (to allow future-proofing).
 //
 // Returns an error if any file fails to copy or render.
+//
 //nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (b *BaseLint) copyFiles() error {
 	for name, info := range b.cfg.Linters {
@@ -125,24 +134,32 @@ func (b *BaseLint) copyFiles() error {
 		}
 
 		switch name {
-		case types.LinterGo:
-			err := b.handleLintFile(types.LinterGo, ".golangci.yml")
+		case goboottypes.LinterGo:
+			err := b.handleLintFile(goboottypes.LinterGo, ".golangci.yml")
 			if err != nil {
-				return fmt.Errorf("failed to handle %s lint file: %w", types.LinterGo, err)
+				return fmt.Errorf("failed to handle %s lint file: %w", goboottypes.LinterGo, err)
 			}
-		case types.LinterYAML:
-			err := b.handleLintFile(types.LinterYAML, ".yamllint.yml")
+		case goboottypes.LinterYAML:
+			err := b.handleLintFile(goboottypes.LinterYAML, ".yamllint.yml")
 			if err != nil {
-				return fmt.Errorf("failed to handle %s lint file: %w", types.LinterYAML, err)
+				return fmt.Errorf("failed to handle %s lint file: %w", goboottypes.LinterYAML, err)
 			}
-		case types.LinterMake:
+		case goboottypes.LinterMake:
 			// Skip for now — makefile linter uses flags, not a config file.
 			continue
-		case types.LinterMD:
-			err := b.handleLintFile(types.LinterMD, ".markdownlint.yml")
+		case goboottypes.LinterMD:
+			err := b.handleLintFile(goboottypes.LinterMD, ".markdownlint.yml")
 			if err != nil {
-				return fmt.Errorf("failed to handle %s lint file: %w", types.LinterMD, err)
+				return fmt.Errorf("failed to handle %s lint file: %w", goboottypes.LinterMD, err)
 			}
+		case goboottypes.LinterShell:
+			err := b.handleLintFile(goboottypes.LinterShell, ".shellcheckrc")
+			if err != nil {
+				return fmt.Errorf("failed to handle %s lint file: %w", goboottypes.LinterShell, err)
+			}
+		case goboottypes.LinterSHFMT:
+			// Skip for now — shfmt linter uses flags, not a config file.
+			continue
 		default:
 			// Unknown linter — silently ignored for forward compatibility.
 			continue
@@ -172,7 +189,7 @@ func (b *BaseLint) handleLintFile(name, fileName string) error {
 		return fmt.Errorf("failed to copy %s: %w", name, err)
 	}
 
-	err = utils.RenderTemplateToFile("lint_file", b.root, fileName, b.cfg)
+	err = gobootutils.RenderTemplateToFile("lint_file", b.root, fileName, b.cfg)
 	if err != nil {
 		return fmt.Errorf("failed to render template to file: %w", err)
 	}
@@ -189,10 +206,16 @@ func (b *BaseLint) handleLintFile(name, fileName string) error {
 //
 // Returns an error if reading or writing fails.
 func (b *BaseLint) copyFile(fileName string) error {
-	// #nosec G304 -- this file path is safe and user-defined; used intentionally for scaffolding.
-	content, err := os.ReadFile(path.Join(b.cfg.SourcePath, fileName))
+	src := path.Join(b.cfg.SourcePath, fileName+goboottypes.TemplateSuffix)
+
+	// #nosec G304 -- path is safe and user-defined; used intentionally for scaffolding.
+	content, err := os.ReadFile(src)
 	if err != nil {
-		return fmt.Errorf("failed to read template file %q: %w", fileName, err)
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("missing required template %q (expected %q)", fileName, src)
+		}
+
+		return fmt.Errorf("failed to read template file %q: %w", src, err)
 	}
 
 	// Create and write a file into the secured target root.
@@ -200,7 +223,7 @@ func (b *BaseLint) copyFile(fileName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file %q in root: %w", fileName, err)
 	}
-	defer utils.CloseFileWithErr(dstFile)
+	defer gobootutils.CloseFileWithErr(dstFile)
 
 	_, err = dstFile.Write(content)
 	if err != nil {
@@ -220,16 +243,34 @@ func (b *BaseLint) copyFile(fileName string) error {
 func (b *BaseLint) registerScripts() error {
 	cmds := make([]string, 0, len(b.cfg.Linters))
 
-	for _, entry := range b.cfg.Linters {
-		cmds = append(cmds, entry.Cmd)
+	for name, entry := range b.cfg.Linters {
+		if !entry.Enabled {
+			continue
+		}
+
+		if strings.TrimSpace(entry.Cmd) == "" {
+			continue
+		}
+
+		switch name {
+		case goboottypes.LinterGo, goboottypes.LinterYAML, goboottypes.LinterMake,
+			goboottypes.LinterMD, goboottypes.LinterShell, goboottypes.LinterSHFMT:
+			cmds = append(cmds, entry.Cmd)
+		default:
+			continue
+		}
 	}
 
-	err := b.script.RegisterLines(types.ServiceNameBaseLint, cmds)
+	if len(cmds) == 0 {
+		return nil
+	}
+
+	err := b.script.RegisterLines(goboottypes.ServiceNameBaseLint, cmds)
 	if err != nil {
 		return fmt.Errorf("failed to register script commands: %w", err)
 	}
 
-	err = b.script.RegisterFile(types.ScriptFileLint, cmds)
+	err = b.script.RegisterFile(goboottypes.ScriptFileLint, cmds)
 	if err != nil {
 		return fmt.Errorf("failed to register script file: %w", err)
 	}

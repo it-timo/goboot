@@ -21,8 +21,8 @@ import (
 	"path"
 
 	"github.com/it-timo/goboot/pkg/config"
-	"github.com/it-timo/goboot/pkg/types"
-	"github.com/it-timo/goboot/pkg/utils"
+	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
 // BaseLocal implements the Service interface and encapsulates the execution logic
@@ -66,7 +66,7 @@ func NewBaseLocal(targetDir string) *BaseLocal {
 // It matches the constant defined in the type package and must align with
 // the corresponding entry in the goboot config (e.g., "base_local").
 func (b *BaseLocal) ID() string {
-	return types.ServiceNameBaseLocal
+	return goboottypes.ServiceNameBaseLocal
 }
 
 // SetConfig assigns the base local configuration.
@@ -83,7 +83,7 @@ func (b *BaseLocal) SetConfig(cfg config.ServiceConfig) error {
 	b.cfg = baseCfg
 
 	// Ensure source and target paths are different (prevent accidental overwrite).
-	err := utils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
+	err := gobootutils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
 	if err != nil {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
@@ -99,10 +99,17 @@ func (b *BaseLocal) SetConfig(cfg config.ServiceConfig) error {
 //
 // This assumes config has been validated during initialization.
 func (b *BaseLocal) Run() error {
-	curRoot, err := utils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
+	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
 	}
+
+	defer func() {
+		err := curRoot.Close()
+		if err != nil {
+			fmt.Println("Failed to close root dir:", err)
+		}
+	}()
 
 	b.root = curRoot
 	b.ProjectName = b.cfg.ProjectName
@@ -116,7 +123,7 @@ func (b *BaseLocal) Run() error {
 	return nil
 }
 
-// RegisterLines implements types.Registrar by accepting script lines from another service.
+// RegisterLines implements goboottypes.Registrar by accepting script lines from another service.
 //
 // Depending on which script formats are enabled (make/task), the lines are grouped by service name.
 //
@@ -124,21 +131,21 @@ func (b *BaseLocal) Run() error {
 func (b *BaseLocal) RegisterLines(name string, lines []string) error {
 	for _, entry := range b.cfg.FileList {
 		switch entry {
-		case types.ScriptNameMake:
+		case goboottypes.ScriptNameMake:
 			_, exist := b.MakeScripts[name]
 			if exist {
 				return fmt.Errorf("service %q already registered in make", name)
 			}
 
 			b.MakeScripts[name] = lines
-		case types.ScriptNameTask:
+		case goboottypes.ScriptNameTask:
 			_, exist := b.TaskScripts[name]
 			if exist {
 				return fmt.Errorf("service %q already registered in task", name)
 			}
 
 			b.TaskScripts[name] = lines
-		case types.ScriptNameCommit:
+		case goboottypes.ScriptNameCommit:
 			_, exist := b.CommitScripts[name]
 			if exist {
 				return fmt.Errorf("service %q already registered in commit", name)
@@ -152,13 +159,13 @@ func (b *BaseLocal) RegisterLines(name string, lines []string) error {
 	return nil
 }
 
-// RegisterFile implements types.Registrar by accepting a list of commands to be written into a script file.
+// RegisterFile implements goboottypes.Registrar by accepting a list of commands to be written into a script file.
 //
 // Only store the file if the script directory target is enabled and not already used.
 func (b *BaseLocal) RegisterFile(name string, lines []string) error {
 	for _, entry := range b.cfg.FileList {
 		switch entry {
-		case types.ScriptNameScript:
+		case goboottypes.ScriptNameScript:
 			_, exist := b.ScriptFiles[name]
 			if exist {
 				return fmt.Errorf("file %q already registered in scripts", name)
@@ -178,36 +185,37 @@ func (b *BaseLocal) RegisterFile(name string, lines []string) error {
 // based on what the user enabled in the config.
 //
 // For script files, only files that were previously registered will be copied.
+//
 //nolint:cyclop // flat logic preferred for clarity and extensibility.
 func (b *BaseLocal) copyFiles() error {
 	for _, entry := range b.cfg.FileList {
 		switch entry {
-		case types.ScriptNameMake:
+		case goboottypes.ScriptNameMake:
 			err := b.copyFile(b.cfg.SourcePath, "", "Makefile")
 			if err != nil {
 				return fmt.Errorf("failed to copy Makefile: %w", err)
 			}
-		case types.ScriptNameTask:
+		case goboottypes.ScriptNameTask:
 			err := b.copyFile(b.cfg.SourcePath, "", "Taskfile.yml")
 			if err != nil {
 				return fmt.Errorf("failed to copy Taskfile: %w", err)
 			}
-		case types.ScriptNameCommit:
+		case goboottypes.ScriptNameCommit:
 			err := b.copyFile(b.cfg.SourcePath, "", ".pre-commit-config.yaml")
 			if err != nil {
 				return fmt.Errorf("failed to copy Pre-Commit: %w", err)
 			}
-		case types.ScriptNameScript:
+		case goboottypes.ScriptNameScript:
 			if len(b.ScriptFiles) > 0 {
-				err := utils.EnsureDir(types.ScriptDirNameScript, b.root, types.DirPerm)
+				err := gobootutils.EnsureDir(goboottypes.ScriptDirNameScript, b.root, goboottypes.DirPerm)
 				if err != nil {
 					return fmt.Errorf("failed to create scripts dir: %w", err)
 				}
 
-				scriptsSrcPath := path.Join(b.cfg.SourcePath, types.ScriptDirNameScript)
+				scriptsSrcPath := path.Join(b.cfg.SourcePath, goboottypes.ScriptDirNameScript)
 
 				for fileName := range b.ScriptFiles {
-					err = b.copyFile(scriptsSrcPath, types.ScriptDirNameScript, fileName)
+					err = b.copyFile(scriptsSrcPath, goboottypes.ScriptDirNameScript, fileName)
 					if err != nil {
 						return fmt.Errorf("failed to copy %q: %w", fileName, err)
 					}
@@ -228,13 +236,19 @@ func (b *BaseLocal) copyFiles() error {
 //
 // Returns an error if reading or writing fails.
 func (b *BaseLocal) copyFile(srcPath, targetPath, fileName string) error {
+	src := path.Join(srcPath, fileName+goboottypes.TemplateSuffix)
+
 	// #nosec G304 -- this file path is safe and user-defined; used intentionally for scaffolding.
-	content, err := os.ReadFile(path.Join(srcPath, fileName))
+	content, err := os.ReadFile(src)
 	if err != nil {
-		return fmt.Errorf("failed to read template file %q: %w", fileName, err)
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("missing required template %q (expected %q)", fileName, src)
+		}
+
+		return fmt.Errorf("failed to read template file %q: %w", src, err)
 	}
 
-	if targetPath == types.ScriptDirNameScript {
+	if targetPath == goboottypes.ScriptDirNameScript {
 		fileName = path.Join(targetPath, fileName)
 	}
 
@@ -243,14 +257,21 @@ func (b *BaseLocal) copyFile(srcPath, targetPath, fileName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file %q in root: %w", fileName, err)
 	}
-	defer utils.CloseFileWithErr(dstFile)
+	defer gobootutils.CloseFileWithErr(dstFile)
 
 	_, err = dstFile.Write(content)
 	if err != nil {
 		return fmt.Errorf("failed to write file %q: %w", fileName, err)
 	}
 
-	err = utils.RenderTemplateToFile("script_file", b.root, fileName, b.scriptRegistry)
+	if targetPath == goboottypes.ScriptDirNameScript {
+		err = dstFile.Chmod(goboottypes.ScriptPerm)
+		if err != nil {
+			return fmt.Errorf("failed to set executable permissions on %q: %w", fileName, err)
+		}
+	}
+
+	err = gobootutils.RenderTemplateToFile("script_file", b.root, fileName, b.scriptRegistry)
 	if err != nil {
 		return fmt.Errorf("failed to render template to file: %w", err)
 	}

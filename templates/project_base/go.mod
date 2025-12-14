@@ -1,3 +1,0 @@
-module {{.LowerProjectName}}
-
-go {{.UsedGoVersion}}

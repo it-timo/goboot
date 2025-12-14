@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
 // BaseLintConfig defines the metadata used by goboot to generate linting setup for a project.
@@ -15,14 +15,18 @@ type BaseLintConfig struct {
 
 	// ProjectName is the short identifier for the project (e.g., "goboot").
 	// Used in headings, comments, and other rendered metadata.
-	ProjectName string `yaml:"projectName"`
+	ProjectName string `yaml:"-"`
 
 	// RepoImportPath is the full Go module import path (e.g., "github.com/org/project").
 	// Used in linter config like depguard to enforce proper import usage.
-	RepoImportPath string `yaml:"repoImportPath"`
+	RepoImportPath string `yaml:"-"`
 
 	// Linters is a map of named linter configs to be enabled for this project.
 	Linters map[string]*Linter `yaml:"linters"`
+
+	// AllowedPackages is a list of packages that are allowed to be imported.
+	// Used in linter config like depguard.
+	AllowedPackages []string `yaml:"allowedPackages"`
 }
 
 // Linter defines an individual linter to be included in the generated linting setup.
@@ -36,10 +40,12 @@ type Linter struct {
 
 // lintCmds defines the default commands used if no custom `Cmd` is set in the config.
 var lintCmds = map[string]string{
-	types.LinterGo:   types.DefaultGoLintCmd,
-	types.LinterYAML: types.DefaultYMLLintCmd,
-	types.LinterMake: types.DefaultMakeLintCmd,
-	types.LinterMD:   types.DefaultMDLintCmd,
+	goboottypes.LinterGo:    goboottypes.DefaultGoLintCmd,
+	goboottypes.LinterYAML:  goboottypes.DefaultYMLLintCmd,
+	goboottypes.LinterMake:  goboottypes.DefaultMakeLintCmd,
+	goboottypes.LinterMD:    goboottypes.DefaultMDLintCmd,
+	goboottypes.LinterShell: goboottypes.DefaultShellLintCmd,
+	goboottypes.LinterSHFMT: goboottypes.DefaultSHFMTCmd,
 }
 
 // newBaseLintConfig returns a newly initialized BaseLintConfig with the project name.
@@ -51,13 +57,16 @@ func newBaseLintConfig(projectName string) *BaseLintConfig {
 
 // ID returns a stable identifier for this config.
 func (bl *BaseLintConfig) ID() string {
-	return types.ServiceNameBaseLint
+	return goboottypes.ServiceNameBaseLint
 }
 
 // ReadConfig loads the base lint configuration from the provided YAML file path.
 //
 // It overwrites the current config values with the file contents.
-func (bl *BaseLintConfig) ReadConfig(confPath string) error {
+func (bl *BaseLintConfig) ReadConfig(confPath string, repoURL string) error {
+	bl.RepoImportPath = strings.TrimPrefix(repoURL, "https://")
+	bl.RepoImportPath = strings.TrimPrefix(bl.RepoImportPath, "http://")
+
 	return readYMLConfig(confPath, bl)
 }
 
@@ -100,6 +109,8 @@ func (bl *BaseLintConfig) fillNeededInfos() {
 			cmd, exist := lintCmds[name]
 			if exist {
 				linter.Cmd = cmd
+
+				continue
 			}
 
 			fmt.Printf("[WARN] Unknown linter %q; no default command defined", name)

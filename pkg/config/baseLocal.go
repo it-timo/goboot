@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
 // BaseLocalConfig defines the metadata used by goboot to generate the local setup for a project.
@@ -16,7 +16,7 @@ type BaseLocalConfig struct {
 
 	// ProjectName is the short identifier for the project (e.g., "goboot").
 	// Used in headings, comments, and other rendered metadata.
-	ProjectName string `yaml:"projectName"`
+	ProjectName string `yaml:"-"`
 
 	// FileList is a list of files to be copied from the source path to the target path.
 	FileList []string `yaml:"fileList"`
@@ -31,13 +31,13 @@ func newBaseLocalConfig(projectName string) *BaseLocalConfig {
 
 // ID returns a stable identifier for this config.
 func (bl *BaseLocalConfig) ID() string {
-	return types.ServiceNameBaseLocal
+	return goboottypes.ServiceNameBaseLocal
 }
 
 // ReadConfig loads the base local configuration from the provided YAML file path.
 //
 // It overwrites the current config values with the file contents.
-func (bl *BaseLocalConfig) ReadConfig(confPath string) error {
+func (bl *BaseLocalConfig) ReadConfig(confPath string, _ string) error {
 	return readYMLConfig(confPath, bl)
 }
 
@@ -62,6 +62,30 @@ func (bl *BaseLocalConfig) Validate() error {
 
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
+	}
+
+	seen := make(map[string]struct{})
+	invalid := []string{}
+
+	for _, file := range bl.FileList {
+		trimmed := strings.TrimSpace(file)
+		if trimmed == "" {
+			invalid = append(invalid, "fileList contains blank entries")
+
+			continue
+		}
+
+		if _, exists := seen[trimmed]; exists {
+			invalid = append(invalid, "fileList contains duplicates")
+
+			continue
+		}
+
+		seen[trimmed] = struct{}{}
+	}
+
+	if len(invalid) > 0 {
+		return fmt.Errorf("invalid config: %s", strings.Join(invalid, ", "))
 	}
 
 	return nil

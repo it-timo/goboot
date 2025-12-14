@@ -130,7 +130,7 @@ linters:
     - wastedassign
     - whitespace
     - wrapcheck
-    - wsl
+    - wsl_v5
     - zerologlint
 
   #  ----------------------------
@@ -143,11 +143,34 @@ linters:
             - $gostd                     #  Standard library allowed
             - github.com/it-timo/goboot  #  Internal modules
             - gopkg.in/yaml.v3           #  Required YAML parsing
+            - github.com/onsi/ginkgo/v2  #  Testing framework
+            - github.com/onsi/gomega     #  Matcher library
           deny:
             - pkg: "math/rand$"  #  Discourage the use of insecure random generators.
               desc: use math/rand/v2
-            - pkg: "github.com/pkg/errors"
+            - pkg: "github.com/pkg/errors"  #  Discourage the use of pkg/errors, use standard lib instead.
               desc: Should be replaced by standard lib errors package
+    revive:
+      rules:
+        - name: dot-imports  #  Allow dot-imports ONLY for Ginkgo/Gomega test DSL.
+          arguments:
+            - allowedPackages:  #  Ginkgo/Gomega rely on dot-imports for readable BDD test syntax.
+                - "github.com/onsi/ginkgo/v2"
+                - "github.com/onsi/gomega"
+    wsl_v5:
+      #  Allow writing the first statement directly after `{`.
+      allow-first-in-block: true
+      #  Forbid blocks that are visually "empty" (only whitespace between { }).
+      allow-whole-block: false
+      #  Maximum number of consecutive statements allowed before a blank line is required.
+      branch-max-lines: 3
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          #  Security checks on test-only filesystem helpers (chmod, temp fixtures, etc.) are intentionally relaxed.
+          - gosec
 
 #  ----------------------------
 #  Options for analysis running.

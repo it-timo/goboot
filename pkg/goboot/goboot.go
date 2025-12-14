@@ -11,15 +11,19 @@ that encapsulate feature-specific behavior.
 package goboot
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
 	"github.com/it-timo/goboot/pkg/baseproject"
+	"github.com/it-timo/goboot/pkg/basetest"
 	"github.com/it-timo/goboot/pkg/config"
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
 // GoBoot is the central controller struct for running goboot-based generation logic.
@@ -64,7 +68,7 @@ func (gb *GoBoot) RegisterServices() error {
 	}
 
 	// creates the target dir if not exist.
-	err := os.MkdirAll(gb.cfg.TargetPath, types.DirPerm)
+	err := os.MkdirAll(gb.cfg.TargetPath, goboottypes.DirPerm)
 	if err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
@@ -92,6 +96,36 @@ func (gb *GoBoot) RunServices() error {
 	return gb.ServiceMgr.runAll()
 }
 
+// RunGoModTidy runs go mod tidy if the go.mod file exists.
+func (gb *GoBoot) RunGoModTidy(execute bool) error {
+	if !execute {
+		return nil
+	}
+
+	projectRoot := filepath.Join(gb.cfg.TargetPath, gb.cfg.ProjectName)
+	goModPath := filepath.Join(projectRoot, "go.mod")
+
+	_, err := os.Stat(goModPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
+		return fmt.Errorf("failed to stat go.mod: %w", err)
+	}
+
+	// cd to target path and make go mod tidy.
+	cmd := exec.CommandContext(context.Background(), "go", "mod", "tidy")
+	cmd.Dir = projectRoot
+
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run go mod tidy: %w", err)
+	}
+
+	return nil
+}
+
 // registerPreServices registers foundational services that need to exist before other services can be used.
 //
 // This typically includes internal infrastructure providers (e.g., script registrars).
@@ -105,12 +139,12 @@ func (gb *GoBoot) registerPreServices() error {
 		}
 
 		switch meta.ID {
-		case types.ServiceNameBaseLocal:
+		case goboottypes.ServiceNameBaseLocal:
 			baseLocal := baselocal.NewBaseLocal(gb.cfg.TargetPath)
 
 			err := gb.ServiceMgr.register(baseLocal)
 			if err != nil {
-				return fmt.Errorf("failed to register %s service: %w", types.ServiceNameBaseLocal, err)
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseLocal, err)
 			}
 		default:
 			// skip all services that are not explicitly defined.
@@ -129,6 +163,8 @@ func (gb *GoBoot) registerPreServices() error {
 // Registration fails if the service is unknown or if instantiation fails.
 //
 // Returns an error if any service fails to register.
+//
+//nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (gb *GoBoot) registerMainServices() error {
 	for _, meta := range gb.cfg.Services {
 		if !meta.IsEnabled() {
@@ -136,19 +172,24 @@ func (gb *GoBoot) registerMainServices() error {
 		}
 
 		switch meta.ID {
-		case types.ServiceNameBaseProject:
+		case goboottypes.ServiceNameBaseProject:
 			err := gb.ServiceMgr.register(baseproject.NewBaseProject(gb.cfg.TargetPath))
 			if err != nil {
-				return fmt.Errorf("failed to register %s service: %w", types.ServiceNameBaseProject, err)
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseProject, err)
 			}
-		case types.ServiceNameBaseLint:
+		case goboottypes.ServiceNameBaseLint:
 			err := gb.ServiceMgr.register(baselint.NewBaseLint(gb.cfg.TargetPath))
 			if err != nil {
-				return fmt.Errorf("failed to register %s service: %w", types.ServiceNameBaseLint, err)
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseLint, err)
 			}
-		case types.ServiceNameBaseLocal:
+		case goboottypes.ServiceNameBaseLocal:
 			// skip it, because it's registered in pre-service.
 			continue
+		case goboottypes.ServiceNameBaseTest:
+			err := gb.ServiceMgr.register(basetest.NewBaseTest(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseTest, err)
+			}
 		// Future services can be added here.
 		default:
 			return fmt.Errorf("unknown service ID: %s", meta.ID)

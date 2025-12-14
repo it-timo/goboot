@@ -23,6 +23,25 @@ vars:
   VERSION:
     sh: cat .version  #  Reads a version from a file (used for builds and prints)
 
+  MD_FILES:
+    sh: find . -name '*.md' | tr '\n' ' '
+  SH_FILES:
+    sh: find . -type f -name '*.sh' | tr '\n' ' '
+
+  DOCKER_RUN_CMD: "docker run --rm -v {{.ROOT_DIR}}:/workdir -w /workdir"
+
+  # Go / project linters
+  GOLANGCI_LINT_CMD: '{{.DOCKER_RUN_CMD}} golangci/golangci-lint:v2.7.1 golangci-lint run cmd/... pkg/...'
+  YAML_LINT_CMD: '{{.DOCKER_RUN_CMD}} pipelinecomponents/yamllint:0.35.9 yamllint .'
+  CHECKMAKE_LINT_CMD: '{{.DOCKER_RUN_CMD}} cytopia/checkmake:latest-0.5 Makefile'
+  MD_LINT_CMD: '{{.DOCKER_RUN_CMD}} ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 markdownlint {{.MD_FILES}}'
+
+  # Shell tooling
+  SHELLCHECK_CMD: '{{.DOCKER_RUN_CMD}} koalaman/shellcheck:v0.11.0 -x {{.SH_FILES}}'
+  SHFMT_CHECK_CMD: '{{.DOCKER_RUN_CMD}} mvdan/shfmt:v3.12.0 -d -i 2 -ci {{.SH_FILES}}'
+
+  TEST_COVER_FILE: "coverage.txt"
+
 #  -----------------------------------------------------------------------------
 #  📋 Defined Tasks
 #  -----------------------------------------------------------------------------
@@ -39,26 +58,30 @@ tasks:
   lint:
     desc: Run linters
     cmds:
-      - golangci-lint run                           #  Static analysis for Go code
-      - yamllint .                                  #  YAML syntax and formatting
-      - checkmake Makefile                          #  Lint for Makefile syntax / conventions
-      - docker run -v "$PWD":/workdir -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 "**/*.md"
-      - |
-        bash -c '
-          docker run --rm \
-            -v "$PWD":/workdir \
-            -w /workdir \
-            ghcr.io/igorshubovych/markdownlint-cli:v0.45.0 \
-            markdownlint $(find . -type f -wholename "*.md")
-        '
-      #  Markdown lint via container — avoids local install and ensures a pinned version
+      - '{{.GOLANGCI_LINT_CMD}}'   #  Static analysis for all Go source files
+      - '{{.YAML_LINT_CMD}}'       #  YAML syntax and formatting
+      - '{{.CHECKMAKE_LINT_CMD}}'  #  Lint for Makefile syntax / conventions
+      - '{{.MD_LINT_CMD}}'         #  Markdown lint via container
+      - '{{.SHELLCHECK_CMD}}'      #  ShellCheck for shell scripts
+      - '{{.SHFMT_CHECK_CMD}}'     #  shfmt for shell scripts (check only)
 
   test:
-    desc: Run all tests
-    cmd: >
-      go test -race -timeout=9m -coverprofile coverage.txt \
-      $(go list ./... | grep -v /test/noauto) && \
-      go tool cover -func=coverage.txt; rm -f coverage.txt
+    desc: Run all tests with coverage
+    cmds:
+      - |
+          TEST_PKGS="$(
+            go list ./... \
+              | grep -v "/test/noauto" \
+              | grep -v "/templates"
+          )"
+
+          go test \
+            -race \
+            -timeout=9m \
+            -coverprofile "{{.TEST_COVER_FILE}}" \
+            ${TEST_PKGS}
+      - go tool cover -func="{{.TEST_COVER_FILE}}"
+      - rm -f "{{.TEST_COVER_FILE}}"
 
   version:
     desc: Print current version

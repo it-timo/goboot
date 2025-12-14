@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
 // BaseProjectConfig defines the metadata used by goboot to generate a new Go project.
@@ -17,20 +17,24 @@ type BaseProjectConfig struct {
 	SourcePath string `yaml:"sourcePath"`
 
 	// ProjectURL is the full repository URL (e.g., "https://github.com/user/project").
-	// Used in go.mod and README links.
-	ProjectURL string `yaml:"projectUrl"`
+	// Used in README links etc.
+	ProjectURL string `yaml:"-"`
+
+	// RepoPath is the full repository path (e.g., "github.com/user/project").
+	// Used in go.mod and imports.
+	RepoPath string `yaml:"-"`
 
 	// ProjectName is the main identifier for the project (e.g., "goboot").
 	// Used in CLI entry points, module path, and template files.
-	ProjectName string `yaml:"projectName"`
+	ProjectName string `yaml:"-"`
 
 	// CapsProjectName is the uppercase variant of ProjectName (e.g., "GOBOOT").
 	// Used in headers, LICENSE, and NOTICE.
-	CapsProjectName string `yaml:"capsProjectName"`
+	CapsProjectName string `yaml:"-"`
 
 	// LowerProjectName is the lowercase variant (e.g., "goboot").
 	// Used for safe filenames, Docker images, etc.
-	LowerProjectName string `yaml:"lowerProjectName"`
+	LowerProjectName string `yaml:"-"`
 
 	// UsedGoVersion specifies the Go version to write into config files (e.g., "1.22.2").
 	UsedGoVersion string `yaml:"usedGoVersion"`
@@ -56,11 +60,8 @@ type BaseProjectConfig struct {
 	// GitProvider determines how to render related templates and links.
 	GitProvider string `yaml:"gitProvider"`
 
-	// GitHubUser is the GitHub username or org (used in badges and URLs).
-	GitHubUser string `yaml:"githubUser"`
-
-	// GitLabUser is the GitLab username or group (used in badges and URLs).
-	GitLabUser string `yaml:"gitlabUser"`
+	// GitUser is the GitHub username or org (used in badges and URLs).
+	GitUser string `yaml:"gitUser"`
 }
 
 // newBaseProjectConfig returns a newly initialized BaseProjectConfig with the project name.
@@ -72,18 +73,21 @@ func newBaseProjectConfig(projectName string) *BaseProjectConfig {
 
 // ID returns a stable identifier for this config.
 func (bp *BaseProjectConfig) ID() string {
-	return types.ServiceNameBaseProject
+	return goboottypes.ServiceNameBaseProject
 }
 
 // ReadConfig loads the base project configuration from the provided YAML file path.
 // It overwrites the current config values with the file contents.
-func (bp *BaseProjectConfig) ReadConfig(confPath string) error {
+func (bp *BaseProjectConfig) ReadConfig(confPath string, repoURL string) error {
+	bp.ProjectURL = repoURL
+
 	return readYMLConfig(confPath, bp)
 }
 
 // Validate verifies the BaseProjectConfig for use in scaffolding.
 //
 // It returns an error if required values are missing/invalid, or calls fillNeededInfos.
+//
 //nolint:cyclop // flat validation logic preferred for clarity and extensibility.
 func (bp *BaseProjectConfig) Validate() error {
 	var missing []string
@@ -124,13 +128,9 @@ func (bp *BaseProjectConfig) Validate() error {
 		missing = append(missing, "author")
 	}
 
-	if strings.TrimSpace(bp.GitProvider) == "github" {
-		if strings.TrimSpace(bp.GitHubUser) == "" {
-			missing = append(missing, "githubUser")
-		}
-	} else if strings.TrimSpace(bp.GitProvider) == "gitlab" {
-		if strings.TrimSpace(bp.GitLabUser) == "" {
-			missing = append(missing, "gitlabUser")
+	if strings.TrimSpace(bp.GitProvider) != "" {
+		if strings.TrimSpace(bp.GitUser) == "" {
+			missing = append(missing, "gitUser")
 		}
 	}
 
@@ -148,6 +148,8 @@ func (bp *BaseProjectConfig) fillNeededInfos() {
 	// Normalize caps/lower.
 	bp.CapsProjectName = strings.ToUpper(bp.ProjectName)
 	bp.LowerProjectName = strings.ToLower(bp.ProjectName)
+	bp.RepoPath = strings.TrimPrefix(bp.ProjectURL, "https://")
+	bp.RepoPath = strings.TrimPrefix(bp.RepoPath, "http://")
 
 	// Autofill year if not set.
 	if bp.CurrentYear == 0 {

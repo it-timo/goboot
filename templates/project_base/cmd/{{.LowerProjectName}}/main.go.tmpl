@@ -1,0 +1,77 @@
+/*
+Package main initializes and executes the {{.ProjectName}} CLI.
+
+It ...
+
+Errors during any stage cause early termination.
+*/
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io"
+	"os"
+
+	"{{.RepoPath}}/pkg/config"
+	"{{.RepoPath}}/pkg/{{.LowerProjectName}}"
+)
+
+var (
+	exitFunc               = os.Exit
+	outputWriter io.Writer = os.Stdout
+)
+
+// writef writes to outputWriter. If that fails, it falls back to fmt.Println.
+// Temporary until structured logging replaces fmt entirely.
+func writef(format string, a ...any) {
+	if _, err := fmt.Fprintf(outputWriter, format, a...); err != nil {
+		fmt.Println("Failed to write to output:", err)
+	}
+}
+
+// run executes the whole {{.ProjectName}} CLI with ...
+func run(args []string) error {
+	// Step 0: Parse flags explicitly using a local FlagSet to avoid global state.
+	flagSet := flag.NewFlagSet("{{.LowerProjectName}}", flag.ContinueOnError)
+	flagSet.SetOutput(outputWriter) // keep flag parsing output testable
+
+	var configPath string
+	flagSet.StringVar(&configPath, "config", "./configs/{{.LowerProjectName}}.yml", "Path to the {{.LowerProjectName}} config file")
+
+	flagSet.Usage = func() {
+		writef("Usage: %s [flags]\n\nFlags:\n", flagSet.Name())
+		flagSet.PrintDefaults() // writes to flagSet.Output() which is outputWriter
+	}
+
+	if err := flagSet.Parse(args); err != nil {
+		return fmt.Errorf("failed to parse flags: %w", err)
+	}
+
+	// Step 1: Load and validate {{.ProjectName}} configuration from YAML.
+	cfg := config.New{{.ProjectName}}Config(configPath)
+	if err := cfg.Init(); err != nil {
+		return fmt.Errorf("failed to initialize configuration: %w", err)
+	}
+
+	// Avoid dumping cfg (secrets / unstable output). Print only what’s safe & useful.
+	writef("Config loaded: %s\n", configPath)
+
+	// Step 2: Create a new {{.ProjectName}} application instance.
+	app := {{.LowerProjectName}}.New{{.ProjectName}}(cfg)
+
+	// Step 3+: ... TODO: dispatch subcommands / run app
+	err := app.Run()
+    if err != nil {
+		return fmt.Errorf("failed to run {{.ProjectName}}: %w", err)
+	}
+
+	return nil
+}
+
+func main() {
+	if err := run(os.Args[1:]); err != nil {
+		writef("%s\n", err)
+		exitFunc(1)
+	}
+}

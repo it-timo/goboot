@@ -17,10 +17,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/it-timo/goboot/pkg/config"
-	"github.com/it-timo/goboot/pkg/types"
-	"github.com/it-timo/goboot/pkg/utils"
+	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
 // BaseProject implements the Service interface and represents the logic layer
@@ -45,7 +46,7 @@ func NewBaseProject(targetDir string) *BaseProject {
 // It matches the constant defined in the type package and must align with
 // the corresponding entry in the goboot config (e.g., "base_project").
 func (b *BaseProject) ID() string {
-	return types.ServiceNameBaseProject
+	return goboottypes.ServiceNameBaseProject
 }
 
 // SetConfig assigns the base project configuration.
@@ -62,7 +63,7 @@ func (b *BaseProject) SetConfig(cfg config.ServiceConfig) error {
 	b.cfg = baseCfg
 
 	// Ensure source and target paths are different (prevent accidental overwrite).
-	err := utils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
+	err := gobootutils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
 	if err != nil {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
@@ -78,10 +79,17 @@ func (b *BaseProject) SetConfig(cfg config.ServiceConfig) error {
 //
 // This assumes config has been validated during initialization.
 func (b *BaseProject) Run() error {
-	curRoot, err := utils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
+	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
 	}
+
+	defer func() {
+		err := curRoot.Close()
+		if err != nil {
+			fmt.Println("Failed to close root dir:", err)
+		}
+	}()
 
 	b.root = curRoot
 
@@ -136,7 +144,6 @@ func (b *BaseProject) walkAndApply(fsys fs.FS, handler func(path string, d fs.Di
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to walk dir: %w", err)
 	}
@@ -156,20 +163,24 @@ func (b *BaseProject) walkAndApply(fsys fs.FS, handler func(path string, d fs.Di
 // Returns an error if path rendering, reading, or writing fails.
 func (b *BaseProject) renderPath(relTemplatePath string, dirEntry fs.DirEntry) error {
 	// Render the target path using template logic (e.g. "cmd/{{project_name}}/main.go").
-	renderedPath, err := utils.ExecuteTemplateText("relpath", relTemplatePath, b.cfg)
+	renderedPath, err := gobootutils.ExecuteTemplateText("relpath", relTemplatePath, b.cfg)
 	if err != nil {
 		return fmt.Errorf("failed to render path %q: %w", relTemplatePath, err)
 	}
 
 	// If it's a directory, create it inside the root.
 	if dirEntry.IsDir() {
-		err = utils.EnsureDir(renderedPath, b.root, types.DirPerm)
+		err = gobootutils.EnsureDir(renderedPath, b.root, goboottypes.DirPerm)
 		if err != nil {
 			return fmt.Errorf("failed to ensure directory %q: %w", renderedPath, err)
 		}
 
 		return nil
 	}
+
+	// TemplateSuffix is a filename-only convention.
+	// goboot renders all files equally; the suffix is stripped only for output naming.
+	renderedPath = strings.TrimSuffix(renderedPath, goboottypes.TemplateSuffix)
 
 	// Read a template file from the rootDir.
 	fullTemplatePath := filepath.Join(b.cfg.SourcePath, relTemplatePath)
@@ -181,7 +192,7 @@ func (b *BaseProject) renderPath(relTemplatePath string, dirEntry fs.DirEntry) e
 	}
 
 	// Ensure destination directory exists.
-	err = utils.EnsureDir(filepath.Dir(renderedPath), b.root, types.DirPerm)
+	err = gobootutils.EnsureDir(filepath.Dir(renderedPath), b.root, goboottypes.DirPerm)
 	if err != nil {
 		return fmt.Errorf("failed to ensure destination directory %q: %w", filepath.Dir(renderedPath), err)
 	}
@@ -191,7 +202,7 @@ func (b *BaseProject) renderPath(relTemplatePath string, dirEntry fs.DirEntry) e
 	if err != nil {
 		return fmt.Errorf("failed to create file %q in root: %w", renderedPath, err)
 	}
-	defer utils.CloseFileWithErr(dstFile)
+	defer gobootutils.CloseFileWithErr(dstFile)
 
 	_, err = dstFile.Write(content)
 	if err != nil {
@@ -216,7 +227,7 @@ func (b *BaseProject) renderContent(path string, dirEntry fs.DirEntry) error {
 		return nil
 	}
 
-	err := utils.RenderTemplateToFile("project_file", b.root, path, b.cfg)
+	err := gobootutils.RenderTemplateToFile("project_file", b.root, path, b.cfg)
 	if err != nil {
 		return fmt.Errorf("failed to render template to file: %w", err)
 	}

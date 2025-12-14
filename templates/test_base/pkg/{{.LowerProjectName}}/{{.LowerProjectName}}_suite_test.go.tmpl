@@ -1,0 +1,14 @@
+package {{.LowerProjectName}}_test
+
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+func Test{{.ProjectName}}(t *testing.T) {
+	t.Parallel()
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "{{.ProjectName}} Suite")
+}

@@ -1,0 +1,117 @@
+package {{.LowerProjectName}}_test
+
+import (
+	"path/filepath"
+	{{- if eq .UseStyle "go" }}
+	"testing"
+	{{- else if eq .UseStyle "ginkgo" }}
+	"os"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	{{- end }}
+
+	"{{.RepoImportPath}}/pkg/{{.LowerProjectName}}"
+)
+
+{{- if eq .UseStyle "go" }}
+// testEnv holds common per-test resources.
+type testEnv struct {
+	t       *testing.T
+	tempDir string
+}
+
+func newTestEnv(t *testing.T) *testEnv {
+	t.Helper()
+
+	return &testEnv{
+		t:       t,
+		tempDir: t.TempDir(), // auto-cleaned by testing package
+	}
+}
+
+func (e *testEnv) join(path ...string) string {
+	e.t.Helper()
+	return filepath.Join(append([]string{e.tempDir}, path...)...)
+}
+
+// Example for a specific function under test in {{.LowerProjectName}}.
+//
+// Replace "Method" and args/expectations with the real API.
+func TestMethod(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		// TODO: define input parameters
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		// want    <Type> // optional
+		wantErr bool
+	}{
+		{
+			name: "case description",
+			args: args{
+				// TODO: fill args
+			},
+			// want:    <value>,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // capture range variable
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			env := newTestEnv(t)
+
+			// Example of using the temp dir for this test:
+			_ = env.join // remove once used
+
+			{{.LowerProjectName}}.New{{.ProjectName}}(nil)
+
+			// TODO: call the function under test:
+			//
+			// got, err := {{.LowerProjectName}}.Method(...)
+			//
+			// if (err != nil) != tt.wantErr {
+			//     t.Fatalf("Method() error = %v, wantErr %v", err, tt.wantErr)
+			// }
+			//
+			// if diff := cmp.Diff(tt.want, got); diff != "" {
+			//     t.Fatalf("Method() mismatch (-want +got):\n%s", diff)
+			// }
+		})
+	}
+}
+{{- else if eq .UseStyle "ginkgo" }}
+var _ = Describe("{{.ProjectName}} Package", func() {
+	var (
+		tempDir string
+	)
+
+	BeforeEach(func() {
+		var err error
+		tempDir, err = os.MkdirTemp("", "{{.LowerProjectName}}-test-*")
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		if tempDir != "" {
+			Expect(os.RemoveAll(tempDir)).To(Succeed())
+		}	
+	})
+
+	Describe("New{{.ProjectName}}", func() {
+		Context("context description", func() {
+			It("case description", func() {
+				// TODO do something
+				{{.LowerProjectName}}.New{{.ProjectName}}(nil)
+			})
+		})
+	})
+})
+{{- end }}

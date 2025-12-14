@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/it-timo/goboot/pkg/config"
-	"github.com/it-timo/goboot/pkg/types"
+	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
 // Service defines the contract for modular service units that goboot can orchestrate.
@@ -55,11 +55,11 @@ func newServiceManager(cfgMgr *config.Manager) *serviceManager {
 		services: make(map[string]Service),
 		cfgMgr:   cfgMgr,
 		priorServiceIDs: []string{
-			types.ServiceNameBaseProject, // required to initialize the base project directory structure.
+			goboottypes.ServiceNameBaseProject, // required to initialize the base project directory structure.
 			// future pre-services can be added here.
 		},
 		subsequentServiceIDs: []string{
-			types.ServiceNameBaseLocal, // required to handle the script files in fully.
+			goboottypes.ServiceNameBaseLocal, // required to handle the script files in fully.
 			// future sub-services can be added here.
 		},
 	}
@@ -88,6 +88,7 @@ func (sm *serviceManager) register(service Service) error {
 //   - If no config is found, the service is skipped with a warning
 //
 // It returns the first encountered execution error, if any. Skipped services do not fail the run.
+//
 //nolint:cyclop // branching required for service dispatch logic; each path reflects a distinct lifecycle phase.
 func (sm *serviceManager) runAll() error {
 	err := sm.assignConfigs()
@@ -117,9 +118,9 @@ func (sm *serviceManager) runAll() error {
 			}
 		}
 
-		receiver, isScriptRec := svc.(types.ScriptReceiver)
+		receiver, isScriptRec := svc.(goboottypes.ScriptReceiver)
 		if isScriptRec {
-			registrar, isRegistrar := sm.services[types.ServiceNameBaseLocal].(types.Registrar)
+			registrar, isRegistrar := sm.services[goboottypes.ServiceNameBaseLocal].(goboottypes.Registrar)
 			if isRegistrar {
 				fmt.Printf("Injecting script registrar into %q\n", curID)
 
