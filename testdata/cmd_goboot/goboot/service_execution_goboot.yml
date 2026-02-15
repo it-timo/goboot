@@ -1,0 +1,8 @@
+projectName: proj
+repoUrl: https://example.com/x
+gitProvider: gitlab
+targetPath: ${TARGET_DIR}
+services:
+  - id: base_project
+    confPath: ${BASE_PROJECT_PATH}
+    enabled: true

@@ -1,13 +1,7 @@
-# 📁 Project Structure — `goboot` (v0.0.2)
+# 📁 Project Structure — `goboot` (v0.1.0)
 
-This document reflects the **current structure** of the `goboot` project as of version `v0.0.2`.
-
-It is intentionally scoped to **what exists**, not what’s imagined.  
-As new versions introduce layers (e.g., CI, Dockerization), this file will be updated accordingly.
-
-For planned features, see [`ROADMAP.md`](./ROADMAP.md).
-
----
+This document reflects the current repository structure for `goboot` at `v0.1.0`.
+It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
 
@@ -21,6 +15,7 @@ For planned features, see [`ROADMAP.md`](./ROADMAP.md).
 - `pkg/baselint/` — Lint configuration service (dockerized linters)
 - `pkg/baselocal/` — Local development scripts service
 - `pkg/basetest/` — Testing scaffold service (Ginkgo/Gomega suites and helpers)
+- `pkg/baseci/` — CI scaffolding service (GitLab/GitHub generation with policy modes)
 - `pkg/config/` — Config types and loading logic
 - `pkg/goboot/` — Core execution engine
 - `pkg/goboottypes/` — Shared constants and interfaces (service IDs, linter definitions, etc.)
@@ -30,16 +25,18 @@ For planned features, see [`ROADMAP.md`](./ROADMAP.md).
 
 - `goboot.yml` — Main config entry point
 - `base_project.yml` — Base project service config
-- `base_lint.yml` — Lint service config (dockerized linters incl. shellcheck/shfmt)
+- `base_lint.yml` — Lint service config (dockerized linters incl. shellcheck/shfmt/editorconfig-checker)
 - `base_local.yml` — Local scripts config
 - `base_test.yml` — Test scaffold config
+- `base_ci.yml` — CI scaffold config
 
 ### `/templates/`
 
 - `project_base/` — Project scaffolding templates
-- `lint_base/` — Lint configuration templates (golangci-lint, yamllint, checkmake, markdownlint, shellcheck, shfmt)
+- `lint_base/` — Lint configuration templates (golangci-lint, yamllint, checkmake, markdownlint, shellcheck, shfmt, editorconfig-checker)
 - `local_base/` — Local helper scripts/templates
 - `test_base/` — Testing templates (suite bootstrap, utils, sample specs)
+- `ci_base/` — CI templates (GitLab and GitHub providers)
 
 ### `/doc/adr/`
 
@@ -89,7 +86,7 @@ For planned features, see [`ROADMAP.md`](./ROADMAP.md).
 ## 🔜 Not Yet Present (Planned in Later Versions)
 
 These directories are **not yet introduced** but are part of the intended long-term structure.  
-See [`ROADMAP.md`](./ROADMAP.md) for targeted milestones.
+See [`ROADMAP.md`](../ROADMAP.md) for targeted milestones.
 
 - `test/` — Additional integration/e2e harnesses
 - `benchmarks/` — Performance regression tracking
@@ -110,4 +107,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.0.2 — matches real files in the repository._
+_Last updated: v0.1.0 — matches real files in the repository._

@@ -207,7 +207,7 @@ var _ = Describe("BaseLint Service", func() {
 			Expect(filepath.Join(targetRoot, ".yamllint.yml")).NotTo(BeAnExistingFile())
 		})
 
-		It("registers scripts for enabled linters only", func() {
+		assertRegistersEnabledCommands := func(fileKey string, setReceiver func(*recordingRegistrar)) {
 			createTemplate(".golangci.yml", "go")
 
 			validConfig.Linters = map[string]*config.Linter{
@@ -219,14 +219,26 @@ var _ = Describe("BaseLint Service", func() {
 			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
 
 			registrar := &recordingRegistrar{}
-			baseLint.SetScriptReceiver(registrar)
+			setReceiver(registrar)
 
 			Expect(baseLint.Run()).To(Succeed())
 
 			Expect(registrar.linesCalls).To(HaveKey(goboottypes.ServiceNameBaseLint))
 			Expect(registrar.linesCalls[goboottypes.ServiceNameBaseLint]).To(ConsistOf("go-cmd"))
-			Expect(registrar.fileCalls).To(HaveKey(goboottypes.ScriptFileLint))
-			Expect(registrar.fileCalls[goboottypes.ScriptFileLint]).To(ConsistOf("go-cmd"))
+			Expect(registrar.fileCalls).To(HaveKey(fileKey))
+			Expect(registrar.fileCalls[fileKey]).To(ConsistOf("go-cmd"))
+		}
+
+		It("registers scripts for enabled linters only", func() {
+			assertRegistersEnabledCommands(goboottypes.ScriptFileLint, func(reg *recordingRegistrar) {
+				baseLint.SetScriptReceiver(reg)
+			})
+		})
+
+		It("registers CI jobs for enabled linters only", func() {
+			assertRegistersEnabledCommands(goboottypes.CIFileLint, func(reg *recordingRegistrar) {
+				baseLint.SetCIReceiver(reg)
+			})
 		})
 
 		It("returns an error when template file is missing", func() {
@@ -302,6 +314,21 @@ var _ = Describe("BaseLint Service", func() {
 			err := baseLint.Run()
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("failed to register script file"))
+		})
+
+		It("propagates CI registrar errors", func() {
+			createTemplate(".golangci.yml", "go")
+			validConfig.Linters = map[string]*config.Linter{
+				goboottypes.LinterGo: {Enabled: true, Cmd: "go-cmd"},
+			}
+			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
+
+			registrar := &recordingRegistrar{linesErr: errors.New("ci lines boom")}
+			baseLint.SetCIReceiver(registrar)
+
+			err := baseLint.Run()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to register ci jobs"))
 		})
 	})
 })

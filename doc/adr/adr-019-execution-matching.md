@@ -1,4 +1,4 @@
-# 📄 ADR-019: Service Execution Strategy with Config Matching
+# ADR-019: Service Execution Strategy with Config Matching
 
 **Tags:** `execution`, `config-matching`, `service-manager`
 
@@ -6,47 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
-### Context
+## Context
 
-Each registered service must only execute if its configuration has been loaded and validated.
-This ensures services are never run in an unconfigured or invalid state.
-
-The `serviceManager.runAll()` method performs this check by:
-
-- Looking up the config via `cfgMgr.Get(id)`
-- Skipping the service if no config is found
-- Running the service with its config otherwise
+Registered services should execute only when corresponding validated configuration exists.
+Missing config should not crash optional service flows.
 
 ---
 
 ## Decision
 
-Implement config-aware execution:
+Use config-aware execution in `serviceManager`:
 
-```go
-cfg, ok := sm.cfgMgr.Get(id)
-if !ok {
-    fmt.Printf("Service %q skipped (no configuration loaded)\n", id)
-    continue
-}
-err := svc.Run(cfg)
-```
+- assign config to services before run (`SetConfig(...)`),
+- skip services that have no loaded config, and
+- run configured services via `Run()`.
 
 ---
 
 ## Advantages
 
-- Prevents accidental service execution
-- Ensures 1:1 match between service logic and config data
-- Skippable by design — no hard failure for missing optional services
+- Prevents execution with undefined input.
+- Supports optional service enablement.
+- Keeps skip behavior explicit in logs.
 
 ---
 
 ## Disadvantages
 
-- All services require a matching config (even if minimal)
-- Skipped services may lead to partial outputs if not monitored closely
+- Partial output is possible when users expect disabled services to run.
+- Misconfigured service IDs may fail silently if only skip logs are observed.
+
+---
+
+## Alternatives Considered
+
+- **Fail hard when any registered service lacks config:** rejected because optional services are part of the design.
+- **Run with implicit zero-value config:** rejected because hidden defaults can mask configuration mistakes.

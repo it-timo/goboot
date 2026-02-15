@@ -1,6 +1,7 @@
 package basetest_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -167,6 +168,22 @@ var _ = Describe("BaseTest", func() {
 
 		It("accepts nil registrar", func() {
 			baseTest.SetScriptReceiver(nil)
+			// Should not panic
+		})
+	})
+
+	Describe("SetCIReceiver", func() {
+		BeforeEach(func() {
+			baseTest = basetest.NewBaseTest(tmpUserDir)
+		})
+
+		It("sets the registrar successfully", func() {
+			baseTest.SetCIReceiver(mockReg)
+			// No error, just sets the receiver
+		})
+
+		It("accepts nil registrar", func() {
+			baseTest.SetCIReceiver(nil)
 			// Should not panic
 		})
 	})
@@ -386,6 +403,45 @@ var _ = Describe("BaseTest", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				// Should not panic, just skip registration
+			})
+		})
+
+		Context("with CI registration", func() {
+			BeforeEach(func() {
+				err := os.WriteFile(filepath.Join(tmpSrcDir, "test.go"), []byte("package test"), 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				cfg = &config.BaseTestConfig{
+					SourcePath:       tmpSrcDir,
+					ProjectName:      "CITest",
+					TestCMD:          goboottypes.DefaultGoTestCMD,
+					RepoImportPath:   "github.com/test/ci",
+					UseStyle:         goboottypes.TestStyleGinkgo,
+					CapsProjectName:  "CITEST",
+					LowerProjectName: "citest",
+				}
+				err = baseTest.SetConfig(cfg)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("registers CI test commands when receiver is set", func() {
+				baseTest.SetCIReceiver(mockReg)
+				err := baseTest.Run()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(mockReg.registeredLines).To(HaveKey(goboottypes.ServiceNameBaseTest))
+				Expect(mockReg.registeredLines[goboottypes.ServiceNameBaseTest]).To(ContainElement(goboottypes.DefaultGoTestCMD))
+				Expect(mockReg.registeredFiles).To(HaveKey(goboottypes.CIFileTest))
+				Expect(mockReg.registeredFiles[goboottypes.CIFileTest]).To(ContainElement(goboottypes.DefaultGoTestCMD))
+			})
+
+			It("propagates CI registration failures", func() {
+				mockReg.registerErr = errors.New("ci register failed")
+				baseTest.SetCIReceiver(mockReg)
+
+				err := baseTest.Run()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("failed to register ci jobs"))
 			})
 		})
 

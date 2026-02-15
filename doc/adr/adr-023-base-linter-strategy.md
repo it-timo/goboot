@@ -1,4 +1,4 @@
-# 📄 ADR-023: Linter Configuration Rendering Strategy
+# ADR-023: Linter Configuration Rendering Strategy
 
 **Tags:** `baselint`, `linting`, `templates`, `rendering`, `golangci`
 
@@ -6,52 +6,40 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Linting configuration files (like `.golangci.yml`, `.markdownlint.yml`, etc.) need project-specific metadata injected
-(e.g., module name, linter sets). Instead of copying static files, these templates must be rendered with context.
-
-The `baseLint` service is responsible for generating these configurations dynamically,
-ensuring they are tailored to each project.
+Lint configs require project-specific values and selected linter sets.
+Static copy alone is insufficient for these generated artifacts.
 
 ---
 
 ## Decision
 
-The `baseLint` service uses **Go’s built-in `text/template`**
-to render linter configuration files from source templates, injecting:
-
-- Project name or module path
-- Enabled linters (from config)
-- Optional service-related metadata
-
-Rendering is strictly **file-by-file**, avoiding deep templating logic or runtime dependencies.
+Render lint config files with Go `text/template` on a file-by-file basis.
+Template data includes project metadata and enabled lint selections.
 
 ---
 
 ## Advantages
 
-- Predictable and audit-friendly template system.
-- Enables consistent config output across projects.
-- No external dependencies or language extensions.
-- Easier to test and reason about.
+- Deterministic rendering with stdlib tooling.
+- Template behavior aligns with other generator services.
+- Easier integration testing of rendered output.
 
 ---
 
 ## Disadvantages
 
-- While text/template supports range, if, and method calls, it lacks built-in helpers for different logics
-  (e.g., trimming, joins, case conversion) — which must be handled in Go.
-- Template debugging can be less ergonomic than richer engines.
+- Complex formatting helpers are limited compared with richer template engines.
+- Template errors surface at render time and require good tests.
 
 ---
 
 ## Alternatives Considered
 
-- **Mustache:** Lacks logic, requiring pre-computed template input structs. Not a net win.
-- **Sprig with Helm-style templates:** Powerful but introduces YAML logic bleed, extra cognitive load,
-  and non-standard Go behavior.
+- **Mustache-like logic-less templates:** rejected because required computed values would shift complexity into pre-processing.
+- **Sprig/Helm-style function sets:** rejected to avoid additional abstraction and non-stdlib dependency overhead.

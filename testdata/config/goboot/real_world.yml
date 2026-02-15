@@ -1,0 +1,7 @@
+projectName: myproject
+repoUrl: https://github.com/user/myproject
+targetPath: /tmp/myproject
+services:
+  - id: base_project
+    confPath: ${PROJECT_PATH}
+    enabled: true

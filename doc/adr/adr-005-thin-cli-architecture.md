@@ -1,4 +1,4 @@
-# 📄 ADR-005: Thin CLI Architecture
+# ADR-005: Thin CLI Architecture
 
 **Tags:** `architecture`, `cli`, `separation-of-concerns`
 
@@ -6,52 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Command-line interface (CLI) entry points often accumulate business logic, making them hard to test and maintain.
-Global state (like `flag.StringVar` variables at the package level) causes side effects
-that make parallel testing impossible and hampers reusability.
+CLI entry points often become a second application layer with business logic and global state.
+That increases coupling and makes CLI behavior harder to test deterministically.
 
 ---
 
 ## Decision
 
-We enforce a **Thin CLI** architecture:
+Keep `cmd/goboot` as a thin entry point.
 
-### 1. No Business Logic in `main`
-
-- The `main` package is strictly an **entry point**.
-- It allows ONLY:
-    1. Argument parsing.
-    2. Configuration loading.
-    3. Service registration invocation.
-    4. Exit code handling.
-
-### 2. No Global Flag State
-
-- **Prohibited**: `flag.Parse()` on the global `flag.CommandLine`.
-- **Required**: Use `fs := flag.NewFlagSet(...)` and `fs.Parse(args)`.
-- This allows `run(args []string)` to be tested with arbitrary inputs in parallel without race conditions.
-
-### 3. Logic Delegation
-
-- All actual work must happen in `pkg/`.
-- `cmd/goboot` delegates immediately to `goboot.NewGoBoot` and its methods.
+- `main` handles argument parsing, startup wiring, and process exit behavior.
+- Service logic remains in `pkg/`.
+- Use local `flag.FlagSet` instances instead of global `flag.CommandLine` state.
 
 ---
 
 ## Advantages
 
-- **Testability**: The CLI flow can be end-to-end tested (`main_test.go`) without spawning subprocesses.
-- **Reusability**: `pkg/goboot` can be embedded in other tools if needed.
-- **Clarity**: It is immediately obvious where "wiring" ends and "logic" begins.
+- CLI logic is easier to test with injected arguments.
+- Service behavior remains reusable outside the CLI entry point.
+- Ownership boundary between wiring and business logic stays clear.
 
 ---
 
 ## Disadvantages
 
-- **Boilerplate**: Passing arguments explicitly is slightly more verbose than using globals.
+- Slightly more explicit wiring code in `cmd/`.
+- New contributors must follow layering constraints when adding features.
+
+---
+
+## Alternatives Considered
+
+- **Business logic directly in `main`:** rejected due to low testability and mixed responsibilities.
+- **Global flag variables:** rejected due to hidden shared state and reduced test isolation.

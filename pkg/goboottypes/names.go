@@ -1,21 +1,18 @@
 /*
-Package goboottypes defines constants and foundational type declarations shared across the goboot project.
-
-It provides a central place for declaring common identifiers such as service
-names to ensure consistency across modules and reduce duplication.
-
-This package is intentionally minimal and scoped to shared project-wide symbols.
+Package goboottypes defines shared constants and interfaces used across goboot.
 */
 package goboottypes
 
-// The declaration of service names.
+// Service IDs used in config and orchestration.
 const (
-	// ServiceNameBaseProject is the name for the base project generation.
+	// ServiceNameBaseProject identifies the base project generator.
 	ServiceNameBaseProject = "base_project"
-	// ServiceNameBaseLint is the name for the base lint generation.
+	// ServiceNameBaseLint identifies the lint generator.
 	ServiceNameBaseLint = "base_lint"
-	// ServiceNameBaseLocal is the name for the base local generation.
+	// ServiceNameBaseLocal identifies the local tooling generator.
 	ServiceNameBaseLocal = "base_local"
-	// ServiceNameBaseTest is the name for the base test generation.
+	// ServiceNameBaseTest identifies the test scaffolding generator.
 	ServiceNameBaseTest = "base_test"
+	// ServiceNameBaseCI identifies the CI generator.
+	ServiceNameBaseCI = "base_ci"
 )

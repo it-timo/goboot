@@ -1,24 +1,11 @@
-#  -----------------------------------------------------------------------------
-#  🛠 Taskfile — Developer Commands for `goboot`
-#  -----------------------------------------------------------------------------
-#
-#  This file defines reproducible and documented task aliases for common workflows.
-#  It is used by the `go-task` tool (https://taskfile.dev/) and acts as a modern
-#  alternative to Makefiles — with cleaner syntax, native YAML support, and built-in shell integration.
-#
-#  These tasks are intended to:
-#    - Simplify setup and usage for contributors
-#    - Ensure consistent linting and testing across environments
-#    - Act as automation hooks for CI pipelines or local workflows.
-#
-#  This file is part of the `goboot` template project and may require
-#  adaptation in downstream OSS or private forks.
+# Task aliases for local development and CI parity.
 
 version: "3"
 
-# -----------------------------------------------------------------------------
-# 🔄 Dynamic variables
-# -----------------------------------------------------------------------------
+# Load shared tool versions.
+dotenv: ['versions.env']
+
+# Dynamic variables.
 vars:
   VERSION:
     sh: cat .version  #  Reads a version from a file (used for builds and prints)
@@ -30,21 +17,22 @@ vars:
 
   DOCKER_RUN_CMD: "docker run --rm -v {{.ROOT_DIR}}:/workdir -w /workdir"
 
-  # Go / project linters
-  GOLANGCI_LINT_CMD: '{{.DOCKER_RUN_CMD}} golangci/golangci-lint:v2.7.1 golangci-lint run cmd/... pkg/...'
-  YAML_LINT_CMD: '{{.DOCKER_RUN_CMD}} pipelinecomponents/yamllint:0.35.9 yamllint .'
-  CHECKMAKE_LINT_CMD: '{{.DOCKER_RUN_CMD}} cytopia/checkmake:latest-0.5 Makefile'
-  MD_LINT_CMD: '{{.DOCKER_RUN_CMD}} ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 markdownlint {{.MD_FILES}}'
+  # Linter commands.
+  GOLANGCI_LINT_CMD: '{{.DOCKER_RUN_CMD}} golangci/golangci-lint:{{.GOLANGCI_LINT_VERSION}} golangci-lint run ./...'
+  YAML_LINT_CMD: '{{.DOCKER_RUN_CMD}} pipelinecomponents/yamllint:{{.YAMLLINT_VERSION}} yamllint .'
+  CHECKMAKE_LINT_CMD: '{{.DOCKER_RUN_CMD}} cytopia/checkmake:{{.CHECKMAKE_VERSION}} Makefile'
+  MD_LINT_CMD: '{{.DOCKER_RUN_CMD}} ghcr.io/igorshubovych/markdownlint-cli:{{.MARKDOWNLINT_VERSION}} markdownlint {{.MD_FILES}}'
 
-  # Shell tooling
-  SHELLCHECK_CMD: '{{.DOCKER_RUN_CMD}} koalaman/shellcheck:v0.11.0 -x {{.SH_FILES}}'
-  SHFMT_CHECK_CMD: '{{.DOCKER_RUN_CMD}} mvdan/shfmt:v3.12.0 -d -i 2 -ci {{.SH_FILES}}'
+  # Shell tooling.
+  SHELLCHECK_CMD: '{{.DOCKER_RUN_CMD}} koalaman/shellcheck:{{.SHELLCHECK_VERSION}} -x {{.SH_FILES}}'
+  SHFMT_CHECK_CMD: '{{.DOCKER_RUN_CMD}} mvdan/shfmt:{{.SHFMT_VERSION}} -d -i 2 -ci {{.SH_FILES}}'
+
+  EDITORCONFIG_CHECKER_CONTAINER: 'mstruebing/editorconfig-checker:{{.EDITORCONFIG_CHECKER_VERSION}}'
+  EDITORCONFIG_CHECKER_CMD: '{{.DOCKER_RUN_CMD}} --entrypoint ec {{.EDITORCONFIG_CHECKER_CONTAINER}} -exclude "(\\.git|\\.idea)"'
 
   TEST_COVER_FILE: "coverage.txt"
 
-#  -----------------------------------------------------------------------------
-#  📋 Defined Tasks
-#  -----------------------------------------------------------------------------
+# Task definitions.
 tasks:
   default:
     desc: Run build, lint, and test (default task)
@@ -53,17 +41,18 @@ tasks:
   build:
     desc: Build the Go binary
     cmd: go build -ldflags="-X main.version={{.VERSION}}" -o bin/goboot ./cmd/goboot
-    #  - `-X`: inject version string into the `main.version` variable
+    # `-X` injects version into `main.version`.
 
   lint:
     desc: Run linters
     cmds:
-      - '{{.GOLANGCI_LINT_CMD}}'   #  Static analysis for all Go source files
-      - '{{.YAML_LINT_CMD}}'       #  YAML syntax and formatting
-      - '{{.CHECKMAKE_LINT_CMD}}'  #  Lint for Makefile syntax / conventions
-      - '{{.MD_LINT_CMD}}'         #  Markdown lint via container
-      - '{{.SHELLCHECK_CMD}}'      #  ShellCheck for shell scripts
-      - '{{.SHFMT_CHECK_CMD}}'     #  shfmt for shell scripts (check only)
+      - '{{.GOLANGCI_LINT_CMD}}'         #  Static analysis for all Go source files
+      - '{{.YAML_LINT_CMD}}'             #  YAML syntax and formatting
+      - '{{.CHECKMAKE_LINT_CMD}}'        #  Lint for Makefile syntax / conventions
+      - '{{.MD_LINT_CMD}}'               #  Markdown lint via container
+      - '{{.SHELLCHECK_CMD}}'            #  ShellCheck for shell scripts
+      - '{{.SHFMT_CHECK_CMD}}'           #  shfmt for shell scripts (check only)
+      - '{{.EDITORCONFIG_CHECKER_CMD}}'  #  EditorConfig checker
 
   test:
     desc: Run all tests with coverage
@@ -86,3 +75,11 @@ tasks:
   version:
     desc: Print current version
     cmd: 'echo "Current version: {{.VERSION}}"'
+
+  verify:intro:
+    desc: Regenerate IntroProject and run the full root + output verification flow
+    cmd: ./scripts/verify_introproject.sh
+
+  verify:ci-canary:
+    desc: Run local CI simulation (act + gitlab-ci-local) for root and IntroProject
+    cmd: ./scripts/verify_ci_canary.sh

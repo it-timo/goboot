@@ -1,0 +1,16 @@
+sourcePath: ${TEMPLATES_LINT_BASE}
+linters:
+  golang:
+    cmd: echo go-lint
+    enabled: true
+  yaml:
+    cmd: ""
+    enabled: true
+  markdown:
+    cmd: echo markdown
+    enabled: false
+  shellcheck:
+    cmd: echo shellcheck
+    enabled: false
+allowedPackages:
+  - github.com/example/safe

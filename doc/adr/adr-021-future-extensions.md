@@ -1,4 +1,4 @@
-# 📄 ADR-021: Extensibility Strategy for New Services and Features
+# ADR-021: Extensibility Strategy for New Services and Features
 
 **Tags:** `extensibility`, `oss`, `architecture`
 
@@ -6,50 +6,42 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-As an OSS project, `goboot` must enable contributors to add new services, templates,
-or config fields with minimal risk of breaking existing behavior.
+The project needs a repeatable way to add services and config fields without destabilizing existing behavior.
 
 ---
 
 ## Decision
 
-- All services must:
-  - Implement a shared `Service` interface
-  - Register via `RegisterServices()` based on their declared ID
-  - Define a distinct config struct (`BaseXConfig`)
+Define extension points through existing architecture contracts.
 
-- All config options must:
-  - Be added via the `config.Manager`
-  - Pass validation before execution
-
-- All templates must:
-  - Be rendered via `text/template`
-  - Live under dedicated, discoverable directories
+- New services implement the shared service interface and register explicitly.
+- New config fields are typed and validated in config modules.
+- Templates remain data-driven through `text/template` in dedicated directories.
 
 ---
 
 ## Advantages
 
-- Encourages community contribution
-- Low risk of regressions
-- Predictable points of integration
+- Extension path is explicit and consistent.
+- Risk of unreviewed runtime behavior is reduced.
+- New features align with existing test and config workflows.
 
 ---
 
 ## Disadvantages
 
-- Slight manual effort to extend registry
-- Requires discipline across contributors
+- Adding capabilities requires updates in multiple explicit places.
+- Fast experimentation is slower than dynamic plugin-style approaches.
 
 ---
 
 ## Alternatives Considered
 
-- Dynamic service registration — rejected due to validation and traceability concerns
-- Global service loader maps — rejected due to tight coupling and testability loss
+- **Dynamic registration extension points:** rejected due to traceability and validation concerns.
+- **Feature-specific one-off patterns:** rejected because architectural drift would increase over time.

@@ -1,78 +1,41 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# Lint Script — Comprehensive Project Linter
-# ==============================================================================
-#
-# This script performs full-project linting using the following tools (via Docker):
-#
-#   1. golangci-lint   → Static analysis for all Go source files
-#   2. yamllint         → Syntax + style checking for YAML configuration files
-#   3. checkmake        → Makefile validation and style guidance
-#   4. markdownlint     → Markdown file linting
-#   5. shellcheck       → Shell script linting
-#   6. shfmt            → Shell script formatting check
-#
-# All tools run via Docker to ensure consistency and correct versions.
-#
-# USAGE:
-#   ./scripts/lint.sh
-#
-# EXIT CODES:
-#   0 → All linters passed
-#   1 → One or more linters failed
-# ==============================================================================
+# Run repository linters with pinned Docker images.
+# Usage: ./scripts/lint.sh
 
 set -euo pipefail
 
-# ------------------------------------------------------------------------------
-# Config
-# ------------------------------------------------------------------------------
+# Load centralized tool versions.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# shellcheck source=versions.env
+source "${PROJECT_ROOT}/versions.env"
 
 DOCKER_CMD="docker run --rm -v $(pwd):/workdir -w /workdir"
 
-GOLANGCI_LINT_IMAGE="golangci/golangci-lint:v2.7.1"
-MD_LINT_IMAGE="ghcr.io/igorshubovych/markdownlint-cli:v0.46.0"
-YAMLLINT_IMAGE="pipelinecomponents/yamllint:0.35.9"
-CHECKMAKE_IMAGE="cytopia/checkmake:latest-0.5"
-SHELLCHECK_IMAGE="koalaman/shellcheck:v0.11.0"
-SHFMT_IMAGE="mvdan/shfmt:v3.12.0"
-
-# ------------------------------------------------------------------------------
-# Pre-flight Check
-# ------------------------------------------------------------------------------
+GOLANGCI_LINT_IMAGE="golangci/golangci-lint:${GOLANGCI_LINT_VERSION}"
+MD_LINT_IMAGE="ghcr.io/igorshubovych/markdownlint-cli:${MARKDOWNLINT_VERSION}"
+YAMLLINT_IMAGE="pipelinecomponents/yamllint:${YAMLLINT_VERSION}"
+CHECKMAKE_IMAGE="cytopia/checkmake:${CHECKMAKE_VERSION}"
+SHELLCHECK_IMAGE="koalaman/shellcheck:${SHELLCHECK_VERSION}"
+SHFMT_IMAGE="mvdan/shfmt:${SHFMT_VERSION}"
+EDITORCONFIG_CHECKER_IMAGE="mstruebing/editorconfig-checker:${EDITORCONFIG_CHECKER_VERSION}"
 
 if ! command -v docker &>/dev/null; then
   echo "Error: Docker is required but not installed."
   exit 1
 fi
 
-# ------------------------------------------------------------------------------
-# Lint: Go (golangci-lint)
-# ------------------------------------------------------------------------------
-
 echo "Running golangci-lint..."
-${DOCKER_CMD} "${GOLANGCI_LINT_IMAGE}" golangci-lint run cmd/... pkg/...
+${DOCKER_CMD} "${GOLANGCI_LINT_IMAGE}" golangci-lint run ./...
 echo "golangci-lint passed"
-
-# ------------------------------------------------------------------------------
-# Lint: YAML (yamllint)
-# ------------------------------------------------------------------------------
 
 echo "Running yamllint..."
 ${DOCKER_CMD} "${YAMLLINT_IMAGE}" yamllint .
 echo "yamllint passed"
 
-# ------------------------------------------------------------------------------
-# Lint: Makefile (checkmake)
-# ------------------------------------------------------------------------------
-
 echo "Running checkmake..."
 ${DOCKER_CMD} "${CHECKMAKE_IMAGE}" Makefile
 echo "checkmake passed"
-
-# ------------------------------------------------------------------------------
-# Lint: Markdown (markdownlint)
-# ------------------------------------------------------------------------------
 
 echo "Running markdownlint..."
 
@@ -86,10 +49,6 @@ else
   echo "markdownlint passed"
 fi
 
-# ------------------------------------------------------------------------------
-# Lint: Shell scripts (ShellCheck)
-# ------------------------------------------------------------------------------
-
 echo "Running shellcheck..."
 
 SH_FILES="$(find . -type f -name "*.sh")"
@@ -102,10 +61,6 @@ else
   echo "shellcheck passed"
 fi
 
-# ------------------------------------------------------------------------------
-# Format Check: Shell scripts (shfmt, check-only)
-# ------------------------------------------------------------------------------
-
 echo "Running shfmt (check only)..."
 
 if [[ -z "${SH_FILES}" ]]; then
@@ -116,9 +71,9 @@ else
   echo "shfmt check passed"
 fi
 
-# ------------------------------------------------------------------------------
-# All Linters Passed
-# ------------------------------------------------------------------------------
+echo "Running editorconfig-checker..."
+${DOCKER_CMD} --entrypoint ec "${EDITORCONFIG_CHECKER_IMAGE}" -exclude '(\.git|\.idea)'
+echo "editorconfig-checker passed"
 
 echo ""
 echo "All linters completed successfully!"

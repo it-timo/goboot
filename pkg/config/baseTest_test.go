@@ -213,14 +213,14 @@ var _ = Describe("BaseTestConfig", func() {
 
 		Context("with valid YAML file", func() {
 			It("loads the configuration successfully with ginkgo style", func() {
-				yamlContent := `sourcePath: ./templates/test
-useStyle: ginkgo
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_test/ginkgo.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseTestConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.SourcePath).To(Equal("./templates/test"))
@@ -230,14 +230,14 @@ useStyle: ginkgo
 			})
 
 			It("loads the configuration successfully with go style", func() {
-				yamlContent := `sourcePath: ./templates/test_go
-useStyle: go
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_test/go.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseTestConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.SourcePath).To(Equal("./templates/test_go"))
@@ -246,15 +246,15 @@ useStyle: go
 			})
 
 			It("populates RepoImportPath from parameter", func() {
-				yamlContent := `sourcePath: ./templates/test
-useStyle: ginkgo
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_test/ginkgo.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				customPath := "github.com/custom/repo"
 				newConfig := &config.BaseTestConfig{}
-				err = newConfig.ReadConfig(configPath, customPath)
+				err = newConfig.ReadConfig(configPath, customPath, "")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.RepoImportPath).To(Equal(customPath))
@@ -263,21 +263,21 @@ useStyle: ginkgo
 
 		Context("with non-existent file", func() {
 			It("returns an error", func() {
-				err := baseTest.ReadConfig("/nonexistent/path.yml", testPath)
+				err := baseTest.ReadConfig("/nonexistent/path.yml", testPath, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("with invalid YAML", func() {
 			It("returns an error", func() {
-				invalidYAML := `sourcePath: ./templates
-useStyle: [invalid yaml structure
-`
-				err := os.WriteFile(configPath, []byte(invalidYAML), 0644)
+				invalidYAML, err := loadTestFixture("config/base_test/invalid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, invalidYAML, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseTestConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})

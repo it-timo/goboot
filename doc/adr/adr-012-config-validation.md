@@ -1,4 +1,4 @@
-# 📄 ADR-012: Typed Config Structure and Validation Strategy
+# ADR-012: Typed Config Structure and Validation Strategy
 
 **Tags:** `config`, `validation`, `typed-structure`
 
@@ -6,40 +6,41 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Handling config via `map[string]interface{}` or dynamic YAML decoding leads to fragile code and poor IDE support.
-`goboot` adopts strict, typed configuration via Go structs with validation logic.
+Untyped configuration decoding increases runtime error risk and weakens tooling support.
+`goboot` requires explicit config contracts per service.
 
 ---
 
 ## Decision
 
-- Every service defines a dedicated config struct (e.g., `BaseLintConfig`)
-- A central config manager validates configs at load time
-- Only validated `ServiceConfig` types are passed to services
+- Use dedicated config structs per service.
+- Validate configs centrally during load.
+- Pass only validated config instances into service lifecycle.
 
 ---
 
 ## Advantages
 
-- Prevents runtime panics from missing fields
-- IDE auto-completion and refactor support
-- Easier testing, documentation, and migration
+- Better compile-time and editor support.
+- Earlier detection of invalid config data.
+- Clear place for service-specific validation rules.
 
 ---
 
 ## Disadvantages
 
-- Slightly more boilerplate per config
-- Changes require struct updates and revalidation logic
+- More boilerplate for each new config model.
+- Schema evolution requires synchronized struct and validation updates.
 
 ---
 
 ## Alternatives Considered
 
-- Unstructured map config — rejected due to brittleness and low maintainability
+- **Unstructured config maps:** rejected due to reduced safety and maintainability.
+- **Late validation inside each service run:** rejected due to delayed failure and inconsistent behavior.

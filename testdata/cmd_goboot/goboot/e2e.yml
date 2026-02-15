@@ -1,0 +1,20 @@
+projectName: ${PROJECT_NAME}
+repoUrl: ${REPO_URL}
+targetPath: ${TARGET_DIR}
+gitProvider: ${GIT_PROVIDER}
+services:
+  - id: base_project
+    confPath: ${BASE_PROJECT_CFG}
+    enabled: true
+  - id: base_lint
+    confPath: ${BASE_LINT_CFG}
+    enabled: true
+  - id: base_test
+    confPath: ${BASE_TEST_CFG}
+    enabled: true
+  - id: base_local
+    confPath: ${BASE_LOCAL_CFG}
+    enabled: true
+  - id: base_ci
+    confPath: ${BASE_CI_CFG}
+    enabled: true

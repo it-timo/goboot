@@ -1,0 +1,34 @@
+# Config for the `base_ci` service.
+# Safe to commit; no secrets.
+# This service aggregates commands registered by other services.
+
+# Template source.
+
+#  Directory where CI templates are read from.
+#  Expected to contain provider-specific directories (for example, "gitlab", "github").
+sourcePath: "./templates/ci_base"
+
+# CI versions/policy.
+
+#  List of Go versions to use for CI. Used in build and test jobs.
+goVersions:
+  - "1.25"
+  - "1.26"
+
+#  CI image policy:
+#    - balanced (default): readable tags in generated jobs.
+#    - strict: digest-pinned runtime images.
+#    - simple: tags only, minimal setup.
+imagePolicy: "balanced"
+
+# CI-only jobs.
+# Jobs render only when commands are registered.
+jobs:
+  build:  # job name determines the file name to render (e.g., "build.yml").
+    commands:
+      - "go build ./..."
+
+# Branches that trigger CI automatically; tags always run.
+autoBranches:
+  - "main"
+  - "master"

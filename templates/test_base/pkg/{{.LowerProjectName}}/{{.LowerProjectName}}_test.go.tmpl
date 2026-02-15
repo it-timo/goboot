@@ -1,8 +1,8 @@
 package {{.LowerProjectName}}_test
 
 import (
-	"path/filepath"
 	{{- if eq .UseStyle "go" }}
+	"path/filepath"
 	"testing"
 	{{- else if eq .UseStyle "ginkgo" }}
 	"os"
@@ -102,7 +102,7 @@ var _ = Describe("{{.ProjectName}} Package", func() {
 	AfterEach(func() {
 		if tempDir != "" {
 			Expect(os.RemoveAll(tempDir)).To(Succeed())
-		}	
+		}
 	})
 
 	Describe("New{{.ProjectName}}", func() {

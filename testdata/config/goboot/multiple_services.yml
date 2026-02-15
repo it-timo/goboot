@@ -1,0 +1,20 @@
+projectName: testproject
+gitProvider: gitlab
+repoUrl: https://github.com/user/testproject
+targetPath: /tmp/test
+services:
+  - id: base_project
+    confPath: ${BASE_PROJECT_PATH}
+    enabled: true
+  - id: base_lint
+    confPath: ${BASE_LINT_PATH}
+    enabled: true
+  - id: base_local
+    confPath: ${BASE_LOCAL_PATH}
+    enabled: true
+  - id: base_test
+    confPath: ${BASE_TEST_PATH}
+    enabled: true
+  - id: base_ci
+    confPath: ${BASE_CI_PATH}
+    enabled: true

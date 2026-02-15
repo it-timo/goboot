@@ -1,13 +1,13 @@
 package goboottypes
 
-// DirPerm is the directory permission level.
+// DirPerm is the default directory mode for generated directories.
 const DirPerm = 0755
 
-// FilePerm is the file permission level.
+// FilePerm is the default mode for generated non-executable files.
 const FilePerm = 0644
 
-// ScriptPerm is the file permission level.
+// ScriptPerm is the default mode for generated executable script files.
 const ScriptPerm = 0755
 
-// TemplateSuffix is the suffix for template files.
+// TemplateSuffix marks template input files before rendering.
 const TemplateSuffix = ".tmpl"

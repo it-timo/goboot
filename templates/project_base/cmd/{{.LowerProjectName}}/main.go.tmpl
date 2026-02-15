@@ -1,7 +1,7 @@
 /*
 Package main initializes and executes the {{.ProjectName}} CLI.
 
-It ...
+It wires config loading and application execution.
 
 Errors during any stage cause early termination.
 */
@@ -25,12 +25,13 @@ var (
 // writef writes to outputWriter. If that fails, it falls back to fmt.Println.
 // Temporary until structured logging replaces fmt entirely.
 func writef(format string, a ...any) {
-	if _, err := fmt.Fprintf(outputWriter, format, a...); err != nil {
+	_, err := fmt.Fprintf(outputWriter, format, a...)
+	if err != nil {
 		fmt.Println("Failed to write to output:", err)
 	}
 }
 
-// run executes the whole {{.ProjectName}} CLI with ...
+// run executes CLI setup, config initialization, and app execution.
 func run(args []string) error {
 	// Step 0: Parse flags explicitly using a local FlagSet to avoid global state.
 	flagSet := flag.NewFlagSet("{{.LowerProjectName}}", flag.ContinueOnError)
@@ -44,13 +45,16 @@ func run(args []string) error {
 		flagSet.PrintDefaults() // writes to flagSet.Output() which is outputWriter
 	}
 
-	if err := flagSet.Parse(args); err != nil {
+	err := flagSet.Parse(args)
+	if err != nil {
 		return fmt.Errorf("failed to parse flags: %w", err)
 	}
 
 	// Step 1: Load and validate {{.ProjectName}} configuration from YAML.
 	cfg := config.New{{.ProjectName}}Config(configPath)
-	if err := cfg.Init(); err != nil {
+
+	err = cfg.Init()
+	if err != nil {
 		return fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
@@ -60,9 +64,9 @@ func run(args []string) error {
 	// Step 2: Create a new {{.ProjectName}} application instance.
 	app := {{.LowerProjectName}}.New{{.ProjectName}}(cfg)
 
-	// Step 3+: ... TODO: dispatch subcommands / run app
-	err := app.Run()
-    if err != nil {
+	// Step 3: Execute application logic.
+	err = app.Run()
+	if err != nil {
 		return fmt.Errorf("failed to run {{.ProjectName}}: %w", err)
 	}
 
@@ -70,7 +74,8 @@ func run(args []string) error {
 }
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	err := run(os.Args[1:])
+	if err != nil {
 		writef("%s\n", err)
 		exitFunc(1)
 	}

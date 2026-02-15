@@ -1,0 +1,9 @@
+sourcePath: ./templates/project
+usedGoVersion: "1.22.5"
+usedNodeVersion: "20.12.0"
+releaseCurrentWindow: Q2 2025
+releaseUpcomingWindow: Q4 2025
+releaseLongTerm: "2029"
+author: John Doe
+gitUser: johndoe
+currentYear: 2024

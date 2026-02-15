@@ -1,4 +1,4 @@
-# 📄 ADR-010: Config Manager Behavior and Safety
+# ADR-010: Config Manager Behavior and Safety
 
 **Tags:** `manager`, `validation`, `static-analysis`
 
@@ -6,38 +6,45 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-The config manager is responsible for maintaining the set of enabled service configs during a goboot run.
-Improper or invalid configuration could lead to incorrect project generation or crashes.
+The config manager is the gate for service execution input.
+Invalid or duplicate registrations can lead to ambiguous runtime behavior.
 
 ---
 
 ## Decision
 
-The `Manager` only allows registration of configs that:
+Allow config registration only when:
 
-1. Pass `Validate()`
-2. Have a non-empty `ID()`
-3. Are registered under a unique key (by ID)
+1. `Validate()` succeeds,
+2. `ID()` is non-empty, and
+3. the ID is unique in the manager.
 
-Duplicate or invalid entries are rejected with an error. Lookup is always explicit by ID.
+Reject invalid or duplicate entries with explicit errors.
 
 ---
 
 ## Advantages
 
-- Prevents accidental misregistration or overlap
-- Ensures all configs are validated before use
-- Enables safe concurrent reading (future-safe)
+- Prevents ambiguous service-to-config mapping.
+- Moves failure to startup time instead of execution time.
+- Keeps lookup behavior explicit by service ID.
 
 ---
 
 ## Disadvantages
 
-- Requires each config to define its own strict `Validate()` logic
-- It Does not allow multiple configs of the same type (by design)
+- Validation quality depends on each config module implementation.
+- Duplicate-by-design config patterns are not supported.
+
+---
+
+## Alternatives Considered
+
+- **Allow duplicate IDs with merge behavior:** rejected due to ambiguity and harder debugging.
+- **Lazy validation at service runtime:** rejected because failures would occur later and be harder to localize.

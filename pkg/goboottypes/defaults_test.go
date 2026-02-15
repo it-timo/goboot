@@ -25,11 +25,12 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			Entry("Markdown linter command", goboottypes.DefaultMDLintCmd),
 			Entry("Shell linter command", goboottypes.DefaultShellLintCmd),
 			Entry("SHFMT linter command", goboottypes.DefaultSHFMTCmd),
+			Entry("Editor linter command", goboottypes.DefaultEditorLintCmd),
 		)
 
 		Context("when inspecting specific default commands", func() {
 			It("matches full golangci-lint command", func() {
-				Expect(goboottypes.DefaultGoLintCmd).To(ContainSubstring("golangci/golangci-lint:v2.7.1"))
+				Expect(goboottypes.DefaultGoLintCmd).To(ContainSubstring("golangci/golangci-lint:v2.7.2"))
 				Expect(goboottypes.DefaultGoLintCmd).To(ContainSubstring("golangci-lint run ./..."))
 			})
 
@@ -44,7 +45,7 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			})
 
 			It("pins markdownlint docker image, mount, and pattern", func() {
-				Expect(goboottypes.DefaultMDLintCmd).To(ContainSubstring("ghcr.io/igorshubovych/markdownlint-cli:v0.46.0"))
+				Expect(goboottypes.DefaultMDLintCmd).To(ContainSubstring("ghcr.io/igorshubovych/markdownlint-cli:v0.47.0"))
 				Expect(goboottypes.DefaultMDLintCmd).To(ContainSubstring("markdownlint \"**/*.md\""))
 			})
 
@@ -57,6 +58,11 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 				Expect(goboottypes.DefaultSHFMTCmd).To(ContainSubstring("cytopia/shfmt:latest-1.10"))
 				Expect(goboottypes.DefaultSHFMTCmd).To(ContainSubstring("shfmt -d {{SH_FILES}}"))
 			})
+
+			It("pins editorconfig-checker docker image, mount, and pattern", func() {
+				Expect(goboottypes.DefaultEditorLintCmd).To(ContainSubstring("mstruebing/editorconfig-checker:v3.6.0"))
+				Expect(goboottypes.DefaultEditorLintCmd).To(ContainSubstring("-exclude '(\\.git|\\.idea|\\.vscode)'"))
+			})
 		})
 	})
 
@@ -68,6 +74,7 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			Expect(goboottypes.LinterMD).To(Equal("markdown"))
 			Expect(goboottypes.LinterShell).To(Equal("shellcheck"))
 			Expect(goboottypes.LinterSHFMT).To(Equal("shfmt"))
+			Expect(goboottypes.LinterEditor).To(Equal("editor"))
 		})
 	})
 
@@ -89,10 +96,34 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 		})
 	})
 
+	Describe("Default CI Commands", func() {
+		DescribeTable("test commands are non-empty and valid",
+			func(cmd string) {
+				Expect(cmd).NotTo(BeEmpty())
+				Expect(len(cmd)).To(BeNumerically(">", 10), "Command should be a meaningful string (build ...)")
+			},
+
+			Entry("Go build command", goboottypes.DefaultGoBuildCMD),
+		)
+
+		Context("when inspecting specific default commands", func() {
+			It("matches full go build command", func() {
+				Expect(goboottypes.DefaultGoBuildCMD).To(ContainSubstring("go build"))
+			})
+		})
+	})
+
 	Describe("Default Test Identifiers", func() {
 		It("matches exact identifiers", func() {
 			Expect(goboottypes.TestStyleGinkgo).To(Equal("ginkgo"))
 			Expect(goboottypes.TestStyleGo).To(Equal("go"))
+		})
+	})
+
+	Describe("Default Git Providers", func() {
+		It("matches exact identifiers", func() {
+			Expect(goboottypes.GitProviderGitHub).To(Equal("github"))
+			Expect(goboottypes.GitProviderGitLab).To(Equal("gitlab"))
 		})
 	})
 
@@ -154,7 +185,7 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 
 		Context("when validating permission values", func() {
 			It("has sensible file permissions (owner rw, group rx, others rx)", func() {
-				// 0644 = owner: rw (6), group: r-x (4), others: r-x (4)
+					// 0644 = owner: rw- (6), group: r-- (4), others: r-- (4)
 				perm := os.FileMode(goboottypes.FilePerm)
 				Expect(perm&0o600).To(Equal(os.FileMode(0o600)), "Owner should have read+write permissions")
 				Expect(perm&0o040).To(Equal(os.FileMode(0o040)), "Group should have read")

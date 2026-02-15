@@ -1,4 +1,4 @@
-# 📄 ADR-001: Minimalism over Generalization
+# ADR-001: Minimalism over Generalization
 
 **Tags:** `design-philosophy`, `minimalism`, `abstraction`
 
@@ -6,38 +6,44 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Some Go projects tend toward early interface design, reflection, or generic pipelines.
-This can lead to unnecessary abstraction and complexity.
+Early abstractions (interfaces, reflection, plugin maps) can make a small codebase harder to follow.
+At this stage, `goboot` prioritizes predictable control flow and low onboarding overhead.
 
 ---
 
 ## Decision
 
-This package uses:
+Prefer concrete types and linear execution paths.
 
-- Concrete types
-- Clear linear flow (no plugin maps, no injected handlers)
-- Utility helpers (`utils.EnsureDir`) where repetition warrants it
-
-Interfaces are deferred until actually needed.
+- Use explicit structs and direct function calls.
+- Avoid plugin maps and injected handler chains.
+- Keep helper usage limited to repeated, generic operations.
+- Introduce interfaces only when at least two concrete implementations are required by current behavior.
 
 ---
 
 ## Advantages
 
-- High readability and traceability for OSS contributors
-- No unnecessary indirection for trivial or unique logic
-- Reduces the surface area for bugs or misuse
+- Lower indirection in core flows.
+- Easier debugging and tracing during changes.
+- Fewer abstraction layers to keep consistent.
 
 ---
 
 ## Disadvantages
 
-- If support for pluggable templates or dynamic output is added later, refactoring may be needed
-- Contributors unfamiliar with Go’s idioms might expect more abstraction
+- Refactoring cost increases if runtime-extensible behavior is introduced later.
+- Some duplicated patterns may remain until a real abstraction need appears.
+
+---
+
+## Alternatives Considered
+
+- **Abstract-first architecture:** rejected because current scope does not justify the added indirection.
+- **Plugin-oriented extension model from day one:** rejected because extension is not a current product goal.

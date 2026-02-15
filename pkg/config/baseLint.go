@@ -7,48 +7,45 @@ import (
 	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
-// BaseLintConfig defines the metadata used by goboot to generate linting setup for a project.
-// It injects values into templates (e.g., .golangci.yml) and governs how project-specific linting is rendered.
+// BaseLintConfig configures lint template rendering and lint command defaults.
 type BaseLintConfig struct {
-	// SourcePath is the path to the template source directory (e.g., "./templates/lint_base").
+	// SourcePath points to lint template files.
 	SourcePath string `yaml:"sourcePath"`
 
-	// ProjectName is the short identifier for the project (e.g., "goboot").
-	// Used in headings, comments, and other rendered metadata.
+	// ProjectName is injected into rendered output.
 	ProjectName string `yaml:"-"`
 
-	// RepoImportPath is the full Go module import path (e.g., "github.com/org/project").
-	// Used in linter config like depguard to enforce proper import usage.
+	// RepoImportPath is used by lint configs that check import paths.
 	RepoImportPath string `yaml:"-"`
 
-	// Linters is a map of named linter configs to be enabled for this project.
+	// Linters maps linter IDs to config.
 	Linters map[string]*Linter `yaml:"linters"`
 
-	// AllowedPackages is a list of packages that are allowed to be imported.
-	// Used in linter config like depguard.
+	// AllowedPackages lists import exceptions for lint policies.
 	AllowedPackages []string `yaml:"allowedPackages"`
 }
 
-// Linter defines an individual linter to be included in the generated linting setup.
+// Linter configures one linter entry.
 type Linter struct {
-	// Cmd is the shell command to run the linter (e.g., "golangci-lint run").
+	// Cmd is the linter command.
 	Cmd string `yaml:"cmd"`
 
-	// Enabled indicates whether this linter is active for the project.
+	// Enabled controls whether the linter is active.
 	Enabled bool `yaml:"enabled"`
 }
 
-// lintCmds defines the default commands used if no custom `Cmd` is set in the config.
+// lintCmds defines defaults used when Cmd is empty.
 var lintCmds = map[string]string{
-	goboottypes.LinterGo:    goboottypes.DefaultGoLintCmd,
-	goboottypes.LinterYAML:  goboottypes.DefaultYMLLintCmd,
-	goboottypes.LinterMake:  goboottypes.DefaultMakeLintCmd,
-	goboottypes.LinterMD:    goboottypes.DefaultMDLintCmd,
-	goboottypes.LinterShell: goboottypes.DefaultShellLintCmd,
-	goboottypes.LinterSHFMT: goboottypes.DefaultSHFMTCmd,
+	goboottypes.LinterGo:     goboottypes.DefaultGoLintCmd,
+	goboottypes.LinterYAML:   goboottypes.DefaultYMLLintCmd,
+	goboottypes.LinterMake:   goboottypes.DefaultMakeLintCmd,
+	goboottypes.LinterMD:     goboottypes.DefaultMDLintCmd,
+	goboottypes.LinterShell:  goboottypes.DefaultShellLintCmd,
+	goboottypes.LinterSHFMT:  goboottypes.DefaultSHFMTCmd,
+	goboottypes.LinterEditor: goboottypes.DefaultEditorLintCmd,
 }
 
-// newBaseLintConfig returns a newly initialized BaseLintConfig with the project name.
+// newBaseLintConfig constructs BaseLintConfig with derived project name.
 func newBaseLintConfig(projectName string) *BaseLintConfig {
 	return &BaseLintConfig{
 		ProjectName: projectName,
@@ -60,19 +57,15 @@ func (bl *BaseLintConfig) ID() string {
 	return goboottypes.ServiceNameBaseLint
 }
 
-// ReadConfig loads the base lint configuration from the provided YAML file path.
-//
-// It overwrites the current config values with the file contents.
-func (bl *BaseLintConfig) ReadConfig(confPath string, repoURL string) error {
+// ReadConfig loads base_lint YAML and derives RepoImportPath from repoURL.
+func (bl *BaseLintConfig) ReadConfig(confPath string, repoURL string, _ string) error {
 	bl.RepoImportPath = strings.TrimPrefix(repoURL, "https://")
 	bl.RepoImportPath = strings.TrimPrefix(bl.RepoImportPath, "http://")
 
 	return readYMLConfig(confPath, bl)
 }
 
-// Validate verifies the BaseLintConfig for use in scaffolding.
-//
-// It returns an error if required values are missing/invalid, or calls fillNeededInfos.
+// Validate checks required fields and applies derived defaults.
 func (bl *BaseLintConfig) Validate() error {
 	var missing []string
 
@@ -97,9 +90,8 @@ func (bl *BaseLintConfig) Validate() error {
 	return nil
 }
 
-// fillNeededInfos fills any derived fields in the config.
+// fillNeededInfos assigns default lint commands for enabled linters.
 func (bl *BaseLintConfig) fillNeededInfos() {
-	// Apply default cmd if not set.
 	for name, linter := range bl.Linters {
 		if strings.TrimSpace(linter.Cmd) != "" {
 			continue

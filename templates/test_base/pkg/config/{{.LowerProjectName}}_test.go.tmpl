@@ -103,7 +103,7 @@ var _ = Describe("Config Package", func() {
 	AfterEach(func() {
 		if tempDir != "" {
 			Expect(os.RemoveAll(tempDir)).To(Succeed())
-		}	
+		}
 	})
 
 	Describe("New{{.ProjectName}}Config", func() {

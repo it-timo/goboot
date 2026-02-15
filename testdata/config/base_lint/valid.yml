@@ -1,0 +1,7 @@
+sourcePath: ./templates/lint
+linters:
+  golang:
+    enabled: true
+  yaml:
+    enabled: true
+    cmd: yamllint .

@@ -73,7 +73,7 @@ func TestMethod(t *testing.T) {
 
 			err := {{.LowerProjectName}}utils.SomeHelper(...)
 			if (err != nil) != tt.wantErr {
-			    t.Fatalf("SomeHelper() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("SomeHelper() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			// TODO: call the function under test:
@@ -81,11 +81,11 @@ func TestMethod(t *testing.T) {
 			// got, err := {{.LowerProjectName}}utils.Method(...)
 			//
 			// if (err != nil) != tt.wantErr {
-			//     t.Fatalf("Method() error = %v, wantErr %v", err, tt.wantErr)
+			// 	 t.Fatalf("Method() error = %v, wantErr %v", err, tt.wantErr)
 			// }
 			//
 			// if diff := cmp.Diff(tt.want, got); diff != "" {
-			//     t.Fatalf("Method() mismatch (-want +got):\n%s", diff)
+			//	 t.Fatalf("Method() mismatch (-want +got):\n%s", diff)
 			// }
 		})
 	}
@@ -105,7 +105,7 @@ var _ = Describe("Utils Package", func() {
 	AfterEach(func() {
 		if tempDir != "" {
 			Expect(os.RemoveAll(tempDir)).To(Succeed())
-		}	
+		}
 	})
 
 	Describe("SomeHelper", func() {

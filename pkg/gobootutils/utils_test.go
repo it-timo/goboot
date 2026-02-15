@@ -3,6 +3,7 @@ package gobootutils_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -36,7 +37,7 @@ var _ = Describe("Utils Package", func() {
 		}
 	})
 
-	Describe("EnsureDir", func() {
+		Describe("EnsureDir", func() {
 		Context("when creating a single-level directory", func() {
 			It("creates the directory successfully", func() {
 				err := gobootutils.EnsureDir("testdir", root, goboottypes.DirPerm)
@@ -103,9 +104,48 @@ var _ = Describe("Utils Package", func() {
 				Entry("hidden parent reference", "a/b/../../../escape"),
 			)
 		})
-	})
+		})
 
-	Describe("ComparePaths", func() {
+		Describe("EnforceTemplateSourceLimits", func() {
+			Context("when source is within limits", func() {
+				It("succeeds", func() {
+					sourceDir := filepath.Join(tempDir, "templates-ok")
+					Expect(os.MkdirAll(sourceDir, 0o755)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(sourceDir, "a.tmpl"), []byte("a"), 0o644)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(sourceDir, "b.tmpl"), []byte("bb"), 0o644)).To(Succeed())
+
+					err := gobootutils.EnforceTemplateSourceLimits(sourceDir, 10, 1024)
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when file count exceeds limit", func() {
+				It("returns an error", func() {
+					sourceDir := filepath.Join(tempDir, "templates-many")
+					Expect(os.MkdirAll(sourceDir, 0o755)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(sourceDir, "a.tmpl"), []byte("a"), 0o644)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(sourceDir, "b.tmpl"), []byte("b"), 0o644)).To(Succeed())
+
+					err := gobootutils.EnforceTemplateSourceLimits(sourceDir, 1, 1024)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("exceeds file limit"))
+				})
+			})
+
+			Context("when total bytes exceeds limit", func() {
+				It("returns an error", func() {
+					sourceDir := filepath.Join(tempDir, "templates-large")
+					Expect(os.MkdirAll(sourceDir, 0o755)).To(Succeed())
+					Expect(os.WriteFile(filepath.Join(sourceDir, "big.tmpl"), []byte(strings.Repeat("x", 128)), 0o644)).To(Succeed())
+
+					err := gobootutils.EnforceTemplateSourceLimits(sourceDir, 10, 32)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("exceeds byte limit"))
+				})
+			})
+		})
+
+		Describe("ComparePaths", func() {
 		var (
 			testFile1 string
 			testFile2 string

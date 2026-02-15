@@ -37,7 +37,7 @@ var _ = Describe("BaseProject Service", func() {
 			ReleaseUpcomingWindow: "Q2 2025",
 			ReleaseLongTerm:       "2028",
 			Author:                "Test Author",
-			GitProvider:           "github",
+			GitProvider:           goboottypes.GitProviderGitHub,
 			GitUser:               "testuser",
 		}
 
@@ -139,7 +139,7 @@ var _ = Describe("BaseProject Service", func() {
 				ReleaseUpcomingWindow: "Q2 2025",
 				ReleaseLongTerm:       "2028",
 				Author:                "Test Author",
-				GitProvider:           "github",
+				GitProvider:           goboottypes.GitProviderGitHub,
 				GitUser:               "testuser",
 			}
 			Expect(cfg.Validate()).To(Succeed())

@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  test:
+    name: Test (Go ${{ matrix.go-version }})
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['1.25', '1.26']
+    steps:
+      - name: Checkout code
+        # Used commit SHA for actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Setup Go ${{ matrix.go-version }}
+        # Used commit SHA for actions/setup-go@v6.2.0
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Run Tests
+        run: |
+          go test -race -timeout=5m -coverprofile=coverage.txt ./...
+          go tool cover -func=coverage.txt
+
+      - name: Upload coverage report
+        # Used commit SHA for actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9
+        with:
+          name: coverage-report-go-${{ matrix.go-version }}
+          path: coverage.txt
+          retention-days: 7

@@ -1,0 +1,6 @@
+sourcePath: ${TEMPLATES_LOCAL_BASE}
+fileList:
+  - make
+  - task
+  - script
+  - commit

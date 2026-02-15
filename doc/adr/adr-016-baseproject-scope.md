@@ -1,4 +1,4 @@
-# 📄 ADR-016: Service Responsibility & Scope – `baseProject`
+# ADR-016: Service Responsibility & Scope - `baseProject`
 
 **Tags:** `service`, `responsibility`, `structure`
 
@@ -6,38 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-The `baseProject` package defines a service that bootstraps a new Go project from a predefined directory of templates.
-It is the default entry point in the `goboot` project system and responsible
-for rendering structure and injecting metadata.
+`baseProject` creates the baseline repository structure and template output.
+Without a clear boundary, base scaffolding concerns can spread into other services.
 
 ---
 
 ## Decision
 
-Implement the `base_project` service as a concrete type that:
+Keep `base_project` focused on foundational project generation.
 
-- Operates based on `config.BaseProjectConfig`
-- Renders both paths and file contents using Go templates
-- Performs all operations within an isolated `*os.Root`
+- Input: `BaseProjectConfig`.
+- Work: render template paths and file contents.
+- Filesystem boundary: all writes occur in scoped root handling.
 
 ---
 
 ## Advantages
 
-- Keeps responsibility narrow and testable
-- Integrates cleanly into the `goboot` service lifecycle
-- Supports isolated, deterministic generation of project output
-- Enables extensibility in a controlled, concrete way
+- Clear ownership of initial scaffold generation.
+- Lower coupling with lint/test/local/CI services.
+- Predictable generation lifecycle in orchestrator ordering.
 
 ---
 
 ## Disadvantages
 
-- Any future support for different output formats or modes will need manual extension
-- No plugin support (by design) means reduced flexibility unless rewritten
+- Feature requests touching base structure often require this service to change.
+- Additional output modes would require explicit extension work.
+
+---
+
+## Alternatives Considered
+
+- **Fold base structure generation into orchestrator:** rejected because orchestration and generation concerns would mix.
+- **Split into multiple micro-services immediately:** rejected because current scope is still cohesive within one service.

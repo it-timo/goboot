@@ -1,50 +1,64 @@
-#  -----------------------------------------------------------------------------
-#  .pre-commit-config.yaml — Developer checks before commits for `goroot`
-#  -----------------------------------------------------------------------------
-#
-#  All changes must be made by the developer — no auto-magic or format rewriting.
-#  -----------------------------------------------------------------------------
+# Local pre-commit hooks for lint and test checks.
 
 repos:
   - repo: local
     hooks:
       - id: golint
         name: golangci-lint (docker)
-        entry: bash -lc 'docker run --rm -v "$PWD:/app" -w /app golangci/golangci-lint:v2.7.1 golangci-lint run ./...'
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            golangci/golangci-lint:${GOLANGCI_LINT_VERSION} golangci-lint run ./...'
         language: system
         pass_filenames: false
 
       - id: yamllint
         name: yamllint (docker)
-        entry: bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir pipelinecomponents/yamllint:0.35.9 yamllint .'
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            pipelinecomponents/yamllint:${YAMLLINT_VERSION} yamllint .'
         language: system
         pass_filenames: false
 
       - id: checkmake
         name: checkmake (docker)
-        entry: bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir cytopia/checkmake:latest-0.5 Makefile'
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            cytopia/checkmake:${CHECKMAKE_VERSION} Makefile'
         language: system
         pass_filenames: false
 
       - id: markdownlint
         name: markdownlint (docker)
-        entry: bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 "**/*.md"'
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            ghcr.io/igorshubovych/markdownlint-cli:${MARKDOWNLINT_VERSION} "**/*.md"'
         language: system
         pass_filenames: false
 
       - id: shellcheck
         name: shellcheck (docker)
-        entry: >
-          bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir koalaman/shellcheck:v0.11.0
-          -x $(find . -type f -name "*.sh" -not -path "./templates/*")'
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            koalaman/shellcheck:${SHELLCHECK_VERSION} \
+            -x $(find . -type f -name "*.sh" -not -path "./templates/*")'
         language: system
         pass_filenames: false
 
       - id: shfmt
         name: shfmt (check only, docker)
-        entry: >
-          bash -lc 'docker run --rm -v "$PWD:/workdir" -w /workdir mvdan/shfmt:v3.12.0
-          -d -i 2 -ci $(find . -type f -name "*.sh" -not -path "./templates/*")'
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            mvdan/shfmt:${SHFMT_VERSION} \
+            -d -i 2 -ci $(find . -type f -name "*.sh" -not -path "./templates/*")'
+        language: system
+        pass_filenames: false
+
+      - id: editorconfig-checker
+        name: editorconfig-checker (docker)
+        entry: |
+          bash -lc 'source versions.env && docker run --rm -v "$PWD:/workdir" -w /workdir \
+            --entrypoint ec mstruebing/editorconfig-checker:${EDITORCONFIG_CHECKER_VERSION} \
+            -exclude "(\.git|\.idea)"'
         language: system
         pass_filenames: false
 
@@ -58,5 +72,11 @@ repos:
             go tool cover -func=coverage.txt
             rm -f coverage.txt
           '
+        language: system
+        pass_filenames: false
+
+      - id: verify_intro
+        name: Verify IntroProject
+        entry: ./scripts/verify_introproject.sh
         language: system
         pass_filenames: false

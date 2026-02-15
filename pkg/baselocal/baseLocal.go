@@ -1,16 +1,5 @@
 /*
-Package baselocal implements the core bootstrapping logic for the "base_local" service.
-
-This service is responsible for setting up the foundational local script infrastructure
-of a newly scaffolded Go project.
-
-It handles:
-- Copying predefined local script templates into the project.
-- Applying Go `text/template` rendering to inject project-specific metadata.
-- Respecting a strict separation of logic per script (Linter, Test, etc.).
-
-The service expects a validated configuration of type config.BaseLocalConfig
-and is one of the default built-in services within the `goboot` system.
+Package baselocal implements the base_local generation service.
 */
 package baselocal
 
@@ -25,21 +14,15 @@ import (
 	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
-// BaseLocal implements the Service interface and encapsulates the execution logic
-// for generating local scripts.
-//
-// It holds a reference to the resolved config.BaseLocalConfig and tracks the
-// target directory and secure root for file operations.
+// BaseLocal renders local tooling files (Makefile/Taskfile/pre-commit/scripts).
 type BaseLocal struct {
-	cfg       *config.BaseLocalConfig // Validated service configuration.
-	targetDir string                  // Destination path for rendered files.
-	root      *os.Root                // Secure a root handle for a safe file writes.
+	cfg       *config.BaseLocalConfig
+	targetDir string
+	root      *os.Root
 	scriptRegistry
 }
 
-// scriptRegistry holds collected command-line scripts registered by other services.
-//
-// These scripts are grouped by output format (Makefile, Taskfile, or script directory).
+// scriptRegistry stores command registrations grouped by output type.
 type scriptRegistry struct {
 	ProjectName   string
 	MakeScripts   map[string][]string // service → commands
@@ -48,7 +31,7 @@ type scriptRegistry struct {
 	ScriptFiles   map[string][]string // fileName → commands
 }
 
-// NewBaseLocal constructs a new BaseLocal instance for a given target directory.
+// NewBaseLocal constructs BaseLocal for a target directory.
 func NewBaseLocal(targetDir string) *BaseLocal {
 	return &BaseLocal{
 		targetDir: targetDir,
@@ -61,19 +44,12 @@ func NewBaseLocal(targetDir string) *BaseLocal {
 	}
 }
 
-// ID returns the static service identifier used to register and retrieve this service.
-//
-// It matches the constant defined in the type package and must align with
-// the corresponding entry in the goboot config (e.g., "base_local").
+// ID returns the service identifier.
 func (b *BaseLocal) ID() string {
 	return goboottypes.ServiceNameBaseLocal
 }
 
-// SetConfig assigns the base local configuration.
-//
-// It performs a type assertion to ensure the correct config type was passed.
-//
-// This assumes config has been validated during initialization.
+// SetConfig assigns validated base_local config and blocks source==target runs.
 func (b *BaseLocal) SetConfig(cfg config.ServiceConfig) error {
 	baseCfg, ok := cfg.(*config.BaseLocalConfig)
 	if !ok {
@@ -91,13 +67,7 @@ func (b *BaseLocal) SetConfig(cfg config.ServiceConfig) error {
 	return nil
 }
 
-// Run executes the base local generation logic.
-//
-// It performs a type assertion to ensure the correct config type was passed.
-//
-// After storing the typed config, it begins the file scaffolding process.
-//
-// This assumes config has been validated during initialization.
+// Run opens the target root and generates enabled local tooling files.
 func (b *BaseLocal) Run() error {
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
@@ -114,7 +84,6 @@ func (b *BaseLocal) Run() error {
 	b.root = curRoot
 	b.ProjectName = b.cfg.ProjectName
 
-	// Trigger the core logic to copy and render relevant script files.
 	err = b.copyFiles()
 	if err != nil {
 		return fmt.Errorf("failed to copy files: %w", err)
@@ -123,11 +92,7 @@ func (b *BaseLocal) Run() error {
 	return nil
 }
 
-// RegisterLines implements goboottypes.Registrar by accepting script lines from another service.
-//
-// Depending on which script formats are enabled (make/task), the lines are grouped by service name.
-//
-// It ensures that no service registers the same script type more than once.
+// RegisterLines stores commands for enabled output types (make/task/commit).
 func (b *BaseLocal) RegisterLines(name string, lines []string) error {
 	for _, entry := range b.cfg.FileList {
 		switch entry {
@@ -159,9 +124,7 @@ func (b *BaseLocal) RegisterLines(name string, lines []string) error {
 	return nil
 }
 
-// RegisterFile implements goboottypes.Registrar by accepting a list of commands to be written into a script file.
-//
-// Only store the file if the script directory target is enabled and not already used.
+// RegisterFile stores script file commands when script output is enabled.
 func (b *BaseLocal) RegisterFile(name string, lines []string) error {
 	for _, entry := range b.cfg.FileList {
 		switch entry {
@@ -179,13 +142,7 @@ func (b *BaseLocal) RegisterFile(name string, lines []string) error {
 	return nil
 }
 
-// copyFiles performs the actual copy and render operation for all configured script file types.
-//
-// It handles Makefiles, Taskfiles, pre-commit config, and scripts/ directory as needed,
-// based on what the user enabled in the config.
-//
-// For script files, only files that were previously registered will be copied.
-//
+// copyFiles copies and renders all enabled local tooling outputs.
 //nolint:cyclop // flat logic preferred for clarity and extensibility.
 func (b *BaseLocal) copyFiles() error {
 	for _, entry := range b.cfg.FileList {
@@ -227,14 +184,7 @@ func (b *BaseLocal) copyFiles() error {
 	return nil
 }
 
-// copyFile reads a single static file from the SourcePath and writes it
-// into the target directory within the secure os.Root.
-//
-// Used for initial transfer before template rendering is applied.
-//
-// Expect the target path and a relative filename (e.g., "Makefile").
-//
-// Returns an error if reading or writing fails.
+// copyFile copies one template file into root and renders it with scriptRegistry.
 func (b *BaseLocal) copyFile(srcPath, targetPath, fileName string) error {
 	src := path.Join(srcPath, fileName+goboottypes.TemplateSuffix)
 

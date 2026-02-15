@@ -1,57 +1,26 @@
-###############################################################################
-#  Root Generation Configuration
-#
-#  This file controls the execution of the goboot scaffolding engine.
-#  It specifies where to generate the project and which modular services to run.
-#
-#  Every listed service-entry, references to a separate configuration file (e.g., base_project.yml)
-#  that defines the logic and metadata for generating a specific part of the project.
-#
-#  This file is safe to commit. It does not contain secrets or runtime environment values.
-#
-#  Structure:
-#    - `target_path`: where the output project will be created
-#    - `services`: modular logic units to run (e.g., base_project, ci_setup, docker, etc.)
-#
-#  See also:
-#    - configs/base_project.yml (base project metadata)
-#    - ROADMAP.md (feature goals and service expansion plan)
-#    - WORKFLOW.md (release and structure lifecycle)
-#
-#  NOTE:
-#  Service execution order is deterministic and defined inside goboot itself.
-#  Services like "base_project" are always run first because they scaffold the target structure.
-#  Configs should not define order — goboot ensures correctness and avoids unpredictable behavior.
-###############################################################################
+# Root config for one goboot generation run.
+# Safe to commit; no secrets.
+# Service execution order is defined in code, not in this file.
 
-#  ------------------------------------------------------------------------------
-#  General Configuration
-#  ------------------------------------------------------------------------------
+# Output root.
 
 #  Directory where the templates will be read from
 targetPath: "outputs"
 
-#  ------------------------------------------------------------------------------
-#  Project Identity
-#  ------------------------------------------------------------------------------
+# Project identity.
 
-#  Project name (used in CLI, directory names, package names, ...)
+#  Project name (used in CLI output, directory names, and package names)
 projectName: "IntroProject"
 
-#  Primary project URL (GitHub/GitLab repository home url used by go.mod and lint)
+#  Primary project URL (GitHub/GitLab repository home URL used by go.mod and lint)
 repoUrl: "https://github.com/projects"
 
-#  ------------------------------------------------------------------------------
-#  Modular Services Configuration
-#  ------------------------------------------------------------------------------
+#  Git provider (used for provider-specific templates)
+gitProvider: "gitlab"
 
-#  Each service entry defines:
-#    - A stable service ID
-#    - A path to a service-specific config file
-#    - Whether the service should be included in this run
-#
-#  Disabled services will be skipped without error.
-#  Service IDs must match known handlers in the goboot binary.
+# Enabled services for this run.
+# Each entry needs: `id`, `confPath`, `enabled`.
+# Unknown IDs fail fast; disabled services are skipped.
 
 services:
   - id: "base_project"                      #  Unique service identifier (must match internal constant)
@@ -65,4 +34,7 @@ services:
     enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"
+    enabled: true
+  - id: "base_ci"
+    confPath: "./configs/base_ci.yml"
     enabled: true

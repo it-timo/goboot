@@ -1,0 +1,3 @@
+sourcePath: ${TEMPLATES_TEST_BASE}
+useStyle: "go"
+testCmd: ""

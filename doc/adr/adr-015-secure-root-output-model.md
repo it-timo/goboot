@@ -1,4 +1,4 @@
-# 📄 ADR-015: Scoped Filesystem Output via `os.Root`
+# ADR-015: Scoped Filesystem Output via `os.Root`
 
 **Tags:** `filesystem`, `security`, `sandboxing`, `go-1.23+`
 
@@ -6,36 +6,41 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Filesystem generation often risks unintentional overwrites, escapes (`../../`), or host-level side effects.
-Go 1.23 introduced `*os.Root`, a new API that securely confines I/O operations to a specific root path,
-preventing traversal or unsafe writes.
+Project generation performs many filesystem writes.
+Without path confinement, traversal paths and accidental overwrite outside the target directory are possible.
 
 ---
 
 ## Decision
 
-Use `os.OpenRoot()` to establish a **safe, bounded output directory** for each scaffolding run.
-All rendering operations occur inside this confined space — no raw `os.Create`, `filepath.Walk`,
-or unbounded path logic is allowed.
+Use `os.OpenRoot()` and perform generation writes through `*os.Root` scoped operations.
+Avoid unbounded host-path writes in service rendering paths.
 
 ---
 
 ## Advantages
 
-- Strong guarantees against accidental or malicious writings outside the project dir
-- Aligns with modern Go sandboxing and testability goals
-- Easier to mock or simulate in test environments
+- Constrains writes to an explicit project root.
+- Reduces traversal risk in template-driven path rendering.
+- Aligns runtime behavior with secure-by-default filesystem handling.
 
 ---
 
 ## Disadvantages
 
-- Slightly more verbose than traditional file APIs
-- Requires contributors to understand the `*os.Root` model
-- Cannot reuse legacy `os.*` and `filepath.*` code without adapting
+- Requires newer Go runtime support and contributor familiarity.
+- Existing `os`/`filepath` helper code may need adaptation.
+- Integration tests must account for root-scoped behavior.
+
+---
+
+## Alternatives Considered
+
+- **Raw host filesystem writes with manual sanitization:** rejected due to higher risk of incomplete path checks.
+- **In-memory filesystem abstraction only:** rejected because real generated output still requires host filesystem behavior.
