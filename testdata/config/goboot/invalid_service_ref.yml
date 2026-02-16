@@ -1,0 +1,7 @@
+projectName: testproject
+repoUrl: https://github.com/user/testproject
+targetPath: /tmp/test
+services:
+  - id: base_project
+    confPath: ${INVALID_PATH}
+    enabled: true

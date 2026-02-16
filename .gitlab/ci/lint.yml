@@ -1,0 +1,105 @@
+# ==============================================================================
+#  GitLab CI lint job for goboot
+# ==============================================================================
+#
+#  Required variables:
+#    - DOCKER_IMAGE
+#    - GOLANGCI_LINT_IMAGE
+#    - YAMLLINT_IMAGE
+#    - MARKDOWNLINT_IMAGE
+#    - CHECKMAKE_IMAGE
+#    - SHELLCHECK_IMAGE
+#    - SHFMT_IMAGE
+#    - EDITORCONFIG_CHECKER_IMAGE
+# ==============================================================================
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+
+lint-branch:
+  stage: lint
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != 'merge_request_event' && $CI_COMMIT_BRANCH != 'main' && $CI_COMMIT_BRANCH != 'master'
+      when: manual
+  image: $DOCKER_IMAGE
+  services:
+    - name: $DOCKER_IMAGE
+      alias: docker
+  script:
+    - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
+    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
+    # GolangCI-Lint
+    - $DOCKER_RUN_CMD $GOLANGCI_LINT_IMAGE golangci-lint run ./...
+    # Yamllint
+    - $DOCKER_RUN_CMD $YAMLLINT_IMAGE yamllint .
+    # Markdownlint
+    - $DOCKER_RUN_CMD $MARKDOWNLINT_IMAGE "**/*.md"
+    # Checkmake
+    - $DOCKER_RUN_CMD $CHECKMAKE_IMAGE Makefile
+    # Shellcheck
+    - $DOCKER_RUN_CMD $SHELLCHECK_IMAGE -x $SH_FILES
+    # Shfmt
+    - $DOCKER_RUN_CMD $SHFMT_IMAGE -d -i 2 -ci $SH_FILES
+    # EditorConfig checker
+    - $DOCKER_RUN_CMD --entrypoint ec $EDITORCONFIG_CHECKER_IMAGE -exclude "(\.git)"
+
+lint-auto:
+  stage: lint
+  only:
+    - main
+    - master
+  except:
+    - tags
+  image: $DOCKER_IMAGE
+  services:
+    - name: $DOCKER_IMAGE
+      alias: docker
+  script:
+    - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
+    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
+    # GolangCI-Lint
+    - $DOCKER_RUN_CMD $GOLANGCI_LINT_IMAGE golangci-lint run ./...
+    # Yamllint
+    - $DOCKER_RUN_CMD $YAMLLINT_IMAGE yamllint .
+    # Markdownlint
+    - $DOCKER_RUN_CMD $MARKDOWNLINT_IMAGE "**/*.md"
+    # Checkmake
+    - $DOCKER_RUN_CMD $CHECKMAKE_IMAGE Makefile
+    # Shellcheck
+    - $DOCKER_RUN_CMD $SHELLCHECK_IMAGE -x $SH_FILES
+    # Shfmt
+    - $DOCKER_RUN_CMD $SHFMT_IMAGE -d -i 2 -ci $SH_FILES
+    # EditorConfig checker
+    - $DOCKER_RUN_CMD --entrypoint ec $EDITORCONFIG_CHECKER_IMAGE -exclude "(\.git)"
+
+lint-tag:
+  stage: lint
+  only:
+    - tags
+  except:
+    - branches
+  image: $DOCKER_IMAGE
+  services:
+    - name: $DOCKER_IMAGE
+      alias: docker
+  script:
+    - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
+    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
+    # GolangCI-Lint
+    - $DOCKER_RUN_CMD $GOLANGCI_LINT_IMAGE golangci-lint run ./...
+    # Yamllint
+    - $DOCKER_RUN_CMD $YAMLLINT_IMAGE yamllint .
+    # Markdownlint
+    - $DOCKER_RUN_CMD $MARKDOWNLINT_IMAGE "**/*.md"
+    # Checkmake
+    - $DOCKER_RUN_CMD $CHECKMAKE_IMAGE Makefile
+    # Shellcheck
+    - $DOCKER_RUN_CMD $SHELLCHECK_IMAGE -x $SH_FILES
+    # Shfmt
+    - $DOCKER_RUN_CMD $SHFMT_IMAGE -d -i 2 -ci $SH_FILES
+    # EditorConfig checker
+    - $DOCKER_RUN_CMD --entrypoint ec $EDITORCONFIG_CHECKER_IMAGE -exclude "(\.git)"

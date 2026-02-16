@@ -1,0 +1,18 @@
+variables:
+{{- if eq .ImagePolicy "strict" }}
+  # Strict mode uses explicit placeholders by design.
+  # Replace all sha256:REPLACE_ME values before production use.
+{{- range $version := .GoVersions }}
+  GO_{{ replace $version "." "_" }}_DIGEST: "sha256:REPLACE_ME"
+{{- end }}
+  DOCKER_IMAGE: "docker@sha256:REPLACE_ME"
+  GOLANGCI_LINT_IMAGE: "golangci/golangci-lint@sha256:REPLACE_ME"
+  YAMLLINT_IMAGE: "pipelinecomponents/yamllint@sha256:REPLACE_ME"
+  MARKDOWNLINT_IMAGE: "ghcr.io/igorshubovych/markdownlint-cli@sha256:REPLACE_ME"
+  CHECKMAKE_IMAGE: "cytopia/checkmake@sha256:REPLACE_ME"
+  SHELLCHECK_IMAGE: "koalaman/shellcheck@sha256:REPLACE_ME"
+  SHFMT_IMAGE: "mvdan/shfmt@sha256:REPLACE_ME"
+  EDITORCONFIG_CHECKER_IMAGE: "mstruebing/editorconfig-checker@sha256:REPLACE_ME"
+{{- else }}
+  DOCKER_IMAGE: "docker:24.0.5-dind"
+{{- end }}

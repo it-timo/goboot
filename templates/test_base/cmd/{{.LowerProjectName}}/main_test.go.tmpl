@@ -109,13 +109,13 @@ var _ = Describe("{{.ProjectName}} Main Package", func() {
 	AfterEach(func() {
 		if tempDir != "" {
 			Expect(os.RemoveAll(tempDir)).To(Succeed())
-		}	
+		}
 	})
 
 	Describe("run", func() {
 		Context("context description", func() {
 			It("case description", func() {
-				configPath := filepath.Join("..", "configs", "{{.LowerProjectName}}.yml")
+				configPath := filepath.Join("../..", "configs", "{{.LowerProjectName}}.yml")
 				// TODO do something
 				Expect(run([]string{"--config", configPath})).To(Succeed())
 			})

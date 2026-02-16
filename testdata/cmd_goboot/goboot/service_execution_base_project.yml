@@ -1,0 +1,8 @@
+sourcePath: ${SOURCE_DIR}
+usedGoVersion: "1.22.0"
+usedNodeVersion: "20.0.0"
+releaseCurrentWindow: Q1 2025
+releaseUpcomingWindow: Q2 2025
+releaseLongTerm: "2028"
+author: a
+gitUser: u

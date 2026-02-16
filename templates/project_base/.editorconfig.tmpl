@@ -10,19 +10,19 @@ root = true
 charset = utf-8
 end_of_line = lf
 indent_style = space
-indent_size = 4
+indent_size = 2
 trim_trailing_whitespace = true
 insert_final_newline = true
 
 # -----------------------------------------------------------------------------
-# 🐹 Go files (tabs required by gofmt/goimports)
+# 🐹 Go files (use tabs, as per gofmt/goimports)
 # -----------------------------------------------------------------------------
 [*.go]
 indent_style = tab
 indent_size = 4
 
 # -----------------------------------------------------------------------------
-# 📄 Markdown — preserve formatting (e.g., trailing spaces for lists)
+# 📄 Markdown — readable diffs, preserve trailing spaces
 # -----------------------------------------------------------------------------
 [*.md]
 trim_trailing_whitespace = false
@@ -32,29 +32,26 @@ insert_final_newline = true
 # 🔧 Config and data formats
 # -----------------------------------------------------------------------------
 
-# YAML — 2-space indentation per convention
+# YAML (2 spaces, per convention)
 [*.yml]
 indent_style = space
-indent_size = 2
 
 [*.yaml]
 indent_style = space
-indent_size = 2
 
-# JSON — 2-space indentation for readability/tooling
+# JSON (2 spaces, final newline for tooling)
 [*.json]
 indent_style = space
-indent_size = 2
 insert_final_newline = true
 
-# TOML — used in REUSE, config, etc.
+# TOML (also 2 spaces, used in REUSE and tooling)
 [*.toml]
 indent_style = space
-indent_size = 2
 insert_final_newline = true
 
-# .env files — often user-defined spacing
+# .env and related (preserve user formatting)
 [*.env]
+indent_size = 4
 trim_trailing_whitespace = false
 insert_final_newline = true
 
@@ -64,37 +61,36 @@ insert_final_newline = true
 [*.sh]
 insert_final_newline = true
 
-[*.bash]
-insert_final_newline = true
-
-[*.zsh]
-insert_final_newline = true
-
 # -----------------------------------------------------------------------------
-# 🐳 Docker-related files
+# 🐳 Docker files
 # -----------------------------------------------------------------------------
 [Dockerfile]
+indent_size = 4
 insert_final_newline = true
 
 [*.dockerignore]
+indent_size = 4
 trim_trailing_whitespace = false
 
 # -----------------------------------------------------------------------------
-# 🛠 Makefiles (tabs required)
+# 🛠 Makefile (tabs required)
 # -----------------------------------------------------------------------------
 [Makefile]
+indent_size = 4
 indent_style = tab
 trim_trailing_whitespace = true
 
 # -----------------------------------------------------------------------------
-# 🛡 EditorConfig and Git metadata
+# 🛡 Git and EditorConfig files themselves
 # -----------------------------------------------------------------------------
 [.editorconfig]
+indent_size = 4
 insert_final_newline = true
 
 [*.gitignore]
+indent_size = 4
 trim_trailing_whitespace = false
 
-[*.gitattributes]
-trim_trailing_whitespace = false
-insert_final_newline = true
+# -----------------------------------------------------------------------------
+# 🛠 Rules for specific files
+# -----------------------------------------------------------------------------

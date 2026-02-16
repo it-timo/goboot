@@ -1,0 +1,8 @@
+sourcePath: ${TEMPLATES_PROJECT_BASE}
+usedGoVersion: "1.22.5"
+usedNodeVersion: "20.0.0"
+releaseCurrentWindow: "Q1 2026"
+releaseUpcomingWindow: "Q3 2026"
+releaseLongTerm: "2029"
+author: "E2E Author"
+gitUser: "example"

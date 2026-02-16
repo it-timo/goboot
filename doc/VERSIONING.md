@@ -1,7 +1,7 @@
 # Versioning Strategy
 
-The `goboot` project follows [Semantic Versioning 2.0.0](https://semver.org),
-with a **structured feature build-up** during its `v0.x.x` phase.
+`goboot` follows [Semantic Versioning 2.0.0](https://semver.org),
+with structured feature rollout during `v0.x.x`.
 
 ---
 
@@ -18,7 +18,7 @@ layered rollout of features, tooling, and project hygiene.
 
 | Version Range | Purpose                                                        |
 |---------------|----------------------------------------------------------------|
-| `v0.0.x`      | Structural core: services, config, linting, testing, FS safet  |
+| `v0.0.x`      | Structural core: services, config, linting, testing, FS safety |
 | `v0.1.x`      | CI/CD & infrastructure: pipelines, release flow, templates     |
 | `v0.2.x`      | Packaging: Docker images, release artifacts                    |
 | `v0.3.x`      | Contribution: issue templates, governance, community docs      |
@@ -57,4 +57,4 @@ Every `v0.x.x` release is a **public and deliberate step** toward maturity, refl
 
 ## 📚 See Also
 
-- [ROADMAP.md](./ROADMAP.md)
+- [ROADMAP.md](../ROADMAP.md)

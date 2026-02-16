@@ -1,12 +1,10 @@
 # Testing Guide for goboot
 
-This document describes the testing approach, organization, and best practices for the goboot project.
+This guide describes testing approach, structure, and quality gates for goboot.
 
-## Overview
+goboot uses **Ginkgo v2** and **Gomega** for BDD-style tests across packages.
 
-The goboot project uses **Ginkgo v2** and **Gomega** for BDD-style testing with comprehensive coverage across all packages.
-
-### Coverage Targets
+## Coverage Targets
 
 The project enforces strict quality gates to ensure long-term maintainability:
 
@@ -27,8 +25,8 @@ make test
 task test
 ```
 
-> The `make test` and `task test` target uses `go list ./...`
-> and excludes `/test/noauto` and `/templates` packages on purpose.
+`make test` and `task test` use `go list ./...` and intentionally exclude
+`/test/noauto` and `/templates`.
 
 ### Detailed Commands
 
@@ -59,6 +57,28 @@ go test -v ./pkg/goboottypes
 # Test config package
 go test -v ./pkg/config
 ```
+
+### Updating Golden Digests (E2E)
+
+`cmd/goboot/main_e2e_test.go` contains deterministic digest assertions for
+selected generated outputs.
+
+Update them only when output changes are intentional.
+
+```bash
+# Run the relevant E2E specs and read the failing digest from test output
+go test ./cmd/goboot -ginkgo.focus "scaffolds a full project|supports go-style tests|generates deterministic output"
+
+# After updating expected digest constants, verify everything
+go test ./...
+make lint
+```
+
+Rules:
+
+- Do not update digest constants to "make tests pass" without reviewing file diffs.
+- Confirm the changed generated files match the intended contract/policy changes.
+- Keep digest inputs stable (the tests intentionally hash a fixed high-signal file set).
 
 ## Test Organization
 

@@ -1,4 +1,4 @@
-# 📄 ADR-003: Intentional Use of `pkg/utils` as Pure Functional Set
+# ADR-003: Intentional Use of `pkg/gobootutils` as Pure Functional Set
 
 **Tags:** `utils`, `hygiene`, `modularity`, `stateless`
 
@@ -6,40 +6,44 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Utility packages are frequently abused as dumping grounds for unrelated helpers, side-effect-laden code,
-or improperly scoped functions.
-This undermines testability, introduces circular imports, and confuses ownership.
+Utility packages commonly accumulate mixed responsibilities.
+That pattern increases ownership ambiguity and can introduce hidden dependencies.
 
 ---
 
 ## Decision
 
-Restrict `pkg/utils` to **pure, stateless helper functions** with:
+Keep `pkg/gobootutils` restricted to stateless helpers.
 
-- No logging
-- No config access
-- No global variables or shared state
-
-Only generic helpers (e.g., file-safe mkdir, path cleaning) are permitted.
+- No logging side effects.
+- No config/state ownership.
+- No global mutable variables.
+- No domain orchestration logic.
 
 ---
 
 ## Advantages
 
-- Prevents misuse and “god-package” growth
-- Enables safe, dependency-free reuse
-- Avoid import loops and testing side effects
-- Clarifies that `utils` is **not** a place for business logic
+- Clear package boundary for reusable helpers.
+- Reduced risk of import cycles.
+- Easier unit testing of helper behavior.
 
 ---
 
 ## Disadvantages
 
-- Requires active enforcement or review discipline
-- May initially confuse new contributors (“where should I put this?”)
+- Enforcing boundaries requires review discipline.
+- Some helpers may need relocation as domain boundaries evolve.
+
+---
+
+## Alternatives Considered
+
+- **Broad catch-all utils package:** rejected due to long-term coupling and discoverability issues.
+- **No shared utils at all:** rejected because repeated low-level code would grow across services.

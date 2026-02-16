@@ -1,4 +1,4 @@
-# 📄 ADR-013: Error Handling Style: Explicit Early Returns
+# ADR-013: Error Handling Style: Explicit Early Returns
 
 **Tags:** `errors`, `style`, `robustness`
 
@@ -6,44 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Go allows inline error handling using `if err := ...; err != nil`, but this can obscure variable lifetime
-and hurt readability in larger, modular functions.
-
-Given `goboot`’s architectural aim of readability, clarity, and testability,
-we enforce a consistent error style throughout the codebase.
+The codebase favors explicit control flow to support reviewability and debugging.
+Mixed error styles make it harder to reason about lifecycle-heavy service logic.
 
 ---
 
 ## Decision
 
-- Always declare errors using `err = ...` and follow with `if err != nil { return ... }`
-- Avoid `panic()` unless truly unrecoverable (e.g., internal invariant breach)
-- No silent fallback behavior — every error path must be handled or explicitly ignored with a rationale
+Use explicit early returns for errors as the default style.
+
+- Prefer straightforward `err` assignment and `if err != nil` checks.
+- Avoid panic-based control flow for expected runtime paths.
+- Do not silently suppress errors without explicit rationale.
 
 ---
 
 ## Advantages
 
-- Uniform readability across files and services
-- Easier debugging and logging
-- Predictable control flow, especially in services and orchestrators
+- Consistent error flow across services.
+- Easier stack-level tracing during failures.
+- Lower ambiguity in control-flow branches.
 
 ---
 
 ## Disadvantages
 
-- More verbose
-- Requires code review discipline
+- Higher verbosity in some functions.
+- Requires consistent review enforcement to avoid style drift.
 
 ---
 
 ## Alternatives Considered
 
-- Inline error handling (`if err := ...`) — rejected for consistency and traceability
-- `panic` for expected paths — rejected due to robustness and OSS expectations
+- **Mixed style with frequent inline `if err := ...` blocks:** rejected as default to keep repository-wide consistency.
+- **Panic for recoverable paths:** rejected because generation failures should surface as typed errors.

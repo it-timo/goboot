@@ -1,4 +1,4 @@
-# 📄 ADR-009: Strict Interface Scope for Config Modules
+# ADR-009: Strict Interface Scope for Config Modules
 
 **Tags:** `interfaces`, `validation`, `modularity`
 
@@ -6,26 +6,20 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-In Go, interfaces should describe behavior needed by the caller — not be used for early abstraction.
-The config system initially used a narrow `ServiceConfig` interface to ensure every config:
-
-- Has a stable identifier (`ID`)
-- Can load itself from YAML (`ReadConfig`)
-- Can validate itself before registration (`Validate`)
-
-These methods are the minimum required to treat configs uniformly within the manager.
+The config manager needs a minimal common contract to treat service configs uniformly.
+Overly broad interfaces would hide concrete behavior and increase abstraction cost.
 
 ---
 
 ## Decision
 
-Use the following as the only required interface for config modules:
+Keep `ServiceConfig` minimal and focused on required lifecycle operations:
 
 ```go
 type ServiceConfig interface {
@@ -35,18 +29,26 @@ type ServiceConfig interface {
 }
 ```
 
-All other logic remains in the concrete type.
+Other behavior stays on concrete config types.
 
 ---
 
 ## Advantages
 
-- Minimally invasive interface: avoids bloated abstractions
-- Encourages concrete-first thinking and discoverable logic
-- All behavior remains transparent and inspectable
+- Small interface surface with clear purpose.
+- Concrete behavior remains visible.
+- Lower risk of interface bloat.
 
 ---
 
 ## Disadvantages
 
-- Cannot invoke arbitrary behavior on configs unless cast to the concrete type
+- Advanced config-specific operations require concrete type access.
+- Some callers may need explicit type assertions.
+
+---
+
+## Alternatives Considered
+
+- **Larger shared config interface:** rejected because many methods would be unused by the manager.
+- **No shared interface:** rejected because manager logic would require type switches per config module.

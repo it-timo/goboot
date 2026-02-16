@@ -1,4 +1,4 @@
-# 📄 ADR-008: Config System Structure and Philosophy
+# ADR-008: Config System Structure and Philosophy
 
 **Tags:** `config`, `modular-design`, `idiomatic-go`
 
@@ -6,46 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Modern Go tools benefit from modular and declarative configuration, but many systems introduce runtime in-direction,
-reflection, or plugin hooks that obscure behavior and reduce maintainability.
-
-The `goboot` project needs a configuration system that is:
-
-- Predictable
-- Fully typed
-- Declarative but explicit
-- Idiomatic and traceable
-
-This applies both to how configs are defined and how they are loaded, validated, and used.
+Configuration must remain typed and predictable as services increase.
+Dynamic map-based config handling makes validation and refactoring harder.
 
 ---
 
 ## Decision
 
-Implement a centralized `config` package that provides:
+Use a centralized `config` package with typed service config modules and a manager for load/validate/access flows.
 
-- A `ServiceConfig` interface for static config modules (e.g., base project, linting, Docker)
-- A `Manager` that registers, validates, and exposes these modules
-- A `GoBoot` type that acts as entry point and orchestrator
+- Define service-specific config structs.
+- Validate during load before service execution.
+- Keep orchestration explicit in `GoBoot`.
 
 ---
 
 ## Advantages
 
-- Fully typed: All configs are concrete Go structs, no dynamic maps or generics
-- Centralized: Validation, loading, and usage happen in well-defined places
-- Predictable: No runtime injection or service hooks
-- Scalable: New config modules can be added without changing the core behavior
+- Typed config boundaries for each service.
+- Centralized validation behavior.
+- Predictable startup and config lifecycle.
 
 ---
 
 ## Disadvantages
 
-- All config modules must be hardcoded in `createServiceConfig()`
-- Cannot dynamically register config types at runtime
+- New config types require explicit registration updates.
+- Boilerplate cost is higher than dynamic decoding.
+
+---
+
+## Alternatives Considered
+
+- **Map-based/untyped config model:** rejected due to weaker safety and tooling support.
+- **Runtime plugin config registration:** rejected due to reduced traceability and higher runtime complexity.

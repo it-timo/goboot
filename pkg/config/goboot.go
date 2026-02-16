@@ -1,16 +1,6 @@
 /*
-Package config defines and manages the configuration types used by goboot.
-
-It provides structured representations of all YAML-based config files used during project generation,
-validation, and templating.
-
-This includes project metadata, generator behavior, feature toggles, and any future modular or plugin-based settings.
-
-Configurations in this package are designed to be loaded from static sources, validated before use,
-and injected into templates or internal processing logic.
-
-This package does not deal with application runtime config; its scope is limited to bootstrapping
-and template generation inputs.
+Package config defines configuration models and loading helpers for goboot.
+It handles scaffold-time config only, not runtime application config.
 */
 package config
 
@@ -26,41 +16,31 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// GoBoot holds the global context for a goboot run.
-//
-// It serves as the orchestrator for configuration loading, validation, and access.
-//
-// This includes:
-//   - The base configuration path for the main goboot config
-//   - A list of modular config declarations (ServiceConfigMeta)
-//   - A central config manager (ConfManager) to register and resolve modules
+// GoBoot holds root config values and the config manager for a scaffold run.
 type GoBoot struct {
-	// configPath is the path to the main goboot YAML config file (e.g., ./configs/goboot.yml).
+	// configPath points to the main goboot YAML file.
 	configPath string
 
-	// ProjectName is the identifier for the project (e.g., "goboot").
-	// Used in headings, comments, and other rendered metadata.
+	// ProjectName is the generated project identifier.
 	ProjectName string `yaml:"projectName"`
 
-	// RepoURL is the full repository URL (e.g., "https://github.com/user/project").
-	// Used in go.mod and README links.
+	// RepoURL is the repository URL used for derived metadata.
 	RepoURL string `yaml:"repoUrl"`
 
-	// TargetPath is the path to the project target / output.
+	// GitProvider selects provider-specific behavior.
+	GitProvider string `yaml:"gitProvider"`
+
+	// TargetPath is the directory that receives generated output.
 	TargetPath string `yaml:"targetPath"`
 
-	// Services is a list of external service config declarations to load (e.g., base_project, linting).
+	// Services lists service configs to load.
 	Services []ServiceConfigMeta `yaml:"services"`
 
-	// ConfManager holds validated and registered configuration modules.
-	//
-	// It provides access to modular service configs during generation.
+	// ConfManager stores validated service configs by ID.
 	ConfManager *Manager
 }
 
-// NewGoBoot creates a new GoBoot instance with the given base configuration path.
-//
-// It initializes an empty ConfManager for later population.
+// NewGoBoot returns a GoBoot with an empty config manager.
 func NewGoBoot(confPath string) *GoBoot {
 	return &GoBoot{
 		configPath:  confPath,
@@ -68,12 +48,7 @@ func NewGoBoot(confPath string) *GoBoot {
 	}
 }
 
-// Init loads and validates the goboot base configuration and all declared service modules.
-//
-// It performs the following:
-//   - Reads and parses the main goboot YAML config
-//   - Iterates over declared services and loads their configs via factory
-//   - Validates and registers each service config with the ConfManager
+// Init loads the root config, validates it, then loads and registers enabled services.
 func (gb *GoBoot) Init() error {
 	err := gb.readConfig()
 	if err != nil {
@@ -97,7 +72,7 @@ func (gb *GoBoot) Init() error {
 			return fmt.Errorf("invalid or nil config returned for service ID: %q", svc.ID)
 		}
 
-		err = cfg.ReadConfig(svc.ConfPath, gb.RepoURL)
+		err = cfg.ReadConfig(svc.ConfPath, gb.RepoURL, gb.GitProvider)
 		if err != nil {
 			return fmt.Errorf("failed to read config for %q: %w", svc.ID, err)
 		}
@@ -111,15 +86,12 @@ func (gb *GoBoot) Init() error {
 	return nil
 }
 
-// readConfig reads the goboot base configuration from its YAML path
-// and unmarshal the values into the current GoBoot struct instance.
+// readConfig loads the root goboot YAML into gb.
 func (gb *GoBoot) readConfig() error {
 	return readYMLConfig(gb.configPath, gb)
 }
 
-// validateBase checks the top-level goboot config for required fields and enabled service paths.
-//
-// It ensures projectName, targetPath, and each enabled service's confPath are present.
+// validateBase validates required root fields and enabled service paths.
 //
 //nolint:cyclop // flat logic preferred for clarity and extensibility.
 func (gb *GoBoot) validateBase() error {
@@ -140,10 +112,11 @@ func (gb *GoBoot) validateBase() error {
 			continue
 		}
 
-		// Pre check for known dependencies to reduce error noise.
+		// Report repoUrl once, even if multiple dependent services are enabled.
 		isExempt := svc.ID == goboottypes.ServiceNameBaseProject ||
 			svc.ID == goboottypes.ServiceNameBaseLint ||
-			svc.ID == goboottypes.ServiceNameBaseTest
+			svc.ID == goboottypes.ServiceNameBaseTest ||
+			svc.ID == goboottypes.ServiceNameBaseCI
 
 		if !importPathMissing && !isExempt {
 			if strings.TrimSpace(gb.RepoURL) == "" {
@@ -167,13 +140,7 @@ func (gb *GoBoot) validateBase() error {
 	return nil
 }
 
-// createServiceConfig acts as the central mapping point for service config IDs.
-//
-// Each known ServiceConfig type must be registered here explicitly.
-//
-// This maps string identifiers (e.g., "base_project") to their concrete implementations.
-//
-// Only configs listed here can be used during runtime.
+// createServiceConfig maps a service ID to its concrete config implementation.
 func createServiceConfig(id, projectName string) ServiceConfig {
 	switch id {
 	case goboottypes.ServiceNameBaseProject:
@@ -184,15 +151,15 @@ func createServiceConfig(id, projectName string) ServiceConfig {
 		return newBaseLocalConfig(projectName)
 	case goboottypes.ServiceNameBaseTest:
 		return newBaseTestConfig(projectName)
+	case goboottypes.ServiceNameBaseCI:
+		return newBaseCIConfig(projectName)
 	// Extend with more cases for additional service types.
 	default:
 		return nil
 	}
 }
 
-// readYMLConfig reads the given YAML file path and unmarshal it into the provided destination struct.
-//
-// It returns an error if the file cannot be read or the YAML is malformed.
+// readYMLConfig reads confPath and unmarshals YAML into cfg.
 func readYMLConfig(confPath string, cfg interface{}) error {
 	curPath, err := filepath.Abs(path.Clean(confPath))
 	if err != nil {

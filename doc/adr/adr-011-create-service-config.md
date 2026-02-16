@@ -1,4 +1,4 @@
-# 📄 ADR-011: Centralized Config Dispatch via `createServiceConfig()`
+# ADR-011: Centralized Config Dispatch via `createServiceConfig()`
 
 **Tags:** `dispatch`, `registration`, `no-reflection`
 
@@ -6,46 +6,41 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Dynamic loading of unknown config types is error-prone, especially when reflection, registration maps,
-or runtime hooks are involved.
-Instead, the `goboot` tool makes config support explicit and central.
+The manager needs a deterministic mapping from service IDs to config types.
+Reflection-based dispatch increases runtime complexity and obscures allowed config set.
 
 ---
 
 ## Decision
 
-Use a hardcoded factory method to map known config IDs to their concrete type:
-
-```go
-func createServiceConfig(id string) ServiceConfig {
-    switch id {
-    case types.ServiceNameBaseProject:
-        return newBaseProjectConfig()
-    default:
-        return nil
-    }
-}
-```
-
-No runtime plugins. No reflection.
+Use a hardcoded factory switch (`createServiceConfig`) that maps known service IDs to concrete config structs.
+Unknown IDs return `nil`.
 
 ---
 
 ## Advantages
 
-- Explicit control over what config types are allowed
-- Impossible to inject unauthorized logic via YAML
-- Easier to statically analyze and extend
+- Supported config types are explicit.
+- Startup behavior is deterministic.
+- Easier static analysis and review of allowed modules.
 
 ---
 
 ## Disadvantages
 
-- Requires a manual update for each new config module
-- Not suitable for plugin ecosystems (which goboot does not aim to support)
+- Every new service requires a factory update.
+- Not suitable for runtime plugin ecosystems.
+
+---
+
+## Alternatives Considered
+
+- **Reflection-based constructor lookup:** rejected due to lower transparency and higher runtime risk.
+- **Map registry populated at init time:** rejected because registration side
+  effects are less explicit than one central switch.

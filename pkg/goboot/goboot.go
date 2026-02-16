@@ -1,12 +1,5 @@
 /*
-Package goboot defines the core orchestration layer of the `goboot` CLI tool.
-
-This package coordinates the loading, registration, and execution of modular generation services.
-It acts as the top-level entry point, delegating control to a service manager that runs logic
-based on the configuration declared in a YAML config file (see config.GoBoot).
-
-Does not implement generation logic — instead, it dynamically wires together service modules (e.g., baseProject)
-that encapsulate feature-specific behavior.
+Package goboot provides top-level service orchestration.
 */
 package goboot
 
@@ -18,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/it-timo/goboot/pkg/baseci"
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
 	"github.com/it-timo/goboot/pkg/baseproject"
@@ -26,23 +20,15 @@ import (
 	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
-// GoBoot is the central controller struct for running goboot-based generation logic.
-//
-// It is initialized with the validated configuration (config.GoBoot)
-// and uses a service manager to conditionally load and execute service implementations.
+// GoBoot orchestrates service registration and execution for one scaffold run.
 type GoBoot struct {
-	// cfg holds the loaded and validated configuration contexts.
 	cfg *config.GoBoot
 
-	// ServiceMgr manages the lifecycle and execution of registered service modules.
+	// ServiceMgr manages service order and lifecycle.
 	ServiceMgr *serviceManager
 }
 
-// NewGoBoot creates and returns a new GoBoot instance bound to the provided configuration.
-//
-// It wires the internal service manager to the configuration's ConfManager.
-//
-// Note: This does not yet load services — use RegisterServices() afterward.
+// NewGoBoot returns a GoBoot wired to the provided config.
 func NewGoBoot(config *config.GoBoot) *GoBoot {
 	return &GoBoot{
 		cfg:        config,
@@ -50,24 +36,13 @@ func NewGoBoot(config *config.GoBoot) *GoBoot {
 	}
 }
 
-// RegisterServices evaluates all declared services in the config and registers only those marked as enabled.
-//
-// Each service must be explicitly handled here by matching its ID.
-//
-// This avoids runtime registration logic and keeps service orchestration predictable.
-//
-// It performs the following for each declared and enabled service:
-//   - Checks the service ID
-//   - Instantiates the appropriate service implementation
-//   - Registers the service with the service manager
-//
-// Returns an error if any declared service is unknown or registration fails.
+// RegisterServices ensures target root exists and registers enabled services.
 func (gb *GoBoot) RegisterServices() error {
 	if gb.cfg.Services == nil {
 		return errors.New("no services declared in config")
 	}
 
-	// creates the target dir if not exist.
+	// Ensure target root exists.
 	err := os.MkdirAll(gb.cfg.TargetPath, goboottypes.DirPerm)
 	if err != nil {
 		return fmt.Errorf("failed to create target directory: %w", err)
@@ -86,17 +61,12 @@ func (gb *GoBoot) RegisterServices() error {
 	return nil
 }
 
-// RunServices executes all registered services in the order they were registered.
-//
-// It delegates to the internal service manager, which pulls the appropriate config
-// for each service and invokes its logic.
-//
-// If a service has no config, it is skipped.
+// RunServices executes registered services in manager-defined order.
 func (gb *GoBoot) RunServices() error {
 	return gb.ServiceMgr.runAll()
 }
 
-// RunGoModTidy runs go mod tidy if the go.mod file exists.
+// RunGoModTidy runs `go mod tidy` when enabled and go.mod exists.
 func (gb *GoBoot) RunGoModTidy(execute bool) error {
 	if !execute {
 		return nil
@@ -114,7 +84,7 @@ func (gb *GoBoot) RunGoModTidy(execute bool) error {
 		return fmt.Errorf("failed to stat go.mod: %w", err)
 	}
 
-	// cd to target path and make go mod tidy.
+	// Run in generated project root.
 	cmd := exec.CommandContext(context.Background(), "go", "mod", "tidy")
 	cmd.Dir = projectRoot
 
@@ -126,12 +96,7 @@ func (gb *GoBoot) RunGoModTidy(execute bool) error {
 	return nil
 }
 
-// registerPreServices registers foundational services that need to exist before other services can be used.
-//
-// This typically includes internal infrastructure providers (e.g., script registrars).
-// These services must be registered early to allow other services to hook into them.
-//
-// Returns an error if any registration fails.
+// registerPreServices registers services that other services depend on.
 func (gb *GoBoot) registerPreServices() error {
 	for _, meta := range gb.cfg.Services {
 		if !meta.IsEnabled() {
@@ -139,6 +104,13 @@ func (gb *GoBoot) registerPreServices() error {
 		}
 
 		switch meta.ID {
+		case goboottypes.ServiceNameBaseCI:
+			baseCI := baseci.NewBaseCI(gb.cfg.TargetPath)
+
+			err := gb.ServiceMgr.register(baseCI)
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseCI, err)
+			}
 		case goboottypes.ServiceNameBaseLocal:
 			baseLocal := baselocal.NewBaseLocal(gb.cfg.TargetPath)
 
@@ -147,7 +119,7 @@ func (gb *GoBoot) registerPreServices() error {
 				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseLocal, err)
 			}
 		default:
-			// skip all services that are not explicitly defined.
+			// Ignore non-pre services here.
 			continue
 		}
 
@@ -157,13 +129,7 @@ func (gb *GoBoot) registerPreServices() error {
 	return nil
 }
 
-// registerMainServices registers the primary generation services defined in the config.
-//
-// Each enabled service is instantiated and registered using its unique service ID.
-// Registration fails if the service is unknown or if instantiation fails.
-//
-// Returns an error if any service fails to register.
-//
+// registerMainServices registers all non-pre services.
 //nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (gb *GoBoot) registerMainServices() error {
 	for _, meta := range gb.cfg.Services {
@@ -183,7 +149,10 @@ func (gb *GoBoot) registerMainServices() error {
 				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseLint, err)
 			}
 		case goboottypes.ServiceNameBaseLocal:
-			// skip it, because it's registered in pre-service.
+			// Registered earlier as a pre service.
+			continue
+		case goboottypes.ServiceNameBaseCI:
+			// Registered earlier as a pre service.
 			continue
 		case goboottypes.ServiceNameBaseTest:
 			err := gb.ServiceMgr.register(basetest.NewBaseTest(gb.cfg.TargetPath))

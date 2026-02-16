@@ -129,12 +129,13 @@ var _ = Describe("BaseLintConfig", func() {
 		Context("when applying default linter commands", func() {
 			It("fills in all standard default commands", func() {
 				baseLint.Linters = map[string]*config.Linter{
-					goboottypes.LinterGo:    {Enabled: true},
-					goboottypes.LinterYAML:  {Enabled: true},
-					goboottypes.LinterMake:  {Enabled: true},
-					goboottypes.LinterMD:    {Enabled: true},
-					goboottypes.LinterShell: {Enabled: true},
-					goboottypes.LinterSHFMT: {Enabled: true},
+					goboottypes.LinterGo:     {Enabled: true},
+					goboottypes.LinterYAML:   {Enabled: true},
+					goboottypes.LinterMake:   {Enabled: true},
+					goboottypes.LinterMD:     {Enabled: true},
+					goboottypes.LinterShell:  {Enabled: true},
+					goboottypes.LinterSHFMT:  {Enabled: true},
+					goboottypes.LinterEditor: {Enabled: true},
 				}
 
 				err := baseLint.Validate()
@@ -146,6 +147,7 @@ var _ = Describe("BaseLintConfig", func() {
 				Expect(baseLint.Linters[goboottypes.LinterMD].Cmd).To(Equal(goboottypes.DefaultMDLintCmd))
 				Expect(baseLint.Linters[goboottypes.LinterShell].Cmd).To(Equal(goboottypes.DefaultShellLintCmd))
 				Expect(baseLint.Linters[goboottypes.LinterSHFMT].Cmd).To(Equal(goboottypes.DefaultSHFMTCmd))
+				Expect(baseLint.Linters[goboottypes.LinterEditor].Cmd).To(Equal(goboottypes.DefaultEditorLintCmd))
 			})
 
 			It("does not overwrite custom commands", func() {
@@ -218,19 +220,14 @@ var _ = Describe("BaseLintConfig", func() {
 
 		Context("with valid YAML file", func() {
 			It("loads the configuration successfully", func() {
-				yamlContent := `sourcePath: ./templates/lint
-linters:
-  golang:
-    enabled: true
-  yaml:
-    enabled: true
-    cmd: yamllint .
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_lint/valid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseLintConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.SourcePath).To(Equal("./templates/lint"))
@@ -243,21 +240,21 @@ linters:
 
 		Context("with non-existent file", func() {
 			It("returns an error", func() {
-				err := baseLint.ReadConfig("/nonexistent/path.yml", testPath)
+				err := baseLint.ReadConfig("/nonexistent/path.yml", testPath, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("with invalid YAML", func() {
 			It("returns an error", func() {
-				invalidYAML := `sourcePath: ./templates
-projectName: [invalid yaml structure
-`
-				err := os.WriteFile(configPath, []byte(invalidYAML), 0644)
+				invalidYAML, err := loadTestFixture("config/base_lint/invalid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, invalidYAML, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseLintConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})

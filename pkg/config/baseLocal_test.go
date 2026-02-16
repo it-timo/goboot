@@ -153,17 +153,14 @@ var _ = Describe("BaseLocalConfig", func() {
 
 		Context("with valid YAML file", func() {
 			It("loads the configuration successfully", func() {
-				yamlContent := `sourcePath: ./templates/local
-fileList:
-  - Makefile
-  - Taskfile.yml
-  - .editorconfig
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_local/valid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseLocalConfig{}
-				err = newConfig.ReadConfig(configPath, "")
+				err = newConfig.ReadConfig(configPath, "", "")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.SourcePath).To(Equal("./templates/local"))
@@ -175,16 +172,14 @@ fileList:
 			})
 
 			It("loads single file in fileList", func() {
-				yamlContent := `sourcePath: ./templates
-projectName: proj
-fileList:
-  - single.txt
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_local/single.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseLocalConfig{}
-				err = newConfig.ReadConfig(configPath, "")
+				err = newConfig.ReadConfig(configPath, "", "")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.FileList).To(HaveLen(1))
@@ -194,23 +189,21 @@ fileList:
 
 		Context("with non-existent file", func() {
 			It("returns an error", func() {
-				err := baseLocal.ReadConfig("/nonexistent/path.yml", "")
+				err := baseLocal.ReadConfig("/nonexistent/path.yml", "", "")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("with invalid YAML", func() {
 			It("returns an error", func() {
-				invalidYAML := `sourcePath: ./templates
-projectName: [invalid structure
-fileList:
-  - not properly closed
-`
-				err := os.WriteFile(configPath, []byte(invalidYAML), 0644)
+				invalidYAML, err := loadTestFixture("config/base_local/invalid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, invalidYAML, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseLocalConfig{}
-				err = newConfig.ReadConfig(configPath, "")
+				err = newConfig.ReadConfig(configPath, "", "")
 				Expect(err).To(HaveOccurred())
 			})
 		})

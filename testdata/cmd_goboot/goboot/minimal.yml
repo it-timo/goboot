@@ -1,0 +1,3 @@
+projectName: ${PROJECT_NAME}
+targetPath: ${TARGET_DIR}
+services: []

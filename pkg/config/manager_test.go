@@ -20,7 +20,7 @@ func (m *mockServiceConfig) ID() string {
 	return m.id
 }
 
-func (m *mockServiceConfig) ReadConfig(_, _ string) error {
+func (m *mockServiceConfig) ReadConfig(_, _ string, _ string) error {
 	if m.shouldError {
 		return errors.New("mock read error")
 	}

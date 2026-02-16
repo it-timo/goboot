@@ -31,7 +31,7 @@ var _ = Describe("BaseProjectConfig", func() {
 			ReleaseUpcomingWindow: "Q3 2025",
 			ReleaseLongTerm:       "2028",
 			Author:                "Test Author",
-			GitProvider:           "github",
+			GitProvider:           goboottypes.GitProviderGitHub,
 			GitUser:               "testuser",
 		}
 
@@ -126,7 +126,7 @@ var _ = Describe("BaseProjectConfig", func() {
 
 		Context("with GitProvider validation", func() {
 			BeforeEach(func() {
-				baseProject.GitProvider = "github"
+				baseProject.GitProvider = goboottypes.GitProviderGitHub
 			})
 
 			It("validates successfully with GitUser set", func() {
@@ -233,22 +233,14 @@ var _ = Describe("BaseProjectConfig", func() {
 
 		Context("with valid YAML file", func() {
 			It("loads the configuration successfully", func() {
-				yamlContent := `sourcePath: ./templates/project
-usedGoVersion: "1.22.5"
-usedNodeVersion: "20.12.0"
-releaseCurrentWindow: Q2 2025
-releaseUpcomingWindow: Q4 2025
-releaseLongTerm: "2029"
-author: John Doe
-gitProvider: github
-gitUser: johndoe
-currentYear: 2024
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_project/valid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseProjectConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, goboottypes.GitProviderGitHub)
 				Expect(err).NotTo(HaveOccurred())
 				newConfig.ProjectName = "testproject"
 				Expect(newConfig.Validate()).To(Succeed())
@@ -263,57 +255,46 @@ currentYear: 2024
 				Expect(newConfig.ReleaseUpcomingWindow).To(Equal("Q4 2025"))
 				Expect(newConfig.ReleaseLongTerm).To(Equal("2029"))
 				Expect(newConfig.Author).To(Equal("John Doe"))
-				Expect(newConfig.GitProvider).To(Equal("github"))
+				Expect(newConfig.GitProvider).To(Equal(goboottypes.GitProviderGitHub))
 				Expect(newConfig.GitUser).To(Equal("johndoe"))
 				Expect(newConfig.CurrentYear).To(Equal(2024))
 			})
 
 			It("loads Git configuration", func() {
-				yamlContent := `sourcePath: ./templates
-projectUrl: https://gitlab.com/group/project
-repoPath: gitlab.com/group/project
-projectName: project
-usedGoVersion: "1.21.0"
-usedNodeVersion: "18.0.0"
-releaseCurrentWindow: Q1 2025
-releaseUpcomingWindow: Q2 2025
-releaseLongTerm: "2027"
-author: Jane Smith
-gitProvider: gitlab
-gitUser: janesmith
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/base_project/gitlab.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseProjectConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, goboottypes.GitProviderGitLab)
 				Expect(err).NotTo(HaveOccurred())
 				newConfig.ProjectName = "project"
 				Expect(newConfig.Validate()).To(Succeed())
 
-				Expect(newConfig.GitProvider).To(Equal("gitlab"))
+				Expect(newConfig.GitProvider).To(Equal(goboottypes.GitProviderGitLab))
 				Expect(newConfig.GitUser).To(Equal("janesmith"))
 			})
 		})
 
 		Context("with non-existent file", func() {
 			It("returns an error", func() {
-				err := baseProject.ReadConfig("/nonexistent/path.yml", testPath)
+				err := baseProject.ReadConfig("/nonexistent/path.yml", testPath, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("with invalid YAML", func() {
 			It("returns an error", func() {
-				invalidYAML := `sourcePath: ./templates
-projectName: [invalid
-usedGoVersion: not closed properly
-`
-				err := os.WriteFile(configPath, []byte(invalidYAML), 0644)
+				invalidYAML, err := loadTestFixture("config/base_project/invalid.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, invalidYAML, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				newConfig := &config.BaseProjectConfig{}
-				err = newConfig.ReadConfig(configPath, testPath)
+				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).To(HaveOccurred())
 			})
 		})

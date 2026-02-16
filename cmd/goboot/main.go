@@ -30,14 +30,15 @@ func run(args []string) error {
 
 	fs.StringVar(&configPath, "config", "./configs/goboot.yml", "Path to the goboot config file")
 
-	if err := fs.Parse(args); err != nil {
+	err := fs.Parse(args)
+	if err != nil {
 		return fmt.Errorf("failed to parse flags: %w", err)
 	}
 
 	// Step 1: Load and validate goboot configuration from YAML.
 	cfg := config.NewGoBoot(configPath)
 
-	err := cfg.Init()
+	err = cfg.Init()
 	if err != nil {
 		return fmt.Errorf("failed to initialize configuration: %w", err)
 	}

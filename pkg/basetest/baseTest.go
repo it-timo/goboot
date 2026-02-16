@@ -1,14 +1,5 @@
 /*
-Package basetest implements the core bootstrapping logic for the "base_test" service.
-
-This service is responsible for setting up the foundational testing infrastructure of a newly scaffolded Go project.
-
-It handles:
-  - Copying predefined testing configuration templates into the project.
-  - Applying Go `text/template` rendering to inject project-specific metadata into both filenames and content.
-
-The service expects a validated configuration of type config.BaseTestConfig
-and is one of the default built-in services within the `goboot` system.
+Package basetest implements the base_test generation service.
 */
 package basetest
 
@@ -25,45 +16,40 @@ import (
 	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
-// BaseTest implements the Service interface and encapsulates the execution logic
-// for generating testing configuration files based on user-defined config.
-//
-// It holds a reference to the resolved config.BaseTestConfig and tracks the
-// target directory and secure root for file operations.
+// BaseTest renders test scaffolding templates and registers optional test commands.
 type BaseTest struct {
-	cfg       *config.BaseTestConfig // Validated service configuration.
-	targetDir string                 // Destination path for rendered files.
-	root      *os.Root               // Secure a root handle for a safe file writes.
-	script    goboottypes.Registrar  // Contains the Methods to run in base_local.
+	cfg       *config.BaseTestConfig
+	targetDir string
+	root      *os.Root
+	script    goboottypes.Registrar
+	ci        goboottypes.Registrar
 }
 
-// NewBaseTest constructs a new BaseTest instance for a given target directory.
+// NewBaseTest constructs BaseTest for a target directory.
 func NewBaseTest(targetDir string) *BaseTest {
 	return &BaseTest{
 		targetDir: targetDir,
 		script:    nil,
+		ci:        nil,
 	}
 }
 
-// SetScriptReceiver sets the Registrar implementation used for registering script commands.
-//
-// This allows services like base_local to collect command definitions from this service.
-//
-// It must be called before Run if script registration is desired.
+// SetScriptReceiver injects the registrar used for local script registration.
 func (b *BaseTest) SetScriptReceiver(reg goboottypes.Registrar) {
 	b.script = reg
 }
 
-// ID returns the static service identifier used to register and retrieve this service.
+// SetCIReceiver injects the registrar used for CI registration.
+func (b *BaseTest) SetCIReceiver(reg goboottypes.Registrar) {
+	b.ci = reg
+}
+
+// ID returns the service identifier.
 func (b *BaseTest) ID() string {
 	return goboottypes.ServiceNameBaseTest
 }
 
-// SetConfig assigns the base test configuration.
-//
-// It performs a type assertion to ensure the correct config type was passed.
-//
-// This assumes config has been validated during initialization.
+// SetConfig assigns validated base_test config and blocks source==target runs.
 func (b *BaseTest) SetConfig(cfg config.ServiceConfig) error {
 	baseCfg, ok := cfg.(*config.BaseTestConfig)
 	if !ok {
@@ -78,13 +64,19 @@ func (b *BaseTest) SetConfig(cfg config.ServiceConfig) error {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
 
+	err = gobootutils.EnforceTemplateSourceLimits(
+		b.cfg.SourcePath,
+		goboottypes.MaxTemplateSourceFiles,
+		goboottypes.MaxTemplateSourceBytes,
+	)
+	if err != nil {
+		return fmt.Errorf("failed template source guardrails for base_test: %w", err)
+	}
+
 	return nil
 }
 
-// Run executes the base test generation logic.
-//
-// It recursively walks the configured SourcePath (templates), copies files to the target,
-// and applies template rendering to both file paths and file content.
+// Run creates test files and optionally registers script/CI commands.
 func (b *BaseTest) Run() error {
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
@@ -105,16 +97,17 @@ func (b *BaseTest) Run() error {
 		}
 	}
 
+	if b.ci != nil {
+		err := b.registerCIJobs()
+		if err != nil {
+			return fmt.Errorf("failed to register ci jobs: %w", err)
+		}
+	}
+
 	return nil
 }
 
-// createNewTestSetup initializes the test structure by rendering paths and file contents.
-//
-// It performs two passes over the template directory inside the secure root:
-//   - 1. Renders file and directory paths using Go templates.
-//   - 2. Renders the contents of template files using the BaseTest config.
-//
-// All operations are strictly contained within the `*os.Root` directory.
+// createNewTestSetup renders paths first, then file contents, inside b.root.
 func (b *BaseTest) createNewTestSetup() error {
 	// Step 1: Copy from host template into root.
 	err := b.walkAndApply(os.DirFS(b.cfg.SourcePath), b.renderPath)
@@ -122,7 +115,7 @@ func (b *BaseTest) createNewTestSetup() error {
 		return fmt.Errorf("failed to render path: %w", err)
 	}
 
-	// 2. Render file contents inside an already-copied structure.
+	// Step 2: Render file contents in the copied structure.
 	err = b.walkAndApply(b.root.FS(), b.renderContent)
 	if err != nil {
 		return fmt.Errorf("failed to render content: %w", err)
@@ -131,13 +124,7 @@ func (b *BaseTest) createNewTestSetup() error {
 	return nil
 }
 
-// walkAndApply traverses the given fs.FS starting from the root ".", applying the handler function to each entry.
-//
-// Parameters:
-//   - fsys: the filesystem to walk (e.g., os.DirFS(rootDir), b.root.FS()).
-//   - handler: the function to apply to each entry.
-//
-// Returns an error if walking or handling fails.
+// walkAndApply walks fsys and runs handler for every entry.
 func (b *BaseTest) walkAndApply(fsys fs.FS, handler func(path string, d fs.DirEntry) error) error {
 	err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -158,16 +145,8 @@ func (b *BaseTest) walkAndApply(fsys fs.FS, handler func(path string, d fs.DirEn
 	return nil
 }
 
-// renderPath processes directories and files from the template source,
-// applying Go template rendering to all relative paths and replicating the structure inside the root.
-//
-// For files, the content is copied as-is (templating happens in renderContent).
-//
-// Parameters:
-//   - path: The relative target path within the root.
-//   - dirEntry: The directory entry metadata.
-//
-// Returns an error if path rendering, reading, or writing fails.
+// renderPath renders a template-relative path and copies file bytes into b.root.
+// File content templating is handled later by renderContent.
 func (b *BaseTest) renderPath(relTemplatePath string, dirEntry fs.DirEntry) error {
 	// Render the target path using template logic (e.g. "cmd/{{project_name}}/main.go").
 	renderedPath, err := gobootutils.ExecuteTemplateText("relpath", relTemplatePath, b.cfg)
@@ -176,7 +155,7 @@ func (b *BaseTest) renderPath(relTemplatePath string, dirEntry fs.DirEntry) erro
 	}
 
 	if strings.Contains(renderedPath, "suite_test.go") && b.cfg.UseStyle != goboottypes.TestStyleGinkgo {
-		// skip suite files for ginkgo
+		// Skip suite files when stdlib style is selected.
 		return nil
 	}
 
@@ -223,16 +202,7 @@ func (b *BaseTest) renderPath(relTemplatePath string, dirEntry fs.DirEntry) erro
 	return nil
 }
 
-// renderContent applies Go template rendering to the content of all non-directory files
-// within the root directory, using the BaseTest configuration as the template context.
-//
-// The rendered content is written back to the same file location.
-//
-// Parameters:
-//   - path: The relative path to the file within root.
-//   - dirEntry: The directory entry metadata.
-//
-// Returns an error if reading, rendering, or writing fails.
+// renderContent renders non-directory file content in b.root with BaseTest config.
 func (b *BaseTest) renderContent(path string, dirEntry fs.DirEntry) error {
 	if dirEntry.IsDir() {
 		return nil
@@ -256,6 +226,21 @@ func (b *BaseTest) registerScripts() error {
 	err = b.script.RegisterFile(goboottypes.ScriptFileTest, []string{b.cfg.TestCMD})
 	if err != nil {
 		return fmt.Errorf("failed to register script file: %w", err)
+	}
+
+	return nil
+}
+
+// registerCIJobs registers the standard test command with the attached CI registrar.
+func (b *BaseTest) registerCIJobs() error {
+	err := b.ci.RegisterLines(goboottypes.ServiceNameBaseTest, []string{b.cfg.TestCMD})
+	if err != nil {
+		return fmt.Errorf("failed to register ci commands: %w", err)
+	}
+
+	err = b.ci.RegisterFile(goboottypes.CIFileTest, []string{b.cfg.TestCMD})
+	if err != nil {
+		return fmt.Errorf("failed to register ci job file: %w", err)
 	}
 
 	return nil

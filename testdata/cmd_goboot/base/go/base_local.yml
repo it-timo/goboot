@@ -1,0 +1,4 @@
+sourcePath: ${TEMPLATES_LOCAL_BASE}
+fileList:
+  - task
+  - script

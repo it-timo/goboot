@@ -1,12 +1,11 @@
 # goboot — Project Roadmap
 
-> Deterministic scaffolding for long-lived, production-grade Go repositories.
+Deterministic scaffolding for long-lived Go repositories.
 
-This roadmap reflects the **post-2025 architectural direction** of goboot:
-a **service-oriented CLI generator** where each capability is an isolated, ADR-backed module with explicit contracts.
+This roadmap describes goboot as a service-oriented CLI generator with explicit,
+ADR-backed contracts per capability.
 
-goboot prioritizes **reproducibility, deletion-friendliness, and long-term maintainability**
-over convenience or one-click demos.
+Priority is reproducibility and long-term maintainability over one-click convenience.
 
 ---
 
@@ -44,7 +43,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-### v0.0.2 — Testing & Validation (**Current**)
+### v0.0.2 — Testing & Validation (Released)
 
 - `basetest` service with automatic test scaffolding
 - stdlib or Ginkgo/Gomega BDD support
@@ -53,13 +52,13 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 - Hardened filesystem model
 - Internal utils/types refactor
 - End-to-end validation: generated projects pass all quality gates
-- 31 ADRs documenting architecture
+- 33 ADRs documenting architecture
 
 ---
 
-## In Progress
+### v0.1.0 — CI/CD Foundation (Released)
 
-### v0.1.0 — CI/CD Foundation
+Current release.
 
 **Focus:** reproducible automation
 
@@ -70,7 +69,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.1.1 — Structured Logging
 
@@ -80,7 +79,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 - Configurable logging in generated projects
 - ADR update for log handling
 
----
+## Planned Milestones
 
 ### v0.2.0 — Containerization
 

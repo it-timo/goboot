@@ -11,7 +11,7 @@ root = true
 charset = utf-8
 end_of_line = lf
 indent_style = space
-indent_size = 4
+indent_size = 2
 trim_trailing_whitespace = true
 insert_final_newline = true
 
@@ -22,10 +22,19 @@ insert_final_newline = true
 indent_style = tab
 indent_size = 4
 
+# Go template files should also use tabs
+[*.go.tmpl]
+indent_style = tab
+indent_size = 4
+
 # -----------------------------------------------------------------------------
 # 📄 Markdown — readable diffs, preserve trailing spaces
 # -----------------------------------------------------------------------------
 [*.md]
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+[*.md.tmpl]
 trim_trailing_whitespace = false
 insert_final_newline = true
 
@@ -36,26 +45,42 @@ insert_final_newline = true
 # YAML (2 spaces, per convention)
 [*.yml]
 indent_style = space
-indent_size = 2
+
+[*.yml.tmpl]
+indent_style = space
 
 [*.yaml]
 indent_style = space
-indent_size = 2
+
+[*.yaml.tmpl]
+indent_style = space
 
 # JSON (2 spaces, final newline for tooling)
 [*.json]
 indent_style = space
-indent_size = 2
+insert_final_newline = true
+
+[*.json.tmpl]
+indent_style = space
 insert_final_newline = true
 
 # TOML (also 2 spaces, used in REUSE and tooling)
 [*.toml]
 indent_style = space
-indent_size = 2
+insert_final_newline = true
+
+[*.toml.tmpl]
+indent_style = space
 insert_final_newline = true
 
 # .env and related (preserve user formatting)
 [*.env]
+indent_size = 4
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+[*.env.tmpl]
+indent_size = 4
 trim_trailing_whitespace = false
 insert_final_newline = true
 
@@ -65,19 +90,38 @@ insert_final_newline = true
 [*.sh]
 insert_final_newline = true
 
+[*.sh.tmpl]
+insert_final_newline = true
+
 # -----------------------------------------------------------------------------
 # 🐳 Docker files
 # -----------------------------------------------------------------------------
 [Dockerfile]
+indent_size = 4
+insert_final_newline = true
+
+[Dockerfile.tmpl]
+indent_size = 4
 insert_final_newline = true
 
 [*.dockerignore]
+indent_size = 4
+trim_trailing_whitespace = false
+
+[*.dockerignore.tmpl]
+indent_size = 4
 trim_trailing_whitespace = false
 
 # -----------------------------------------------------------------------------
 # 🛠 Makefile (tabs required)
 # -----------------------------------------------------------------------------
 [Makefile]
+indent_size = 4
+indent_style = tab
+trim_trailing_whitespace = true
+
+[Makefile.tmpl]
+indent_size = 4
 indent_style = tab
 trim_trailing_whitespace = true
 
@@ -85,9 +129,19 @@ trim_trailing_whitespace = true
 # 🛡 Git and EditorConfig files themselves
 # -----------------------------------------------------------------------------
 [.editorconfig]
+indent_size = 4
+insert_final_newline = true
+
+[.editorconfig.tmpl]
+indent_size = 4
 insert_final_newline = true
 
 [*.gitignore]
+indent_size = 4
+trim_trailing_whitespace = false
+
+[*.gitignore,tmpl]
+indent_size = 4
 trim_trailing_whitespace = false
 
 # -----------------------------------------------------------------------------

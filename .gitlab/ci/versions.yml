@@ -1,0 +1,42 @@
+# ==============================================================================
+# Centralized Version Management for GitLab CI
+# ==============================================================================
+#
+# This file contains all Docker image versions used in GitLab CI pipelines.
+# All images are pinned to SHA256 digests for reproducibility and security.
+#
+# NOTE: Local development tools (Makefile, Taskfile, scripts, pre-commit)
+#       use tag versions from versions.env for easier readability.
+#
+# ==============================================================================
+
+variables:
+  # --------------------------------------------------------------------------
+  # Go Runtime Images
+  # --------------------------------------------------------------------------
+  GO_1_25_DIGEST: "sha256:85c0ab0b73087fda36bf8692efe2cf67c54a06d7ca3b49c489bbff98c9954d64"
+  GO_1_26_DIGEST: "sha256:c83e68f3ebb6943a2904fa66348867d108119890a2c6a2e6f07b38d0eb6c25c5"
+
+  # --------------------------------------------------------------------------
+  # Docker-in-Docker
+  # --------------------------------------------------------------------------
+  # SHA256 of docker:24.0.5-dind
+  DOCKER_IMAGE: "docker@sha256:3c6e4dca7a63c9a32a4e00da40461ce067f255987ccc9721cf18ffa087bcd1ef"
+
+  # --------------------------------------------------------------------------
+  # Linter Images
+  # --------------------------------------------------------------------------
+  # SHA256 of golangci/golangci-lint:v2.7.2
+  GOLANGCI_LINT_IMAGE: "golangci/golangci-lint@sha256:5d6d5c70a61f1356adfd9dd6316ce286799fefc9d743421356ff1b00842368ba"
+  # SHA256 of pipelinecomponents/yamllint:0.35.9
+  YAMLLINT_IMAGE: "pipelinecomponents/yamllint@sha256:3e9eb9bef568b904d9222e9174a1490f4e015aef3d61e7d3e56f60035e517b79"
+  # SHA256 of ghcr.io/igorshubovych/markdownlint-cli:v0.47.0
+  MARKDOWNLINT_IMAGE: "ghcr.io/igorshubovych/markdownlint-cli@sha256:9f06c8c9a75aa08b87b235b66d618f7df351f09f08faf703177f670e38ee6511"
+  # SHA256 of cytopia/checkmake:latest-0.5
+  CHECKMAKE_IMAGE: "cytopia/checkmake@sha256:23116ee551144f1021b294d3ede266ecb760272e0d6f2833f8a3d38b81beffb8"
+  # SHA256 of koalaman/shellcheck:v0.11.0
+  SHELLCHECK_IMAGE: "koalaman/shellcheck@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d"
+  # SHA256 of mvdan/shfmt:v3.12.0
+  SHFMT_IMAGE: "mvdan/shfmt@sha256:307d265ffd25ce832899ae17c93ed5062fc3375c514bba8f52cbf52792735c4d"
+  # SHA256 of mstruebing/editorconfig-checker:v3.6.0
+  EDITORCONFIG_CHECKER_IMAGE: "mstruebing/editorconfig-checker@sha256:3fee6fe35c9ec21367b92ca50b3bea856ffc8a7a186044c329ac8bb23b33284a"

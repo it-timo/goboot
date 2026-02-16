@@ -1,0 +1,305 @@
+#!/usr/bin/env bash
+# Run local CI simulation for goboot root and generated IntroProject.
+#
+# This script executes the exact act/gitlab-ci-local commands used to validate
+# generated CI behavior for both providers.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+OUTPUT_DIR="${PROJECT_ROOT}/outputs/IntroProject"
+ARTIFACT_DIR="/tmp/act-artifacts"
+TOOLCACHE_DIR="/tmp/act-toolcache"
+ACT_PULL="false"
+PREPULL_IMAGES="true"
+PROVIDER_MODE="${CI_CANARY_PROVIDER:-config}"
+
+usage() {
+  cat <<USAGE
+Usage: ./scripts/verify_ci_canary.sh [options]
+
+Options:
+  --skip-generate  Skip regenerating outputs/IntroProject via goboot
+  --refresh-images Pull fresh act runner images (less deterministic)
+  --skip-prepull  Skip image pre-pull for both GitHub (act) and GitLab flows
+  --provider       CI provider mode: github | gitlab | both | config (default)
+  --help           Show this help
+USAGE
+}
+
+SKIP_GENERATE="false"
+
+for arg in "$@"; do
+  case "${arg}" in
+    --skip-generate)
+      SKIP_GENERATE="true"
+      ;;
+    --refresh-images)
+      ACT_PULL="true"
+      ;;
+    --skip-prepull)
+      PREPULL_IMAGES="false"
+      ;;
+    --provider=*)
+      PROVIDER_MODE="${arg#*=}"
+      ;;
+    --provider)
+      echo "Error: --provider requires a value. Use --provider=<github|gitlab|both|config>."
+      exit 1
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: ${arg}"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+resolve_provider_mode() {
+  local mode="${PROVIDER_MODE}"
+  local cfg_provider
+
+  case "${mode}" in
+    github | gitlab | both)
+      echo "${mode}"
+      return 0
+      ;;
+    config)
+      cfg_provider="$(sed -n 's/^[[:space:]]*gitProvider:[[:space:]]*"\{0,1\}\([a-zA-Z]*\)"\{0,1\}[[:space:]]*$/\1/p' "${PROJECT_ROOT}/configs/goboot.yml" | head -n1 | tr '[:upper:]' '[:lower:]')"
+      if [[ "${cfg_provider}" == "github" || "${cfg_provider}" == "gitlab" ]]; then
+        echo "${cfg_provider}"
+      else
+        echo "both"
+      fi
+      return 0
+      ;;
+    *)
+      echo "Error: invalid --provider mode '${mode}'. Expected github, gitlab, both, or config."
+      exit 1
+      ;;
+  esac
+}
+
+run_step() {
+  local title="$1"
+  local cmd="$2"
+
+  echo ""
+  echo "==> ${title}"
+  echo "    ${cmd}"
+  bash -lc "${cmd}"
+}
+
+require_cmd() {
+  local cmd="$1"
+  if ! command -v "${cmd}" >/dev/null 2>&1; then
+    echo "Error: ${cmd} is required but not installed."
+    exit 1
+  fi
+}
+
+require_cmd go
+require_cmd make
+require_cmd git
+
+mkdir -p "${ARTIFACT_DIR}"
+mkdir -p "${TOOLCACHE_DIR}"
+
+cd "${PROJECT_ROOT}"
+SELECTED_PROVIDER="$(resolve_provider_mode)"
+echo "Provider mode: ${SELECTED_PROVIDER}"
+
+if [[ "${SKIP_GENERATE}" != "true" ]]; then
+  if [[ -d "${OUTPUT_DIR}" ]]; then
+    run_step "Reset existing outputs/IntroProject" "rm -rf '${OUTPUT_DIR}'"
+  fi
+  run_step "Generate IntroProject from default config" "go run cmd/goboot/main.go"
+fi
+
+if [[ ! -d "${OUTPUT_DIR}" ]]; then
+  echo "Error: expected generated output at ${OUTPUT_DIR}."
+  exit 1
+fi
+
+cleanup_runtime_dirs() {
+  # gitlab-ci-local writes transient build state under .gitlab-ci-local.
+  # It must not leak into lint scope.
+  rm -rf .gitlab-ci-local
+}
+
+prepull_act_images() {
+  local scope="$1"
+  local workflow_file=".github/workflows/lint.yml"
+  local -a images
+  local image
+
+  require_cmd docker
+
+  # Default act runner image used by this repository.
+  images=("ghcr.io/catthehacker/ubuntu:act-24.04")
+
+  if [[ -f "${workflow_file}" ]]; then
+    while IFS= read -r image; do
+      if [[ -n "${image}" ]]; then
+        images+=("${image}")
+      fi
+    done < <(grep -Eo '[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9./_-]+(@sha256:[a-f0-9]{64}|:[A-Za-z0-9._-]+)' "${workflow_file}" | sort -u || true)
+  fi
+
+  local -A seen=()
+  local -a unique_images=()
+  for image in "${images[@]}"; do
+    if [[ -z "${seen[${image}]:-}" ]]; then
+      unique_images+=("${image}")
+      seen["${image}"]=1
+    fi
+  done
+
+  for image in "${unique_images[@]}"; do
+    run_step "${scope}: pre-pull image ${image}" "docker pull '${image}'"
+  done
+}
+
+prepull_gitlab_images() {
+  local scope="$1"
+  local -a files
+  local -a images
+  local file
+  local image
+  local var_image
+  local version_images_raw
+
+  require_cmd docker
+
+  files=(".gitlab/ci/lint.yml" ".gitlab/ci/build.yml" ".gitlab/ci/test.yml" ".gitlab/ci/versions.yml")
+
+  for file in "${files[@]}"; do
+    if [[ -f "${file}" ]]; then
+      while IFS= read -r image; do
+        if [[ -n "${image}" ]]; then
+          images+=("${image}")
+        fi
+      done < <(grep -Eo '[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9./_-]+(@sha256:[a-f0-9]{64}|:[A-Za-z0-9._-]+)' "${file}" | sort -u || true)
+    fi
+  done
+
+  # Include plain-image variables from versions.yml (for example DOCKER_IMAGE: "docker:24.0.5-dind"),
+  # but avoid non-image values like DOCKER_HOST=tcp://docker:2375.
+  if [[ -f ".gitlab/ci/versions.yml" ]]; then
+    version_images_raw="$(sed -n 's/^[[:space:]]*[A-Z0-9_]*_IMAGE:[[:space:]]*"\{0,1\}\([^"[:space:]]\+\)"\{0,1\}[[:space:]]*$/\1/p' ".gitlab/ci/versions.yml")"
+    while IFS= read -r var_image; do
+      if [[ -n "${var_image}" && "${var_image}" != *"://"* ]]; then
+        images+=("${var_image}")
+      fi
+    done <<<"${version_images_raw}"
+  fi
+
+  local -A seen=()
+  local -a unique_images=()
+  for image in "${images[@]}"; do
+    if [[ -z "${seen[${image}]:-}" ]]; then
+      unique_images+=("${image}")
+      seen["${image}"]=1
+    fi
+  done
+
+  for image in "${unique_images[@]}"; do
+    run_step "${scope}: pre-pull image ${image}" "docker pull '${image}'"
+  done
+}
+
+run_ci_suite() {
+  local scope="$1"
+  local has_github_ci="false"
+  local has_gitlab_ci="false"
+  local temp_git_repo="false"
+  local uid
+  local gid
+  local docker_sock_gid
+  local user_opts
+  local lint_opts
+  local act_opts
+
+  if [[ -d ".github/workflows" ]]; then
+    has_github_ci="true"
+  fi
+  if [[ -f ".gitlab-ci.yml" ]]; then
+    has_gitlab_ci="true"
+  fi
+  if [[ "${SELECTED_PROVIDER}" == "github" ]]; then
+    has_gitlab_ci="false"
+  elif [[ "${SELECTED_PROVIDER}" == "gitlab" ]]; then
+    has_github_ci="false"
+  fi
+
+  if [[ "${has_github_ci}" != "true" && "${has_gitlab_ci}" != "true" ]]; then
+    echo "Warning: ${scope}: no GitHub or GitLab CI config found; skipping CI simulation."
+    return 0
+  fi
+
+  uid="$(id -u)"
+  gid="$(id -g)"
+  user_opts="--user ${uid}:${gid}"
+
+  if [[ "${has_github_ci}" == "true" ]]; then
+    require_cmd act
+    require_cmd stat
+    if [[ ! -S /var/run/docker.sock ]]; then
+      echo "Error: ${scope}: /var/run/docker.sock not found (required for act lint group-add)."
+      exit 1
+    fi
+    docker_sock_gid="$(stat -c '%g' /var/run/docker.sock)"
+    lint_opts="--user ${uid}:${gid} --group-add ${docker_sock_gid}"
+    act_opts="--pull=${ACT_PULL} --action-offline-mode --use-gitignore=false --artifact-server-path ${ARTIFACT_DIR} --env RUNNER_TOOL_CACHE=${TOOLCACHE_DIR} --env AGENT_TOOLSDIRECTORY=${TOOLCACHE_DIR}"
+
+    if [[ "${PREPULL_IMAGES}" == "true" ]]; then
+      prepull_act_images "${scope}"
+    fi
+
+    cleanup_runtime_dirs
+    run_step "${scope}: act build" "act -j build --container-options \"${user_opts}\" ${act_opts}"
+    cleanup_runtime_dirs
+    run_step "${scope}: act test" "act -j test --container-options \"${user_opts}\" ${act_opts}"
+    cleanup_runtime_dirs
+    run_step "${scope}: act lint" "act -j lint --container-options \"${lint_opts}\" ${act_opts}"
+  else
+    echo "Skipping ${scope}: act checks (.github/workflows not found)."
+  fi
+
+  if [[ "${has_gitlab_ci}" == "true" ]]; then
+    require_cmd gitlab-ci-local
+    if [[ "${PREPULL_IMAGES}" == "true" ]]; then
+      prepull_gitlab_images "${scope}"
+    fi
+    if [[ ! -d ".git" ]]; then
+      # gitlab-ci-local resolves local includes more reliably in a git-indexed workspace.
+      run_step "${scope}: prepare temporary git workspace for gitlab-ci-local" "git init -q && git add -A -f && git -c user.name='goboot-ci-local' -c user.email='goboot-ci-local@local' commit -qm 'temp: ci-local workspace'"
+      temp_git_repo="true"
+    fi
+    cleanup_runtime_dirs
+    run_step "${scope}: gitlab-ci-local build" "gitlab-ci-local --stage build"
+    cleanup_runtime_dirs
+    run_step "${scope}: gitlab-ci-local test" "gitlab-ci-local --force-shell-executor --shell-isolation --stage test"
+    cleanup_runtime_dirs
+    run_step "${scope}: gitlab-ci-local lint (shell -> privileged fallback)" "gitlab-ci-local --force-shell-executor --shell-isolation --stage lint || gitlab-ci-local --stage lint --privileged"
+    cleanup_runtime_dirs
+    if [[ "${temp_git_repo}" == "true" ]]; then
+      run_step "${scope}: cleanup temporary git workspace" "rm -rf .git"
+    fi
+  else
+    echo "Skipping ${scope}: gitlab-ci-local checks (.gitlab-ci.yml not found)."
+  fi
+}
+
+run_ci_suite "Root"
+
+cd "${OUTPUT_DIR}"
+run_ci_suite "IntroProject"
+
+echo ""
+echo "CI canary verification completed successfully (root + IntroProject)."

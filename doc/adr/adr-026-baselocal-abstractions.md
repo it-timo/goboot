@@ -1,4 +1,4 @@
-# 📄 ADR-026: Script Type Abstractions and FileList Control (`baseLocal`)
+# ADR-026: Script Type Abstractions and FileList Control (`baseLocal`)
 
 **Tags:** `baseLocal`, `scripts`, `filelist`, `conditional-rendering`, `modularity`, `extensibility`
 
@@ -6,68 +6,41 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-The `baseLocal` service supports multiple output types:
-
-- `Makefile`
-- `Taskfile.yml`
-- `.pre-commit-config.yaml`
-- Scripts in `scripts/`
-
-However, not all projects want or need all of these. For example, a user might prefer `make` but not use `task`,
-or might skip `pre-commit` entirely. We want to:
-
-- Avoid rendering unnecessary files
-- Give users control over which files get scaffolded
-- Allow clean expansion in the future (e.g., `scripts/windows`, `fishfile`)
-
-This is managed through a `FileList` field in the `BaseLocalConfig`.
+Projects differ in preferred local tooling (for example, make vs task usage).
+Rendering all formats by default can add unnecessary files.
 
 ---
 
 ## Decision
 
-The `baseLocal` service interprets a config-provided `FileList` that defines **which script types** should be rendered.
-
-```yaml
-fileList:
-    - make
-    - task
-    - script
-    - commit
-```
-
-Internally, this:
-
-- Filters what is rendered in `copyFiles()`
-- Prevents unnecessary output or empty files
-
-The available options are aligned with constants in `types/`, e.g. `ScriptNameMake`, `ScriptNameTask`.
+Use `fileList` in `BaseLocalConfig` to control which script/output types are rendered.
+`baseLocal` filters output generation based on that list.
 
 ---
 
 ## Advantages
 
-- Users have fine-grained control over rendered outputs
-- Prevents noise in projects that don’t need all formats
-- Enables clean support for future formats (e.g., `justfile`, `scripts/windows`)
-- Makes the `baseLocal` service more declarative and modular
+- Users can limit generated local tooling to what they use.
+- Reduces unused-file noise in generated repositories.
+- Provides a clear config-level contract for local output selection.
 
 ---
 
 ## Disadvantages
 
-- Slight increase in complexity in `copyFiles()` and registration logic
-- Inconsistent `Register*()` calls from services may silently be ignored if a file type is disabled
+- Rendering path is more conditional and requires broader test coverage.
+- Registered entries may be ignored when corresponding file types are disabled.
 
 ---
 
 ## Alternatives Considered
 
-- **Always render all script formats**: Violates minimalism, bloat project with unused files
-- **Make rendering conditional only inside logic**: Less user-friendly, harder to trace at config level
+- **Always render all local outputs:** rejected due to unnecessary output for many projects.
+- **Conditional rendering hidden only in code with no config field:** rejected
+  because behavior would be less explicit to users.

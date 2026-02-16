@@ -1,4 +1,4 @@
-# 📄 ADR-007: Centralized Service Name Registry in `types/names.go`
+# ADR-007: Centralized Service Name Registry in `goboottypes/names.go`
 
 **Tags:** `constants`, `service-names`, `structure`, `decoupling`
 
@@ -6,38 +6,39 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
-### Context
+## Context
 
-Service identifiers such as `"base_project"` are used across config declarations,
-runtime registration, and execution logic.
-Allowing these identifiers to be spread across the codebase as raw strings introduces coupling, typos,
-and inconsistency.
+Service IDs are used in configuration, registration, and execution paths.
+Repeated string literals increase typo risk and make refactors harder.
 
 ---
 
 ## Decision
 
-Define **all service names as constants** in a centralized file:
-`pkg/types/names.go`
-
-This registry provides a **single source of truth** for cross-cutting service identifiers.
+Define service IDs as constants in a single shared location (`pkg/goboottypes/names.go`).
 
 ---
 
 ## Advantages
 
-- Prevents config ↔ logic mismatch due to typos
-- Enables future tooling, e.g., service listing or generation
-- Promotes discoverability across the codebase
-- Safe for refactoring and reuse
+- Reduces mismatch risk between config keys and runtime IDs.
+- Improves discoverability of supported services.
+- Makes rename/refactor operations safer.
 
 ---
 
 ## Disadvantages
 
-- Introduces indirect coupling between services and `types`
-- Slight overhead from needing to import a common constants file
+- Introduces shared dependency on the constants package.
+- Requires central-file updates when adding services.
+
+---
+
+## Alternatives Considered
+
+- **Inline string IDs per package:** rejected due to duplication and typo risk.
+- **Generated IDs at runtime:** rejected because explicit identifiers are easier to audit and test.

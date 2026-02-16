@@ -1,4 +1,4 @@
-# 📄 ADR-022: Dedicated Linting via `baseLint` Service
+# ADR-022: Dedicated Linting via `baseLint` Service
 
 **Tags:** `service`, `linting`, `quality`, `separation-of-concerns`
 
@@ -6,51 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Linting is a critical part of long-term maintainability and code quality. However, many project generators either:
-
-- omit it entirely,
-- bake in linter files directly,
-- or mix linting setup with unrelated logic like testing or CI bootstrapping.
-
-In `goboot`, linting is treated as a **first-class modular service**, provided through `baseLint`.
+Linting setup can be mixed into unrelated generation logic, making ownership unclear.
+`goboot` requires lint scaffolding while keeping service boundaries explicit.
 
 ---
 
 ## Decision
 
-Introduce a dedicated `baseLint` service that:
+Use a dedicated `baseLint` service.
 
-- Selectively enables predefined linters (Go, YAML, Markdown, etc.) from configuration.
-- Generates config files with project-specific rendering via `text/template`.
-- Delegates optional script registrations (e.g. `golangci-lint run`) to the `baseLocal` system, if enabled.
-- Performs all logic in a standalone, clearly scoped unit (`pkg/baselint`).
+- Select enabled linters from config.
+- Render lint config templates with project context.
+- Optionally register local script commands through shared registrar interfaces.
 
 ---
 
 ## Advantages
 
-- Ensures every generated project starts with consistent linting standards.
-- Makes it trivial to evolve linter strategies over time without polluting unrelated services.
-- Avoids premature assumptions: no CI coupling, no automatic script wiring unless explicitly opted in.
-- Enables future expansion: custom linters, template variants, style presets.
+- Lint concerns are isolated from base project and CI concerns.
+- Lint defaults can evolve without changing unrelated services.
+- Users can configure lint behavior through one service boundary.
 
 ---
 
 ## Disadvantages
 
-- Slight increase in complexity.
-- Requires a second level of awareness from users to enable/disable linters.
+- Adds another service and config surface area.
+- Cross-service script integration requires orchestration coordination.
 
 ---
 
 ## Alternatives Considered
 
-- **Bundling linting into `baseProject`:** Would lead to unclear service scope and potential config bloat.
-- **Baking static files without templating:** Would limit reusability and require duplication across templates.
-- **Relying on external plugins/hooks:** Would violate the goal of having reliable, predictable OSS bootstrapping.
+- **Put lint generation in `baseProject`:** rejected because it merges distinct responsibilities.
+- **Ship static lint files only:** rejected because project-specific rendering requirements exist.

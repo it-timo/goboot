@@ -1,0 +1,7 @@
+projectName: testproject
+repoUrl: https://github.com/user/testproject
+targetPath: /tmp/test
+services:
+  - id: unknown_service_xyz
+    confPath: /tmp/config.yml
+    enabled: true

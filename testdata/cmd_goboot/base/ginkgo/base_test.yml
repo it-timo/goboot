@@ -1,0 +1,4 @@
+sourcePath: ${TEMPLATES_TEST_BASE}
+useStyle: "ginkgo"
+testCmd: |-
+  go test ./...

@@ -1,16 +1,5 @@
 /*
-Package baselint implements the core bootstrapping logic for the "base_lint" service.
-
-This service is responsible for setting up the foundational linting infrastructure of a newly scaffolded Go project.
-
-It handles:
-  - Copying predefined linter configuration templates into the project.
-  - Applying Go `text/template` rendering to inject project-specific metadata.
-  - Skipping linters that are disabled in the config.
-  - Respecting a strict separation of logic per linter (Go, YAML, Markdown, Make).
-
-The service expects a validated configuration of type config.BaseLintConfig
-and is one of the default built-in services within the `goboot` system.
+Package baselint implements the base_lint generation service.
 */
 package baselint
 
@@ -26,48 +15,40 @@ import (
 	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
-// BaseLint implements the Service interface and encapsulates the execution logic
-// for generating linter configuration files based on user-defined config.
-//
-// It holds a reference to the resolved config.BaseLintConfig and tracks the
-// target directory and secure root for file operations.
+// BaseLint renders linter config files and registers optional lint commands.
 type BaseLint struct {
-	cfg       *config.BaseLintConfig // Validated service configuration.
-	targetDir string                 // Destination path for rendered files.
-	root      *os.Root               // Secure a root handle for a safe file writes.
-	script    goboottypes.Registrar  // Contains the Methods to run in base_local.
+	cfg       *config.BaseLintConfig
+	targetDir string
+	root      *os.Root
+	script    goboottypes.Registrar
+	ci        goboottypes.Registrar
 }
 
-// NewBaseLint constructs a new BaseLint instance for a given target directory and provided registrar.
+// NewBaseLint constructs BaseLint for a target directory.
 func NewBaseLint(targetDir string) *BaseLint {
 	return &BaseLint{
 		targetDir: targetDir,
 		script:    nil,
+		ci:        nil,
 	}
 }
 
-// SetScriptReceiver sets the Registrar implementation used for registering script commands.
-//
-// This allows services like base_local to collect command definitions from this service.
-//
-// It must be called before Run if script registration is desired.
+// SetScriptReceiver injects the registrar used for local script registration.
 func (b *BaseLint) SetScriptReceiver(reg goboottypes.Registrar) {
 	b.script = reg
 }
 
-// ID returns the static service identifier used to register and retrieve this service.
-//
-// It matches the constant defined in the type package and must align with
-// the corresponding entry in the goboot config (e.g., "base_lint").
+// SetCIReceiver injects the registrar used for CI registration.
+func (b *BaseLint) SetCIReceiver(reg goboottypes.Registrar) {
+	b.ci = reg
+}
+
+// ID returns the service identifier.
 func (b *BaseLint) ID() string {
 	return goboottypes.ServiceNameBaseLint
 }
 
-// SetConfig assigns the base lint configuration.
-//
-// It performs a type assertion to ensure the correct config type was passed.
-//
-// This assumes config has been validated during initialization.
+// SetConfig assigns validated base_lint config and blocks source==target runs.
 func (b *BaseLint) SetConfig(cfg config.ServiceConfig) error {
 	baseCfg, ok := cfg.(*config.BaseLintConfig)
 	if !ok {
@@ -85,13 +66,7 @@ func (b *BaseLint) SetConfig(cfg config.ServiceConfig) error {
 	return nil
 }
 
-// Run executes the base lint generation logic.
-//
-// It performs a type assertion to ensure the correct config type was passed.
-//
-// After storing the typed config, it begins the file scaffolding process.
-//
-// This assumes config has been validated during initialization.
+// Run opens the target root and generates enabled linting files.
 func (b *BaseLint) Run() error {
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
@@ -107,7 +82,6 @@ func (b *BaseLint) Run() error {
 
 	b.root = curRoot
 
-	// Trigger the core logic to copy and render relevant linter files.
 	err = b.copyFiles()
 	if err != nil {
 		return fmt.Errorf("failed to copy files: %w", err)
@@ -116,16 +90,7 @@ func (b *BaseLint) Run() error {
 	return nil
 }
 
-// copyFiles iterates over all configured linters in the config, and for each enabled linter,
-// it copies and renders the corresponding configuration file.
-//
-// Skipped:
-//   - Linters that are disabled.
-//   - Linters without associated files (e.g., "make" in this case).
-//   - Unknown linters (to allow future-proofing).
-//
-// Returns an error if any file fails to copy or render.
-//
+// copyFiles copies and renders configuration files for enabled linters.
 //nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (b *BaseLint) copyFiles() error {
 	for name, info := range b.cfg.Linters {
@@ -160,6 +125,9 @@ func (b *BaseLint) copyFiles() error {
 		case goboottypes.LinterSHFMT:
 			// Skip for now — shfmt linter uses flags, not a config file.
 			continue
+		case goboottypes.LinterEditor:
+			// Skip for now — editor linter uses flags, not a config file.
+			continue
 		default:
 			// Unknown linter — silently ignored for forward compatibility.
 			continue
@@ -173,16 +141,17 @@ func (b *BaseLint) copyFiles() error {
 		}
 	}
 
+	if b.ci != nil {
+		err := b.registerCIJobs()
+		if err != nil {
+			return fmt.Errorf("failed to register ci jobs: %w", err)
+		}
+	}
+
 	return nil
 }
 
-// handleLintFile is a helper that encapsulates the steps to:
-//   - Copy a static linter config file from sourcePath to the project.
-//   - Apply template rendering with project-specific values.
-//
-// Parameters:
-//   - name: Linter name (used for log context).
-//   - fileName: File to copy and render.
+// handleLintFile copies a lint template file and renders it with config values.
 func (b *BaseLint) handleLintFile(name, fileName string) error {
 	err := b.copyFile(fileName)
 	if err != nil {
@@ -197,14 +166,7 @@ func (b *BaseLint) handleLintFile(name, fileName string) error {
 	return nil
 }
 
-// copyFile reads a single static file from the SourcePath and writes it
-// into the target directory within the secure os.Root.
-//
-// Used for initial transfer before template rendering is applied.
-//
-// Expect a relative filename (e.g., ".golangci.yml").
-//
-// Returns an error if reading or writing fails.
+// copyFile copies one lint template file into root.
 func (b *BaseLint) copyFile(fileName string) error {
 	src := path.Join(b.cfg.SourcePath, fileName+goboottypes.TemplateSuffix)
 
@@ -233,14 +195,8 @@ func (b *BaseLint) copyFile(fileName string) error {
 	return nil
 }
 
-// registerScripts collects all enabled linter commands and registers them
-// with the attached script registrar (typically base_local).
-//
-// This includes both line-based script registration (e.g., for Makefile/Taskfile)
-// and file-based registration (e.g., scripts/lint.sh if applicable).
-//
-// Returns an error if script registration fails at any point.
-func (b *BaseLint) registerScripts() error {
+// gatherCommands collects all enabled linter commands.
+func (b *BaseLint) gatherCommands() []string {
 	cmds := make([]string, 0, len(b.cfg.Linters))
 
 	for name, entry := range b.cfg.Linters {
@@ -254,12 +210,20 @@ func (b *BaseLint) registerScripts() error {
 
 		switch name {
 		case goboottypes.LinterGo, goboottypes.LinterYAML, goboottypes.LinterMake,
-			goboottypes.LinterMD, goboottypes.LinterShell, goboottypes.LinterSHFMT:
+			goboottypes.LinterMD, goboottypes.LinterShell, goboottypes.LinterSHFMT,
+			goboottypes.LinterEditor:
 			cmds = append(cmds, entry.Cmd)
 		default:
 			continue
 		}
 	}
+
+	return cmds
+}
+
+// registerScripts registers enabled lint commands with the local script registrar.
+func (b *BaseLint) registerScripts() error {
+	cmds := b.gatherCommands()
 
 	if len(cmds) == 0 {
 		return nil
@@ -273,6 +237,27 @@ func (b *BaseLint) registerScripts() error {
 	err = b.script.RegisterFile(goboottypes.ScriptFileLint, cmds)
 	if err != nil {
 		return fmt.Errorf("failed to register script file: %w", err)
+	}
+
+	return nil
+}
+
+// registerCIJobs registers all enabled linter commands with the attached CI registrar.
+func (b *BaseLint) registerCIJobs() error {
+	cmds := b.gatherCommands()
+
+	if len(cmds) == 0 {
+		return nil
+	}
+
+	err := b.ci.RegisterLines(goboottypes.ServiceNameBaseLint, cmds)
+	if err != nil {
+		return fmt.Errorf("failed to register ci commands: %w", err)
+	}
+
+	err = b.ci.RegisterFile(goboottypes.CIFileLint, cmds)
+	if err != nil {
+		return fmt.Errorf("failed to register ci job file: %w", err)
 	}
 
 	return nil

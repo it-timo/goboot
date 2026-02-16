@@ -1,0 +1,7 @@
+projectName: testproject
+repoUrl: github.com/user/testproject
+targetPath: ${TARGET_PATH}
+services:
+  - id: base_test
+    confPath: ${BASE_TEST_PATH}
+    enabled: true

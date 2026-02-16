@@ -1,4 +1,4 @@
-# 📄 ADR-020: Service and Directory Naming Conventions
+# ADR-020: Service and Directory Naming Conventions
 
 **Tags:** `filesystem`, `naming`, `oss-guidelines`
 
@@ -6,61 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-As `goboot` is designed to be modular and extensible, the need for consistent naming of internal
-vs. external services becomes critical for:
-
-- separation of concerns,
-- clear ownership,
-- and easier community collaboration.
-
-The core `goboot` modules currently use the `base*` prefix (e.g. `baseproject`, `baselocal`, `baselint`)
-to reflect foundational responsibilities.
-
-However, third-party service modules are expected to follow a different convention to distinguish contributions
-and prevent naming collisions.
+Service IDs map to config sections, runtime registration, and package paths.
+Inconsistent naming increases collision risk and lowers discoverability.
 
 ---
 
 ## Decision
 
-- **Internal services (first-party)** must be named using the prefix `base*`.
-  - Example: `baseproject`, `baselint`, `baselocal`
+Define naming conventions for internal and external services.
 
-- **External or user-contributed services** must use a **provider-scoped prefix**, such as:
-  - `ghuser_linter`
-  - `yourname_quality`
-  - `corpteam_ci`
-
-- **Package structure** must mirror the service ID:
-  - A service ID of `baseproject` maps to `pkg/baseproject/`
-  - A service ID of `johns_ci` maps to `pkg/johns_ci/`
-
-This ensures both naming uniqueness and accountability within the OSS ecosystem.
+- Internal services use the `base*` prefix.
+- External services use scoped prefixes (for example, organization/user prefixes).
+- Package directory names mirror service IDs.
 
 ---
 
 ## Advantages
 
-- Prevents service name collisions
-- Provides clear ownership (internal vs. external)
-- Enables future service registries or discovery without ambiguity
-- Makes it easy to spot trusted, core `goboot` logic at a glance
+- Lower chance of service ID collisions.
+- Clear distinction between first-party and external modules.
+- Predictable package layout from service ID.
 
 ---
 
 ## Disadvantages
 
-- Slightly more verbose for external contributors
-- Requires communication of naming guidelines
+- External IDs become longer.
+- Convention compliance requires documentation and review checks.
 
 ---
 
 ## Alternatives Considered
 
-- Single flat namespace for all services — **rejected** due to collision risk and ownership ambiguity
+- **Flat global namespace:** rejected because ownership and collision handling are weaker.
+- **Completely free-form naming:** rejected because mapping and tooling become less predictable.

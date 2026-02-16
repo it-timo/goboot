@@ -1,0 +1,6 @@
+projectName: testproject
+targetPath: /tmp/test
+services:
+  - id: base_project
+    confPath: /tmp/base_project.yml
+    enabled: false

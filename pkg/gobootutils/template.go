@@ -9,25 +9,8 @@ import (
 	"text/template"
 )
 
-// RenderTemplateToFile reads a file from the given fsRoot, renders it as a Go text/template,
-// and writes the rendered content back to the same file location.
-//
-// Parameters:
-//   - name: A template identifier (used for debugging and template naming).
-//   - fsRoot: A secure *os.Root filesystem used for isolated, scoped access.
-//   - path: The relative file path within fsRoot to be rendered.
-//   - data: The data context for rendering (passed to template.Execute).
-//
-// Behavior:
-//   - The function reads the file's content as raw text.
-//   - Calls ExecuteTemplateText.
-//   - Overwrites the file with the rendered result inside the fsRoot.
-//
-// Returns an error if the file cannot be read, parsed, rendered, or written.
-//
-// Notes:
-//   - Only non-directory files should be passed.
-//   - This method assumes the file exists before rendering.
+// RenderTemplateToFile renders an existing file in fsRoot as a text/template and
+// writes the rendered content back to the same path.
 func RenderTemplateToFile(name string, fsRoot *os.Root, path string, data any) error {
 	file, err := fsRoot.Open(path)
 	if err != nil {
@@ -59,16 +42,7 @@ func RenderTemplateToFile(name string, fsRoot *os.Root, path string, data any) e
 	return nil
 }
 
-// ExecuteTemplateText parses and renders a Go template from a raw string.
-//
-// Parameters:
-//   - name: A template identifier (used for naming/debugging).
-//   - text: The raw Go template source.
-//   - data: The data context passed to template execution.
-//
-// Returns:
-//   - The rendered string.
-//   - An error if the template fails to parse or execute.
+// ExecuteTemplateText parses and executes a template from raw text.
 func ExecuteTemplateText(name, text string, data any) (string, error) {
 	tmpl, err := template.New(name).Funcs(templateFuncs()).Parse(text)
 	if err != nil {
@@ -85,9 +59,7 @@ func ExecuteTemplateText(name, text string, data any) (string, error) {
 	return buf.String(), nil
 }
 
-// templateFuncs returns the common function map used across goboot templates.
-//
-// Note: Only add small, deterministic helpers here to avoid surprising template behavior.
+// templateFuncs returns deterministic helpers shared by template rendering.
 func templateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"indent":  indent,
@@ -96,8 +68,7 @@ func templateFuncs() template.FuncMap {
 	}
 }
 
-// indent prefixes every non-empty line in the provided string with the given number of spaces.
-// It normalizes Windows line endings to Unix style before processing to keep behavior consistent across platforms.
+// indent prefixes each non-empty line with spaces after normalizing CRLF to LF.
 func indent(spaces int, curLine string) string {
 	if spaces < 0 {
 		spaces = 0
@@ -118,7 +89,7 @@ func indent(spaces int, curLine string) string {
 	return strings.Join(lines, "\n")
 }
 
-// oneLine turns any newline / CRLF into single spaces, and trims the string.
+// oneLine replaces line breaks with spaces and trims surrounding whitespace.
 func oneLine(curLine string) string {
 	curLine = strings.ReplaceAll(curLine, "\r\n", "\n")
 	curLine = strings.ReplaceAll(curLine, "\n", " ")

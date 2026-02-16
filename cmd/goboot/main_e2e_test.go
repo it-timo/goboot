@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +8,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"gopkg.in/yaml.v3"
 )
 
 // repoRoot returns the repository root based on this test file location.
@@ -36,94 +36,117 @@ func readFile(path string) string {
 	return string(data)
 }
 
+func parseYAMLFile(path string) map[string]any {
+	data, err := os.ReadFile(path)
+	Expect(err).NotTo(HaveOccurred())
+
+	var doc map[string]any
+
+	err = yaml.Unmarshal(data, &doc)
+	Expect(err).NotTo(HaveOccurred(), "invalid YAML: %s", path)
+
+	return doc
+}
+
+func assertGeneratedGitLabCIValid(projectRoot string) {
+	rootDoc := parseYAMLFile(filepath.Join(projectRoot, ".gitlab-ci.yml"))
+	Expect(rootDoc).To(HaveKey("stages"))
+	Expect(rootDoc).To(HaveKey("include"))
+
+	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "commands.yml"))
+	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "versions.yml"))
+	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "lint.yml"))
+	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "test.yml"))
+	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "build.yml"))
+}
+
+func assertYAMLFilesValid(projectRoot string, relPaths []string) {
+	for _, relPath := range relPaths {
+		parseYAMLFile(filepath.Join(projectRoot, filepath.FromSlash(relPath)))
+	}
+}
+
+func assertFilesExist(root string, relPaths []string) {
+	for _, relPath := range relPaths {
+		Expect(filepath.Join(root, filepath.FromSlash(relPath))).To(BeAnExistingFile())
+	}
+}
+
+func assertFilesNotExist(root string, relPaths []string) {
+	for _, relPath := range relPaths {
+		Expect(filepath.Join(root, filepath.FromSlash(relPath))).NotTo(BeAnExistingFile())
+	}
+}
+
 var _ = Describe("End-to-end goboot runs", func() {
+	const (
+		baseProjectFixtureFile = "cmd_goboot/goboot/service_execution_base_project.yml"
+	)
+
 	It("scaffolds a full project with all services enabled (ginkgo style)", func() {
 		defer withFakeGo()()
 		tempDir := GinkgoT().TempDir()
 		projectName := "E2EGinkgo"
 		repoURL := "github.com/example/e2e-ginkgo"
+		gitProvider := "gitlab"
 		targetDir := filepath.Join(tempDir, "target")
 		projectRoot := filepath.Join(targetDir, projectName)
 		root := repoRoot(GinkgoT())
+		projectBaseTemplates := filepath.Join(root, "templates", "project_base")
+		lintBaseTemplates := filepath.Join(root, "templates", "lint_base")
+		testBaseTemplates := filepath.Join(root, "templates", "test_base")
+		localBaseTemplates := filepath.Join(root, "templates", "local_base")
+		ciBaseTemplates := filepath.Join(root, "templates", "ci_base")
 
 		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
-		writeConfig(baseProjectCfg, fmt.Sprintf(`
-sourcePath: %s
-usedGoVersion: "1.22.5"
-usedNodeVersion: "20.0.0"
-releaseCurrentWindow: "Q1 2026"
-releaseUpcomingWindow: "Q3 2026"
-releaseLongTerm: "2029"
-author: "E2E Author"
-gitProvider: "github"
-gitUser: "example"
-`, filepath.Join(root, "templates", "project_base")))
+		baseProjectContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_project.yml", map[string]string{
+			"TEMPLATES_PROJECT_BASE": projectBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseProjectCfg, string(baseProjectContent))
 
 		baseLintCfg := filepath.Join(tempDir, "base_lint.yml")
-		writeConfig(baseLintCfg, fmt.Sprintf(`
-sourcePath: %s
-linters:
-  golang:
-    cmd: |-
-      {{DOCKER_RUN}} golangci/golangci-lint:v2.7.1 golangci-lint run ./...
-    enabled: true
-  yaml:
-    cmd: |-
-      {{DOCKER_RUN}} pipelinecomponents/yamllint:0.35.9 yamllint .
-    enabled: true
-  markdown:
-    cmd: |-
-      {{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 markdownlint "**/*.md"
-    enabled: true
-  shellcheck:
-    cmd: |-
-      {{DOCKER_RUN}} koalaman/shellcheck:v0.11.0 -x {{SH_FILES}}
-    enabled: true
-  shfmt:
-    cmd: |-
-      {{DOCKER_RUN}} mvdan/shfmt:v3.12.0 -d -i 2 -ci {{SH_FILES}}
-    enabled: true
-allowedPackages:
-  - gopkg.in/yaml.v3
-`, filepath.Join(root, "templates", "lint_base")))
+		baseLintContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_lint.yml", map[string]string{
+			"TEMPLATES_LINT_BASE": lintBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseLintCfg, string(baseLintContent))
 
 		baseTestCfg := filepath.Join(tempDir, "base_test.yml")
-		writeConfig(baseTestCfg, fmt.Sprintf(`
-sourcePath: %s
-useStyle: "ginkgo"
-testCmd: |-
-  go test ./...
-`, filepath.Join(root, "templates", "test_base")))
+		baseTestContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_test.yml", map[string]string{
+			"TEMPLATES_TEST_BASE": testBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseTestCfg, string(baseTestContent))
 
 		baseLocalCfg := filepath.Join(tempDir, "base_local.yml")
-		writeConfig(baseLocalCfg, fmt.Sprintf(`
-sourcePath: %s
-fileList:
-  - make
-  - task
-  - script
-  - commit
-`, filepath.Join(root, "templates", "local_base")))
+		baseLocalContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_local.yml", map[string]string{
+			"TEMPLATES_LOCAL_BASE": localBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseLocalCfg, string(baseLocalContent))
+
+		baseCiCfg := filepath.Join(tempDir, "base_ci.yml")
+		baseCiContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_ci.yml", map[string]string{
+			"TEMPLATES_CI_BASE": ciBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseCiCfg, string(baseCiContent))
 
 		gobootCfg := filepath.Join(tempDir, "goboot.yml")
-		writeConfig(gobootCfg, fmt.Sprintf(`
-projectName: %s
-repoUrl: %s
-targetPath: %s
-services:
-  - id: base_project
-    confPath: %s
-    enabled: true
-  - id: base_lint
-    confPath: %s
-    enabled: true
-  - id: base_test
-    confPath: %s
-    enabled: true
-  - id: base_local
-    confPath: %s
-    enabled: true
-`, projectName, repoURL, targetDir, baseProjectCfg, baseLintCfg, baseTestCfg, baseLocalCfg))
+		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/e2e.yml", map[string]string{
+			"PROJECT_NAME":     projectName,
+			"GIT_PROVIDER":     gitProvider,
+			"REPO_URL":         repoURL,
+			"TARGET_DIR":       targetDir,
+			"BASE_PROJECT_CFG": baseProjectCfg,
+			"BASE_LINT_CFG":    baseLintCfg,
+			"BASE_TEST_CFG":    baseTestCfg,
+			"BASE_LOCAL_CFG":   baseLocalCfg,
+			"BASE_CI_CFG":      baseCiCfg,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(gobootCfg, string(gobootContent))
 
 		Expect(run([]string{"--config", gobootCfg})).To(Succeed())
 
@@ -158,84 +181,83 @@ services:
 		ginkgoSuite := readFile(filepath.Join(projectRoot, "pkg", "e2eginkgo", "e2eginkgo_suite_test.go"))
 		Expect(ginkgoSuite).To(ContainSubstring("RunSpecs"))
 		Expect(ginkgoSuite).To(ContainSubstring("E2EGinkgo Suite"))
+
+		assertGeneratedGitLabCIValid(projectRoot)
+		assertYAMLFilesValid(projectRoot, []string{
+			".golangci.yml",
+			".yamllint.yml",
+			".markdownlint.yml",
+			".pre-commit-config.yaml",
+			"Taskfile.yml",
+			"configs/e2eginkgo.yml",
+		})
+
 	})
 
 	It("supports go-style tests and selectively enabled linters", func() {
 		defer withFakeGo()()
 		tempDir := GinkgoT().TempDir()
 		projectName := "E2EGoStyle"
+		gitProvider := "gitlab"
 		repoURL := "github.com/example/e2e-gostyle"
 		targetDir := filepath.Join(tempDir, "out")
 		projectRoot := filepath.Join(targetDir, projectName)
 		root := repoRoot(GinkgoT())
+		projectBaseTemplates := filepath.Join(root, "templates", "project_base")
+		lintBaseTemplates := filepath.Join(root, "templates", "lint_base")
+		testBaseTemplates := filepath.Join(root, "templates", "test_base")
+		localBaseTemplates := filepath.Join(root, "templates", "local_base")
+		ciBaseTemplates := filepath.Join(root, "templates", "ci_base")
 
 		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
-		writeConfig(baseProjectCfg, fmt.Sprintf(`
-sourcePath: %s
-usedGoVersion: "1.21.9"
-usedNodeVersion: "18.0.0"
-releaseCurrentWindow: "Q2 2026"
-releaseUpcomingWindow: "Q4 2026"
-releaseLongTerm: "2030"
-author: "Go Style Author"
-gitProvider: "gitlab"
-gitUser: "go-style"
-`, filepath.Join(root, "templates", "project_base")))
+		baseProjectContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_project.yml", map[string]string{
+			"TEMPLATES_PROJECT_BASE": projectBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseProjectCfg, string(baseProjectContent))
 
 		baseLintCfg := filepath.Join(tempDir, "base_lint.yml")
-		writeConfig(baseLintCfg, fmt.Sprintf(`
-sourcePath: %s
-linters:
-  golang:
-    cmd: echo go-lint
-    enabled: true
-  yaml:
-    cmd: ""
-    enabled: true
-  markdown:
-    cmd: echo markdown
-    enabled: false
-  shellcheck:
-    cmd: echo shellcheck
-    enabled: false
-allowedPackages:
-  - github.com/example/safe
-`, filepath.Join(root, "templates", "lint_base")))
+		baseLintContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_lint.yml", map[string]string{
+			"TEMPLATES_LINT_BASE": lintBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseLintCfg, string(baseLintContent))
 
 		baseTestCfg := filepath.Join(tempDir, "base_test.yml")
-		writeConfig(baseTestCfg, fmt.Sprintf(`
-sourcePath: %s
-useStyle: "go"
-testCmd: ""
-`, filepath.Join(root, "templates", "test_base")))
+		baseTestContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_test.yml", map[string]string{
+			"TEMPLATES_TEST_BASE": testBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseTestCfg, string(baseTestContent))
 
 		baseLocalCfg := filepath.Join(tempDir, "base_local.yml")
-		writeConfig(baseLocalCfg, fmt.Sprintf(`
-sourcePath: %s
-fileList:
-  - task
-  - script
-`, filepath.Join(root, "templates", "local_base")))
+		baseLocalContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_local.yml", map[string]string{
+			"TEMPLATES_LOCAL_BASE": localBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseLocalCfg, string(baseLocalContent))
+
+		baseCiCfg := filepath.Join(tempDir, "base_ci.yml")
+		baseCiContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_ci.yml", map[string]string{
+			"TEMPLATES_CI_BASE": ciBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseCiCfg, string(baseCiContent))
 
 		gobootCfg := filepath.Join(tempDir, "goboot.yml")
-		writeConfig(gobootCfg, fmt.Sprintf(`
-projectName: %s
-repoUrl: %s
-targetPath: %s
-services:
-  - id: base_project
-    confPath: %s
-    enabled: true
-  - id: base_lint
-    confPath: %s
-    enabled: true
-  - id: base_test
-    confPath: %s
-    enabled: true
-  - id: base_local
-    confPath: %s
-    enabled: true
-`, projectName, repoURL, targetDir, baseProjectCfg, baseLintCfg, baseTestCfg, baseLocalCfg))
+		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/e2e.yml", map[string]string{
+			"PROJECT_NAME":     projectName,
+			"GIT_PROVIDER":     gitProvider,
+			"REPO_URL":         repoURL,
+			"TARGET_DIR":       targetDir,
+			"BASE_PROJECT_CFG": baseProjectCfg,
+			"BASE_LINT_CFG":    baseLintCfg,
+			"BASE_TEST_CFG":    baseTestCfg,
+			"BASE_LOCAL_CFG":   baseLocalCfg,
+			"BASE_CI_CFG":      baseCiCfg,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(gobootCfg, string(gobootContent))
 
 		Expect(run([]string{"--config", gobootCfg})).To(Succeed())
 
@@ -246,7 +268,7 @@ services:
 		Expect(filepath.Join(projectRoot, ".shellcheckrc")).NotTo(BeAnExistingFile())
 
 		// go style skips ginkgo suite generation.
-		_, err := os.Stat(filepath.Join(projectRoot, "pkg", "e2egostyle", "e2egostyle_suite_test.go"))
+		_, err = os.Stat(filepath.Join(projectRoot, "pkg", "e2egostyle", "e2egostyle_suite_test.go"))
 		Expect(os.IsNotExist(err)).To(BeTrue())
 
 		goStyleTest := readFile(filepath.Join(projectRoot, "pkg", "e2egostyle", "e2egostyle_test.go"))
@@ -261,5 +283,214 @@ services:
 		testScript := readFile(filepath.Join(projectRoot, "scripts", "test.sh"))
 		Expect(testScript).To(ContainSubstring("go test -race -timeout=5m"))
 		Expect(testScript).NotTo(ContainSubstring("{{"))
+
+		assertGeneratedGitLabCIValid(projectRoot)
+		assertYAMLFilesValid(projectRoot, []string{
+			".golangci.yml",
+			".yamllint.yml",
+			"Taskfile.yml",
+			"configs/e2egostyle.yml",
+		})
+	})
+
+	It("generates deterministic output for base_project-only scaffolding", func() {
+		defer withFakeGo()()
+
+		tempDir := GinkgoT().TempDir()
+		targetDir := filepath.Join(tempDir, "out")
+		projectRoot := filepath.Join(targetDir, "proj")
+		root := repoRoot(GinkgoT())
+		projectBaseTemplates := filepath.Join(root, "templates", "project_base")
+		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
+		baseProjectContent, err := loadTestFixtureWithVars(
+			baseProjectFixtureFile,
+			map[string]string{
+				"SOURCE_DIR": projectBaseTemplates,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseProjectCfg, string(baseProjectContent))
+
+		gobootCfg := filepath.Join(tempDir, "goboot.yml")
+		gobootContent, err := loadTestFixtureWithVars(
+			"cmd_goboot/goboot/service_execution_goboot.yml",
+			map[string]string{
+				"TARGET_DIR":        targetDir,
+				"BASE_PROJECT_PATH": baseProjectCfg,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(gobootCfg, string(gobootContent))
+
+		Expect(run([]string{"--config", gobootCfg})).To(Succeed())
+
+		assertFilesExist(projectRoot, []string{
+			"LICENSE",
+			"NOTICE",
+			"README.md",
+			"ROADMAP.md",
+			"PROJECT_STRUCTURE.md",
+			"VERSIONING.md",
+			"WORKFLOW.md",
+			"go.mod",
+			"cmd/proj/main.go",
+			"configs/proj.yml",
+			"pkg/config/proj.go",
+			"pkg/proj/proj.go",
+			"pkg/projutils/projUtils.go",
+		})
+		assertFilesNotExist(projectRoot, []string{
+			".gitlab-ci.yml",
+			".golangci.yml",
+			"scripts/lint.sh",
+			"scripts/test.sh",
+			"pkg/proj/proj_test.go",
+		})
+
+		goMod := readFile(filepath.Join(projectRoot, "go.mod"))
+		Expect(goMod).To(ContainSubstring("module example.com/x"))
+		Expect(goMod).NotTo(ContainSubstring("{{"))
+		Expect(readFile(filepath.Join(projectRoot, "README.md"))).NotTo(ContainSubstring("{{"))
+	})
+
+	It("fails with a clear error when go mod tidy cannot resolve modules (proxy/path failure)", func() {
+		defer withFakeGoScript(`#!/usr/bin/env bash
+if [[ "$1" == "mod" && "$2" == "tidy" ]]; then
+echo "go: module lookup disabled by GOPROXY=${GOPROXY:-}" >&2
+exit 1
+fi
+exit 0
+`)()
+
+		origProxy, hadProxy := os.LookupEnv("GOPROXY")
+		Expect(os.Setenv("GOPROXY", "off")).To(Succeed())
+		defer func() {
+			if hadProxy {
+				_ = os.Setenv("GOPROXY", origProxy)
+
+				return
+			}
+
+			_ = os.Unsetenv("GOPROXY")
+		}()
+
+		tempDir := GinkgoT().TempDir()
+		targetDir := filepath.Join(tempDir, "out")
+		projectRoot := filepath.Join(targetDir, "proj")
+		root := repoRoot(GinkgoT())
+		projectBaseTemplates := filepath.Join(root, "templates", "project_base")
+		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
+		baseProjectContent, err := loadTestFixtureWithVars(
+			baseProjectFixtureFile,
+			map[string]string{
+				"SOURCE_DIR": projectBaseTemplates,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseProjectCfg, string(baseProjectContent))
+
+		gobootCfg := filepath.Join(tempDir, "goboot.yml")
+		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/service_execution_goboot.yml", map[string]string{
+			"TARGET_DIR":        targetDir,
+			"BASE_PROJECT_PATH": baseProjectCfg,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(gobootCfg, string(gobootContent))
+
+		err = run([]string{"--config", gobootCfg})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("failed to run go mod tidy"))
+		Expect(err.Error()).To(ContainSubstring("exit status 1"))
+
+		Expect(projectRoot).To(BeADirectory())
+		Expect(filepath.Join(projectRoot, "go.mod")).To(BeAnExistingFile())
+	})
+
+	It("fails fast when template content is not parseable", func() {
+		tempDir := GinkgoT().TempDir()
+		targetDir := filepath.Join(tempDir, "out")
+		sourceDir := filepath.Join(tempDir, "templates")
+
+		Expect(os.MkdirAll(sourceDir, 0o755)).To(Succeed())
+		writeConfig(filepath.Join(sourceDir, "README.md.tmpl"), "project: {{ .ProjectName")
+		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
+		baseProjectContent, err := loadTestFixtureWithVars(
+			baseProjectFixtureFile,
+			map[string]string{
+				"SOURCE_DIR": sourceDir,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseProjectCfg, string(baseProjectContent))
+
+		gobootCfg := filepath.Join(tempDir, "goboot.yml")
+		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/service_execution_goboot.yml", map[string]string{
+			"TARGET_DIR":        targetDir,
+			"BASE_PROJECT_PATH": baseProjectCfg,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(gobootCfg, string(gobootContent))
+
+		err = run([]string{"--config", gobootCfg})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("service execution failed"))
+		Expect(err.Error()).To(ContainSubstring("failed template parse"))
+	})
+
+	It("fails when target path is not writable", func() {
+		if runtime.GOOS == "windows" {
+			Skip("permission model differs on Windows for this scenario")
+		}
+
+		tempDir := GinkgoT().TempDir()
+		lockedParent := filepath.Join(tempDir, "locked")
+		Expect(os.MkdirAll(lockedParent, 0o755)).To(Succeed())
+		Expect(os.Chmod(lockedParent, 0o500)).To(Succeed())
+		defer func() {
+			_ = os.Chmod(lockedParent, 0o755)
+		}()
+
+		targetDir := filepath.Join(lockedParent, "out")
+		configFile := filepath.Join(tempDir, "goboot.yml")
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			"PROJECT_NAME": "perm-fail",
+			"TARGET_DIR":   targetDir,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(configFile, string(yamlContent))
+
+		err = run([]string{"--config", configFile})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("service registration failed"))
+		Expect(err.Error()).To(ContainSubstring("failed to create target directory"))
+	})
+
+	It("fails when an enabled lint template file is missing", func() {
+		tempDir := GinkgoT().TempDir()
+		emptyLintTemplates := filepath.Join(tempDir, "lint_templates")
+		Expect(os.MkdirAll(emptyLintTemplates, 0o755)).To(Succeed())
+
+		baseLintCfg := filepath.Join(tempDir, "base_lint.yml")
+		writeConfig(baseLintCfg, "sourcePath: "+emptyLintTemplates+"\n"+
+			"linters:\n"+
+			"  golang:\n"+
+			"    cmd: \"\"\n"+
+			"    enabled: true\n")
+
+		gobootCfg := filepath.Join(tempDir, "goboot.yml")
+		writeConfig(gobootCfg, "projectName: \"MissingLintTemplate\"\n"+
+			"repoUrl: \"https://github.com/example/missing-template\"\n"+
+			"gitProvider: \"gitlab\"\n"+
+			"targetPath: \""+filepath.Join(tempDir, "out")+"\"\n"+
+			"services:\n"+
+			"  - id: \"base_lint\"\n"+
+			"    confPath: \""+baseLintCfg+"\"\n"+
+			"    enabled: true\n")
+
+		err := run([]string{"--config", gobootCfg})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("service execution failed"))
+		Expect(err.Error()).To(ContainSubstring("missing required template"))
+		Expect(err.Error()).To(ContainSubstring(".golangci.yml"))
 	})
 })

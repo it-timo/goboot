@@ -1,0 +1,4 @@
+sourcePath: /tmp/lint
+linters:
+  golang:
+    enabled: true

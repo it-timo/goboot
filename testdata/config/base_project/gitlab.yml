@@ -1,0 +1,11 @@
+sourcePath: ./templates
+projectUrl: https://gitlab.com/group/project
+repoPath: gitlab.com/group/project
+projectName: project
+usedGoVersion: "1.21.0"
+usedNodeVersion: "18.0.0"
+releaseCurrentWindow: Q1 2025
+releaseUpcomingWindow: Q2 2025
+releaseLongTerm: "2027"
+author: Jane Smith
+gitUser: janesmith

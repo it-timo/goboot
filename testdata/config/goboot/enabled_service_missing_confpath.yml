@@ -1,0 +1,5 @@
+projectName: testproject
+targetPath: /tmp/test
+services:
+  - id: base_project
+    enabled: true

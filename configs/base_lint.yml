@@ -1,38 +1,22 @@
-###############################################################################
-#  Base Lint Configuration File
-#
-#  This file defines metadata used by goboot to scaffold the linter setup.
-#  All values are injected into templated files and may also be used for documentation, CI/CD, and more.
-#
-#  Safe to commit — no secrets, purely structural.
-#  Required by goboot's linter logic.
-###############################################################################
+# Config for the `base_lint` service.
+# Safe to commit; no secrets.
 
-#  ------------------------------------------------------------------------------
-#  General Configuration
-#  ------------------------------------------------------------------------------
+# Template source.
 
 #  Directory where the templates will be read from.
 sourcePath: "templates/lint_base"
 
-#  ------------------------------------------------------------------------------
-#  Modular Linter Configuration
-#  ------------------------------------------------------------------------------
-
-#  Each linter entry defines:
-#    - A stable name
-#    - The command to run
-#    - Whether the service should be included in this run
-#
-#  Disabled linter will be skipped without error.
-#  Linter names can't be empty but are only used to define fallback commands if internally defined.
-#  ROOT_DIR equals to the root directory of the project (pwd)
-#  DOCKER_RUN equals to: docker run --rm -v \"{{ROOT_DIR}}:/workdir\" -w /workdir
-#  SH_FILES equals to: $(find . -type f -name \"*.sh\")
+# Linter definitions.
+# Each entry needs: `cmd`, `enabled`.
+# Disabled linters are skipped.
+# Placeholders:
+# - ROOT_DIR: project root (`pwd`)
+# - DOCKER_RUN: docker wrapper command
+# - SH_FILES: `find . -type f -name "*.sh"`
 linters:
   golang:          #  name of the linter scope
     cmd: |-
-      {{DOCKER_RUN}} golangci/golangci-lint:v2.7.1 golangci-lint run ./...
+      {{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...
     enabled: true  #  enable state
   yaml:
     cmd: |-
@@ -44,7 +28,7 @@ linters:
     enabled: true
   markdown:
     cmd: |-
-      {{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.46.0 markdownlint "**/*.md"
+      {{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.47.0 markdownlint "**/*.md"
     enabled: true
   shellcheck:
     cmd: |-
@@ -54,10 +38,12 @@ linters:
     cmd: |-
       {{DOCKER_RUN}} mvdan/shfmt:v3.12.0 -d -i 2 -ci {{SH_FILES}}
     enabled: true
+  editor:
+    cmd: |-
+      {{DOCKER_RUN}} --entrypoint ec mstruebing/editorconfig-checker:v3.6.0 -exclude '(\.git|\.idea|\.vscode)'
+    enabled: true
 
-#  ------------------------------------------------------------------------------
-#  Allowed Packages
-#  ------------------------------------------------------------------------------
+# Allowed import exceptions for depguard.
 allowedPackages:
   - gopkg.in/yaml.v3
   - github.com/onsi/ginkgo/v2

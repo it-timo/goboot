@@ -1,4 +1,4 @@
-# 📄 ADR-018: Static Service Registration and Orchestration
+# ADR-018: Static Service Registration and Orchestration
 
 **Tags:** `services`, `registration`, `explicit-architecture`
 
@@ -6,43 +6,43 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Dynamic service loading via reflection, plugins, or dependency injection frameworks introduces complexity,
-weakens compile-time guarantees, and complicates extensibility. `goboot` favors static,
-explicit definitions to align with idiomatic Go and clarity in OSS.
+Service registration determines what can run in a generation flow.
+Dynamic registration mechanisms can obscure behavior and produce environment-dependent startup paths.
 
 ---
 
 ## Decision
 
-- Each service (e.g., `base_project`, `base_lint`) is registered statically
-  in a centralized registry function (e.g., `RegisterServices()`).
-- Services implement a shared `Service` interface and are matched by declared ID (e.g., `base_lint`) in `types`.
-- No dynamic discovery or auto-wiring is used.
+Register services statically in centralized orchestration code.
+
+- Services implement the shared `Service` interface.
+- Registry wiring is explicit.
+- No reflection-based auto-registration.
 
 ---
 
 ## Advantages
 
-- Compile-time safety, no runtime surprises
-- Easy grepping and traceability
-- Controlled and predictable service execution
-- Encourages clear responsibility boundaries per service
+- Startup behavior is reviewable in one place.
+- Compile-time references support easier refactoring.
+- Lower variance between environments.
 
 ---
 
 ## Disadvantages
 
-- Slightly more manual for new service integration
-- Less "magical" extensibility (but this is intentional)
+- Registration list must be maintained manually.
+- Third-party extension requires source-level integration.
 
 ---
 
 ## Alternatives Considered
 
-- DI/Reflection: rejected due to runtime risk and reduced clarity
+- **Reflection/scan-based registration:** rejected due to weaker traceability.
+- **Init-time self-registration maps:** rejected because implicit side effects make startup harder to reason about.

@@ -44,11 +44,10 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 		})
 
 		It("reads from the provided config path during init", func() {
-			yamlContent := `projectName: from-custom-path
-targetPath: /tmp/from-custom
-services: []
-`
-			err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+			yamlContent, err := loadTestFixture("config/goboot/read_from_path.yml")
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.WriteFile(configPath, yamlContent, 0644)
 			Expect(err).NotTo(HaveOccurred())
 
 			gb := config.NewGoBoot(configPath)
@@ -63,31 +62,20 @@ services: []
 		Context("with valid configuration", func() {
 			BeforeEach(func() {
 				// Create a minimal valid config file
-				yamlContent := `projectName: testproject
-repoUrl: https://github.com/user/testproject
-targetPath: /tmp/test
-services:
-  - id: base_project
-    confPath: ` + filepath.Join(tempDir, "base_project.yml") + `
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixtureWithVars("config/goboot/init_valid.yml", map[string]string{
+					"BASE_PROJECT_PATH": filepath.Join(tempDir, "base_project.yml"),
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				// Create the service config file
-				serviceConfigContent := `sourcePath: /tmp/templates
-projectName: testproject
-usedGoVersion: "1.22.0"
-usedNodeVersion: "20.0.0"
-releaseCurrentWindow: Q1 2025
-releaseUpcomingWindow: Q2 2025
-releaseLongTerm: "2028"
-author: Test Author
-gitProvider: github
-gitUser: testuser
-`
+				serviceConfigContent, err := loadTestFixture("config/goboot/service_base_project.yml")
+				Expect(err).NotTo(HaveOccurred())
+
 				serviceConfigPath := filepath.Join(tempDir, "base_project.yml")
-				err = os.WriteFile(serviceConfigPath, []byte(serviceConfigContent), 0644)
+				err = os.WriteFile(serviceConfigPath, serviceConfigContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -130,10 +118,10 @@ gitUser: testuser
 			})
 
 			It("returns error for malformed YAML", func() {
-				invalidYAML := `projectName: [invalid yaml
-services: not properly formatted
-`
-				err := os.WriteFile(configPath, []byte(invalidYAML), 0644)
+				invalidYAML, err := loadTestFixture("config/goboot/invalid_goboot.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, invalidYAML, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -142,11 +130,10 @@ services: not properly formatted
 			})
 
 			It("returns error when required base fields are missing", func() {
-				yamlContent := `projectName: ""
-targetPath: ""
-services: []
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/goboot/missing_required_fields.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -157,13 +144,10 @@ services: []
 			})
 
 			It("returns error when enabled service has no confPath", func() {
-				yamlContent := `projectName: testproject
-targetPath: /tmp/test
-services:
-  - id: base_project
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/goboot/enabled_service_missing_confpath.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -175,14 +159,10 @@ services:
 
 		Context("with disabled services", func() {
 			BeforeEach(func() {
-				yamlContent := `projectName: testproject
-targetPath: /tmp/test
-services:
-  - id: base_project
-    confPath: /tmp/base_project.yml
-    enabled: false
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/goboot/disabled_service.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -200,15 +180,10 @@ services:
 
 		Context("with unknown service ID", func() {
 			BeforeEach(func() {
-				yamlContent := `projectName: testproject
-repoUrl: https://github.com/user/testproject
-targetPath: /tmp/test
-services:
-  - id: unknown_service_xyz
-    confPath: /tmp/config.yml
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixture("config/goboot/unknown_service.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -223,23 +198,20 @@ services:
 
 		Context("with invalid service config", func() {
 			BeforeEach(func() {
-				yamlContent := `projectName: testproject
-repoUrl: https://github.com/user/testproject
-targetPath: /tmp/test
-services:
-  - id: base_project
-    confPath: ` + filepath.Join(tempDir, "invalid.yml") + `
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixtureWithVars("config/goboot/invalid_service_ref.yml", map[string]string{
+					"INVALID_PATH": filepath.Join(tempDir, "invalid.yml"),
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				// Create invalid service config (missing required fields)
-				invalidServiceConfig := `projectName: test
-# Missing all required fields
-`
+				invalidServiceConfig, err := loadTestFixture("config/goboot/invalid_service_config.yml")
+				Expect(err).NotTo(HaveOccurred())
+
 				invalidPath := filepath.Join(tempDir, "invalid.yml")
-				err = os.WriteFile(invalidPath, []byte(invalidServiceConfig), 0644)
+				err = os.WriteFile(invalidPath, invalidServiceConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -252,15 +224,12 @@ services:
 			})
 
 			It("returns error when service config file cannot be read", func() {
-				yamlContent := `projectName: testproject
-repoUrl: https://github.com/user/testproject
-targetPath: /tmp/test
-services:
-  - id: base_project
-    confPath: ` + filepath.Join(tempDir, "missing.yml") + `
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixtureWithVars("config/goboot/missing_service_ref.yml", map[string]string{
+					"MISSING_PATH": filepath.Join(tempDir, "missing.yml"),
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -273,54 +242,51 @@ services:
 
 		Context("with multiple services", func() {
 			BeforeEach(func() {
-				yamlContent := `projectName: testproject
-repoUrl: https://github.com/user/testproject
-targetPath: /tmp/test
-services:
-  - id: base_project
-    confPath: ` + filepath.Join(tempDir, "base_project.yml") + `
-    enabled: true
-  - id: base_lint
-    confPath: ` + filepath.Join(tempDir, "base_lint.yml") + `
-    enabled: true
-  - id: base_local
-    confPath: ` + filepath.Join(tempDir, "base_local.yml") + `
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixtureWithVars("config/goboot/multiple_services.yml", map[string]string{
+					"BASE_PROJECT_PATH": filepath.Join(tempDir, "base_project.yml"),
+					"BASE_LINT_PATH":    filepath.Join(tempDir, "base_lint.yml"),
+					"BASE_LOCAL_PATH":   filepath.Join(tempDir, "base_local.yml"),
+					"BASE_TEST_PATH":    filepath.Join(tempDir, "base_test.yml"),
+					"BASE_CI_PATH":      filepath.Join(tempDir, "base_ci.yml"),
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(configPath, yamlContent, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				// Create base_project config
-				projectConfig := `sourcePath: /tmp/templates
-projectName: testproject
-usedGoVersion: "1.22.0"
-usedNodeVersion: "20.0.0"
-releaseCurrentWindow: Q1 2025
-releaseUpcomingWindow: Q2 2025
-releaseLongTerm: "2028"
-author: Test Author
-gitProvider: github
-gitUser: testuser
-`
-				err = os.WriteFile(filepath.Join(tempDir, "base_project.yml"), []byte(projectConfig), 0644)
+				projectConfig, err := loadTestFixture("config/goboot/multiple_base_project.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_project.yml"), projectConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				// Create base_lint config
-				lintConfig := `sourcePath: /tmp/lint
-linters:
-  golang:
-    enabled: true
-`
-				err = os.WriteFile(filepath.Join(tempDir, "base_lint.yml"), []byte(lintConfig), 0644)
+				lintConfig, err := loadTestFixture("config/goboot/multiple_base_lint.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_lint.yml"), lintConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				// Create base_local config
-				localConfig := `sourcePath: /tmp/local
-fileList:
-  - Makefile
-  - Taskfile.yml
-`
-				err = os.WriteFile(filepath.Join(tempDir, "base_local.yml"), []byte(localConfig), 0644)
+				localConfig, err := loadTestFixture("config/goboot/multiple_base_local.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_local.yml"), localConfig, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Create base_test config
+				testConfig, err := loadTestFixture("config/goboot/multiple_base_test.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_test.yml"), testConfig, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				// Create base_ci config
+				ciConfig, err := loadTestFixture("config/goboot/multiple_base_ci.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_ci.yml"), ciConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -341,27 +307,33 @@ fileList:
 				// Check base_local (service)
 				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseLocal)
 				Expect(exist).To(BeTrue())
+
+				// Check base_test (service)
+				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseTest)
+				Expect(exist).To(BeTrue())
+
+				// Check base_ci (service)
+				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseCI)
+				Expect(exist).To(BeTrue())
 			})
 		})
 
 		Context("with base_test service", func() {
 			It("registers the test config and fills defaults", func() {
 				baseTestPath := filepath.Join(tempDir, "base_test.yml")
-				yamlContent := `projectName: testproject
-repoUrl: github.com/user/testproject
-targetPath: ` + filepath.Join(tempDir, "out") + `
-services:
-  - id: base_test
-    confPath: ` + baseTestPath + `
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixtureWithVars("config/goboot/base_test.yml", map[string]string{
+					"BASE_TEST_PATH": baseTestPath,
+					"TARGET_PATH":    filepath.Join(tempDir, "out"),
+				})
 				Expect(err).NotTo(HaveOccurred())
 
-				baseTestConfig := `sourcePath: ./templates/test_base
-useStyle: ginkgo
-`
-				err = os.WriteFile(baseTestPath, []byte(baseTestConfig), 0644)
+				err = os.WriteFile(configPath, yamlContent, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				baseTestConfig, err := loadTestFixture("config/goboot/base_test_config.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(baseTestPath, baseTestConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				goBoot = config.NewGoBoot(configPath)
@@ -383,28 +355,18 @@ useStyle: ginkgo
 	Describe("Real-world scenarios", func() {
 		Context("when setting up a complete project", func() {
 			It("handles a typical configuration", func() {
-				yamlContent := `projectName: myproject
-repoUrl: https://github.com/user/myproject
-targetPath: /tmp/myproject
-services:
-  - id: base_project
-    confPath: ` + filepath.Join(tempDir, "project.yml") + `
-    enabled: true
-`
-				err := os.WriteFile(configPath, []byte(yamlContent), 0644)
+				yamlContent, err := loadTestFixtureWithVars("config/goboot/real_world.yml", map[string]string{
+					"PROJECT_PATH": filepath.Join(tempDir, "project.yml"),
+				})
 				Expect(err).NotTo(HaveOccurred())
 
-				projectConfig := `sourcePath: /tmp/templates
-usedGoVersion: "1.22.5"
-usedNodeVersion: "20.12.0"
-releaseCurrentWindow: Q2 2025
-releaseUpcomingWindow: Q4 2025
-releaseLongTerm: "2029"
-author: John Doe
-gitProvider: github
-gitUser: johndoe
-`
-				err = os.WriteFile(filepath.Join(tempDir, "project.yml"), []byte(projectConfig), 0644)
+				err = os.WriteFile(configPath, yamlContent, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				projectConfig, err := loadTestFixture("config/goboot/real_world_project.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "project.yml"), projectConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
 				testGoBoot := config.NewGoBoot(configPath)

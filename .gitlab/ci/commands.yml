@@ -1,0 +1,11 @@
+# ==============================================================================
+# Centralized Commands Management for GitLab CI
+# ==============================================================================
+#
+# This file contains all command variables used in GitLab CI pipelines.
+#
+# ==============================================================================
+
+variables:
+  DOCKER_RUN_CMD: "docker run --rm -v $PWD:/workdir -w /workdir"
+  FIND_SH_FILES_CMD: "$(find . -type f -name \"*.sh\" -not -path \"./templates/*\")"

@@ -54,7 +54,6 @@ go.work.sum
 .tool-versions
 
 # Dependency audit tools
-go.sum
 go.sum.bak
 
 # Staticcheck and similar
@@ -66,6 +65,7 @@ staticcheck.conf
 .env
 .env.*
 *.env
+!versions.env
 
 # ------------------------------------------------------------------------------
 # ⚙️ CI/CD Tool State
@@ -77,6 +77,7 @@ node_modules/      # in case frontend bits emerge
 coverage-reports/
 build-reports/
 .gocache/
+.gitlab-ci-local/
 
 # ------------------------------------------------------------------------------
 # 🧠 OS & Filesystem Noise

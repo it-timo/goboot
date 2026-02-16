@@ -1,4 +1,4 @@
-# 📄 ADR-002: Explicit Separation of Concerns — No Runtime Reflection or DI
+# ADR-002: Explicit Separation of Concerns - No Runtime Reflection or DI
 
 **Tags:** `philosophy`, `idioms`, `anti-patterns`
 
@@ -6,49 +6,45 @@
 
 ## Status
 
-✅ Accepted
+Accepted
 
 ---
 
 ## Context
 
-Modern Go OSS often overuses runtime abstractions such as:
-
-- Global registries
-- Interface-based plugin discovery
-- Reflection or generic container types
-
-These increase complexity without adding tangible value, especially in tools like `goboot` which aim for deterministic,
-high-trust generation logic.
+Runtime reflection and DI frameworks can reduce explicitness in control flow.
+For a scaffolding tool, deterministic behavior and easy inspection are prioritized over dynamic wiring.
 
 ---
 
 ## Decision
 
-Reject all the following:
+Do not use reflection-based discovery, runtime plugin loading, or container-style dependency injection.
 
-- No global plugin systems
-- No reflection-based discovery
-- No runtime service loading
-- No interface-driven dependency injection
+Use:
 
-Instead:
-
-- Explicit structs
-- Explicit registration
-- Top-level service mapping
+- explicit struct construction,
+- explicit registration, and
+- explicit orchestration in the top-level service manager.
 
 ---
 
 ## Advantages
 
-- Enforces clarity and predictability
-- Encourages meaningful, localized logic
-- Easier for contributors to follow and extend
+- Execution path is visible in code.
+- Fewer runtime failure modes from misconfigured containers/registries.
+- Easier static review and traceability.
 
 ---
 
 ## Disadvantages
 
-- Not extensible via external plugin systems (intended limitation)
-- Slightly more maintenance effort to onboard new modules
+- Adding new modules requires explicit wiring updates.
+- Third-party runtime extension points are intentionally limited.
+
+---
+
+## Alternatives Considered
+
+- **Reflection-based service discovery:** rejected due to weaker compile-time guarantees and harder debugging.
+- **DI container frameworks:** rejected due to additional runtime complexity without clear payoff for current scope.

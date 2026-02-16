@@ -1,7 +1,5 @@
 /*
 Package config defines the configuration structures used by {{.ProjectName}}.
-
-It ...
 */
 package config
 
@@ -19,14 +17,14 @@ import (
 type {{.ProjectName}}Config struct {
 	// configPath is the path to the main {{.ProjectName}} YAML config file (e.g., ./configs/{{.LowerProjectName}}.yml).
 	configPath string `yaml:"-"`
-    // SomeVar is a placeholder for a configuration variable.
+	// SomeVar is a placeholder for a configuration variable.
 	SomeVar string `yaml:"someVar"`
 }
 
 var (
-  ErrConfigNil      = errors.New("config is nil")
-  ErrConfigPathEmpty = errors.New("config path is empty")
-  ErrConfigInvalid  = errors.New("config invalid")
+	ErrConfigNil      = errors.New("config is nil")
+	ErrConfigPathEmpty = errors.New("config path is empty")
+	ErrConfigInvalid  = errors.New("config invalid")
 )
 
 // New{{.ProjectName}}Config returns a config instance bound to a path.
@@ -43,35 +41,35 @@ func (cfg *{{.ProjectName}}Config) Init() error {
 	if cfg == nil {
 		return ErrConfigNil
 	}
-	
-    if strings.TrimSpace(cfg.configPath) == "" {
+
+	if strings.TrimSpace(cfg.configPath) == "" {
 		return ErrConfigPathEmpty
 	}
 
-    // set defaults first, so YAML can override them.
-    cfg.setDefaults()
+	// set defaults first, so YAML can override them.
+	cfg.setDefaults()
 
-    // clean the path and read the config file.
+	// clean the path and read the config file.
 	abs, err := filepath.Abs(filepath.Clean(cfg.configPath))
 	if err != nil {
 		return fmt.Errorf("failed to resolve config path: %w", err)
 	}
 
-    cfg.configPath = abs
+	cfg.configPath = abs
 
 	data, err := os.ReadFile(abs) // #nosec G304 -- the path is user-defined and expected to be dynamic.
 	if err != nil {
 		return fmt.Errorf("failed to read config file %q: %w", cfg.configPath, err)
-    }
+	}
 
 	err = yaml.Unmarshal(data, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-    // validate the config.
+	// validate the config.
 	err = cfg.validate()
-    if err != nil {
+	if err != nil {
 		return fmt.Errorf("validate config %q: %w", cfg.configPath, err)
 	}
 
@@ -88,7 +86,7 @@ func (cfg *{{.ProjectName}}Config) setDefaults() {
 
 // validate checks the {{.ProjectName}} config for required fields.
 //
-// It ensures ... are present.
+// It ensures required fields are present.
 func (cfg *{{.ProjectName}}Config) validate() error {
 	var missing []string
 

@@ -1,0 +1,19 @@
+stages:
+{{- if index .FileScripts "lint.yml" }}
+  - lint
+{{- end }}
+{{- if index .FileScripts "test.yml" }}
+  - test
+{{- end }}
+{{- if index .FileScripts "build.yml" }}
+  - build
+{{- end }}
+
+{{- if .EnabledJobFiles }}
+include:
+  - local: ".gitlab/ci/versions.yml"
+  - local: ".gitlab/ci/commands.yml"
+{{- range $file := .EnabledJobFiles }}
+  - local: "{{ if $.CIDir }}{{ $.CIDir }}/{{ $file }}{{ else }}{{ $file }}{{ end }}"
+{{- end }}
+{{- end }}
