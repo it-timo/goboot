@@ -1,12 +1,11 @@
 package config_test
 
 import (
-	"os"
-
 	{{- if eq .UseStyle "go" }}
 	"path/filepath"
 	"testing"
 	{{- else if eq .UseStyle "ginkgo" }}
+	"os"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -15,7 +14,7 @@ import (
 	"{{.RepoImportPath}}/pkg/config"
 )
 
-{{- if eq .UseStyle "go" }}
+{{ if eq .UseStyle "go" }}
 // testEnv holds common per-test resources.
 type testEnv struct {
 	t       *testing.T
@@ -33,6 +32,7 @@ func newTestEnv(t *testing.T) *testEnv {
 
 func (e *testEnv) join(path ...string) string {
 	e.t.Helper()
+
 	return filepath.Join(append([]string{e.tempDir}, path...)...)
 }
 
@@ -62,9 +62,8 @@ func TestMethod(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt // capture range variable
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			env := newTestEnv(t)
@@ -78,17 +77,17 @@ func TestMethod(t *testing.T) {
 			//
 			// got, err := config.Method(...)
 			//
-			// if (err != nil) != tt.wantErr {
-			//     t.Fatalf("Method() error = %v, wantErr %v", err, tt.wantErr)
+			// if (err != nil) != testCase.wantErr {
+			//     t.Fatalf("Method() error = %v, wantErr %v", err, testCase.wantErr)
 			// }
 			//
-			// if diff := cmp.Diff(tt.want, got); diff != "" {
+			// if diff := cmp.Diff(testCase.want, got); diff != "" {
 			//     t.Fatalf("Method() mismatch (-want +got):\n%s", diff)
 			// }
 		})
 	}
 }
-{{- else if eq .UseStyle "ginkgo" }}
+{{ else if eq .UseStyle "ginkgo" }}
 var _ = Describe("Config Package", func() {
 	var (
 		tempDir string
@@ -96,6 +95,7 @@ var _ = Describe("Config Package", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "{{.LowerProjectName}}-config-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})

@@ -155,6 +155,15 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			Expect(goboottypes.ServiceNameBaseLint).To(Equal("base_lint"))
 			Expect(goboottypes.ServiceNameBaseLocal).To(Equal("base_local"))
 			Expect(goboottypes.ServiceNameBaseTest).To(Equal("base_test"))
+			Expect(goboottypes.ServiceNameBaseCI).To(Equal("base_ci"))
+			Expect(goboottypes.ServiceNameBaseLogger).To(Equal("base_logger"))
+		})
+	})
+
+	Describe("Logger Types", func() {
+		It("matches exact logger type constants", func() {
+			Expect(goboottypes.LoggerTypeZerolog).To(Equal("zerolog"))
+			Expect(goboottypes.LoggerTypeSlog).To(Equal("slog"))
 		})
 	})
 
@@ -185,7 +194,7 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 
 		Context("when validating permission values", func() {
 			It("has sensible file permissions (owner rw, group rx, others rx)", func() {
-					// 0644 = owner: rw- (6), group: r-- (4), others: r-- (4)
+				// 0644 = owner: rw- (6), group: r-- (4), others: r-- (4)
 				perm := os.FileMode(goboottypes.FilePerm)
 				Expect(perm&0o600).To(Equal(os.FileMode(0o600)), "Owner should have read+write permissions")
 				Expect(perm&0o040).To(Equal(os.FileMode(0o040)), "Group should have read")

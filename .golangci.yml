@@ -53,7 +53,7 @@ linters:
     - godox
     - goheader
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - gosmopolitan
@@ -134,6 +134,8 @@ linters:
             - gopkg.in/yaml.v3           #  Required YAML parsing
             - github.com/onsi/ginkgo/v2  #  Testing framework
             - github.com/onsi/gomega     #  Matcher library
+            - github.com/rs/zerolog      #  Logging library
+            - github.com/rs/zerolog/log  #  Logging library
           deny:
             - pkg: "math/rand$"  #  Discourage the use of insecure random generators.
               desc: use math/rand/v2

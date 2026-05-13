@@ -16,7 +16,7 @@ sourcePath: "templates/lint_base"
 linters:
   golang:          #  name of the linter scope
     cmd: |-
-      {{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...
+      {{DOCKER_RUN}} golangci/golangci-lint:v2.12.0 golangci-lint run ./...
     enabled: true  #  enable state
   yaml:
     cmd: |-
@@ -48,3 +48,5 @@ allowedPackages:
   - gopkg.in/yaml.v3
   - github.com/onsi/ginkgo/v2
   - github.com/onsi/gomega
+  - github.com/rs/zerolog
+  - github.com/rs/zerolog/log

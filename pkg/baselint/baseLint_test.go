@@ -49,6 +49,11 @@ func (r *recordingRegistrar) RegisterFile(name string, lines []string) error {
 }
 
 var _ = Describe("BaseLint Service", func() {
+	const (
+		commandGoLint   = "go-cmd"
+		commandYAMLLint = "yaml-cmd"
+	)
+
 	var (
 		tempDir     string
 		baseLint    *baselint.BaseLint
@@ -57,6 +62,7 @@ var _ = Describe("BaseLint Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baselint-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -100,6 +106,7 @@ var _ = Describe("BaseLint Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -153,6 +160,7 @@ var _ = Describe("BaseLint Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
 
@@ -170,8 +178,8 @@ var _ = Describe("BaseLint Service", func() {
 			createTemplate(".yamllint.yml", "yaml: {{ .ProjectName }}")
 
 			validConfig.Linters = map[string]*config.Linter{
-				goboottypes.LinterGo:   {Enabled: true, Cmd: "go-cmd"},
-				goboottypes.LinterYAML: {Enabled: true, Cmd: "yaml-cmd"},
+				goboottypes.LinterGo:   {Enabled: true, Cmd: commandGoLint},
+				goboottypes.LinterYAML: {Enabled: true, Cmd: commandYAMLLint},
 			}
 
 			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
@@ -194,9 +202,9 @@ var _ = Describe("BaseLint Service", func() {
 			createTemplate(".golangci.yml", "run: {{ .ProjectName }}")
 
 			validConfig.Linters = map[string]*config.Linter{
-				goboottypes.LinterGo:   {Enabled: false, Cmd: "go-cmd"},
+				goboottypes.LinterGo:   {Enabled: false, Cmd: commandGoLint},
 				"unknown":              {Enabled: true, Cmd: "unknown-cmd"},
-				goboottypes.LinterYAML: {Enabled: false, Cmd: "yaml-cmd"},
+				goboottypes.LinterYAML: {Enabled: false, Cmd: commandYAMLLint},
 			}
 
 			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
@@ -211,8 +219,8 @@ var _ = Describe("BaseLint Service", func() {
 			createTemplate(".golangci.yml", "go")
 
 			validConfig.Linters = map[string]*config.Linter{
-				goboottypes.LinterGo:   {Enabled: true, Cmd: "go-cmd"},
-				goboottypes.LinterYAML: {Enabled: false, Cmd: "yaml-cmd"},
+				goboottypes.LinterGo:   {Enabled: true, Cmd: commandGoLint},
+				goboottypes.LinterYAML: {Enabled: false, Cmd: commandYAMLLint},
 				"unknown":              {Enabled: true, Cmd: "unknown-cmd"},
 			}
 
@@ -224,7 +232,7 @@ var _ = Describe("BaseLint Service", func() {
 			Expect(baseLint.Run()).To(Succeed())
 
 			Expect(registrar.linesCalls).To(HaveKey(goboottypes.ServiceNameBaseLint))
-			Expect(registrar.linesCalls[goboottypes.ServiceNameBaseLint]).To(ConsistOf("go-cmd"))
+			Expect(registrar.linesCalls[goboottypes.ServiceNameBaseLint]).To(ConsistOf(commandGoLint))
 			Expect(registrar.fileCalls).To(HaveKey(fileKey))
 			Expect(registrar.fileCalls[fileKey]).To(ConsistOf("go-cmd"))
 		}
@@ -243,7 +251,7 @@ var _ = Describe("BaseLint Service", func() {
 
 		It("returns an error when template file is missing", func() {
 			validConfig.Linters = map[string]*config.Linter{
-				goboottypes.LinterGo: {Enabled: true, Cmd: "go-cmd"},
+				goboottypes.LinterGo: {Enabled: true, Cmd: commandGoLint},
 			}
 			// no template created
 
@@ -257,7 +265,7 @@ var _ = Describe("BaseLint Service", func() {
 			createTemplate(".golangci.yml", "{{") // invalid template
 
 			validConfig.Linters = map[string]*config.Linter{
-				goboottypes.LinterGo: {Enabled: true, Cmd: "go-cmd"},
+				goboottypes.LinterGo: {Enabled: true, Cmd: commandGoLint},
 			}
 
 			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
@@ -268,8 +276,9 @@ var _ = Describe("BaseLint Service", func() {
 
 		It("propagates registrar errors", func() {
 			createTemplate(".golangci.yml", "go")
+
 			validConfig.Linters = map[string]*config.Linter{
-				goboottypes.LinterGo: {Enabled: true, Cmd: "go-cmd"},
+				goboottypes.LinterGo: {Enabled: true, Cmd: commandGoLint},
 			}
 			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
 
@@ -303,6 +312,7 @@ var _ = Describe("BaseLint Service", func() {
 
 		It("propagates registrar file errors", func() {
 			createTemplate(".golangci.yml", "go")
+
 			validConfig.Linters = map[string]*config.Linter{
 				goboottypes.LinterGo: {Enabled: true, Cmd: "go-cmd"},
 			}
@@ -318,6 +328,7 @@ var _ = Describe("BaseLint Service", func() {
 
 		It("propagates CI registrar errors", func() {
 			createTemplate(".golangci.yml", "go")
+
 			validConfig.Linters = map[string]*config.Linter{
 				goboottypes.LinterGo: {Enabled: true, Cmd: "go-cmd"},
 			}

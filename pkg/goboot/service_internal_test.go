@@ -8,6 +8,7 @@ import (
 
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/rs/zerolog"
 )
 
 type recordingService struct {
@@ -77,6 +78,8 @@ func (m *mockServiceConfig) Validate() error {
 }
 
 var _ = Describe("serviceManager internals", func() {
+	const customServiceID = "custom"
+
 	var (
 		cfgMgr      *config.Manager
 		testManager *serviceManager
@@ -84,13 +87,13 @@ var _ = Describe("serviceManager internals", func() {
 
 	BeforeEach(func() {
 		cfgMgr = config.NewConfigManager()
-		testManager = newServiceManager(cfgMgr)
+		testManager = newServiceManager(cfgMgr, zerolog.Nop())
 	})
 
 	It("assigns configs and runs matching services", func() {
-		Expect(cfgMgr.Register(&mockServiceConfig{id: "custom"})).To(Succeed())
+		Expect(cfgMgr.Register(&mockServiceConfig{id: customServiceID})).To(Succeed())
 
-		svc := &recordingService{id: "custom"}
+		svc := &recordingService{id: customServiceID}
 		Expect(testManager.register(svc)).To(Succeed())
 
 		err := testManager.runAll()
@@ -101,13 +104,14 @@ var _ = Describe("serviceManager internals", func() {
 
 	It("runs prior, main, and subsequent services in order", func() {
 		Expect(cfgMgr.Register(&mockServiceConfig{id: goboottypes.ServiceNameBaseProject})).To(Succeed())
-		Expect(cfgMgr.Register(&mockServiceConfig{id: "custom"})).To(Succeed())
+		Expect(cfgMgr.Register(&mockServiceConfig{id: customServiceID})).To(Succeed())
 		Expect(cfgMgr.Register(&mockServiceConfig{id: goboottypes.ServiceNameBaseLocal})).To(Succeed())
 
 		var order []string
+
 		services := []*recordingService{
 			{id: goboottypes.ServiceNameBaseProject},
-			{id: "custom"},
+			{id: customServiceID},
 			{id: goboottypes.ServiceNameBaseLocal},
 		}
 
@@ -122,7 +126,7 @@ var _ = Describe("serviceManager internals", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(order).To(Equal([]string{
 			goboottypes.ServiceNameBaseProject,
-			"custom",
+			customServiceID,
 			goboottypes.ServiceNameBaseLocal,
 		}))
 	})
@@ -143,7 +147,7 @@ var _ = Describe("serviceManager internals", func() {
 	})
 
 	It("skips services without configuration", func() {
-		svc := &recordingService{id: "custom"}
+		svc := &recordingService{id: customServiceID}
 		Expect(testManager.register(svc)).To(Succeed())
 
 		err := testManager.runAll()

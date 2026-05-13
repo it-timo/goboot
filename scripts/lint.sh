@@ -10,7 +10,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # shellcheck source=versions.env
 source "${PROJECT_ROOT}/versions.env"
 
-DOCKER_CMD="docker run --rm -v $(pwd):/workdir -w /workdir"
+DOCKER_CMD="docker run --rm --network host -v $(pwd):/workdir -w /workdir"
 
 GOLANGCI_LINT_IMAGE="golangci/golangci-lint:${GOLANGCI_LINT_VERSION}"
 MD_LINT_IMAGE="ghcr.io/igorshubovych/markdownlint-cli:${MARKDOWNLINT_VERSION}"
@@ -39,7 +39,14 @@ echo "checkmake passed"
 
 echo "Running markdownlint..."
 
-MARKDOWN_FILES="$(find . -type f -name "*.md")"
+MARKDOWN_FILES="$(
+  find . \
+    -path './.git' -prune -o \
+    -path './.idea' -prune -o \
+    -path './.gitlab-ci-local' -prune -o \
+    -path './bin' -prune -o \
+    -type f -name "*.md" -print
+)"
 
 if [[ -z "${MARKDOWN_FILES}" ]]; then
   echo "No Markdown files found to lint."
@@ -51,7 +58,14 @@ fi
 
 echo "Running shellcheck..."
 
-SH_FILES="$(find . -type f -name "*.sh")"
+SH_FILES="$(
+  find . \
+    -path './.git' -prune -o \
+    -path './.idea' -prune -o \
+    -path './.gitlab-ci-local' -prune -o \
+    -path './bin' -prune -o \
+    -type f -name "*.sh" -print
+)"
 
 if [[ -z "${SH_FILES}" ]]; then
   echo "No shell scripts found to lint."
@@ -72,7 +86,7 @@ else
 fi
 
 echo "Running editorconfig-checker..."
-${DOCKER_CMD} --entrypoint ec "${EDITORCONFIG_CHECKER_IMAGE}" -exclude '(\.git|\.idea)'
+${DOCKER_CMD} --entrypoint ec "${EDITORCONFIG_CHECKER_IMAGE}" -exclude '(\.git|\.idea|\.gitlab-ci-local|bin)'
 echo "editorconfig-checker passed"
 
 echo ""

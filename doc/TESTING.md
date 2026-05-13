@@ -80,6 +80,20 @@ Rules:
 - Confirm the changed generated files match the intended contract/policy changes.
 - Keep digest inputs stable (the tests intentionally hash a fixed high-signal file set).
 
+### Generated Project Matrix
+
+`make verify_intro` regenerates representative Intro projects and validates them as
+real generated repositories. The matrix currently covers:
+
+- Ginkgo tests + `slog` + GitLab CI
+- stdlib Go tests + `slog` + GitLab CI
+- Ginkgo tests + `zerolog` + GitLab CI
+- stdlib Go tests + `zerolog` + GitLab CI
+
+Each generated project runs its own `make test`, `make lint`, `scripts/test.sh`,
+and `scripts/lint.sh`. The verifier also checks that the expected GitLab files,
+test style, and logger implementation were generated.
+
 ## Test Organization
 
 ### Suite Structure

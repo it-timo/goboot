@@ -36,6 +36,7 @@ var _ = Describe("BaseProjectConfig", func() {
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baseproject-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -242,6 +243,7 @@ var _ = Describe("BaseProjectConfig", func() {
 				newConfig := &config.BaseProjectConfig{}
 				err = newConfig.ReadConfig(configPath, testPath, goboottypes.GitProviderGitHub)
 				Expect(err).NotTo(HaveOccurred())
+
 				newConfig.ProjectName = "testproject"
 				Expect(newConfig.Validate()).To(Succeed())
 
@@ -270,6 +272,7 @@ var _ = Describe("BaseProjectConfig", func() {
 				newConfig := &config.BaseProjectConfig{}
 				err = newConfig.ReadConfig(configPath, testPath, goboottypes.GitProviderGitLab)
 				Expect(err).NotTo(HaveOccurred())
+
 				newConfig.ProjectName = "project"
 				Expect(newConfig.Validate()).To(Succeed())
 

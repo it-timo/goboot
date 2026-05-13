@@ -12,6 +12,9 @@ services:
   - id: base_test
     confPath: ${BASE_TEST_CFG}
     enabled: true
+  - id: base_logger
+    confPath: ${BASE_LOGGER_CFG}
+    enabled: true
   - id: base_local
     confPath: ${BASE_LOCAL_CFG}
     enabled: true

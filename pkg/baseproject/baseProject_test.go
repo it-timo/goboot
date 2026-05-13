@@ -21,6 +21,7 @@ var _ = Describe("BaseProject Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baseproject-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -75,6 +76,7 @@ var _ = Describe("BaseProject Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -149,6 +151,7 @@ var _ = Describe("BaseProject Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "bp-source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -172,6 +175,7 @@ var _ = Describe("BaseProject Service", func() {
 			targetRoot := filepath.Join(tempDir, cfg.ProjectName)
 			renderedPath := filepath.Join(targetRoot, "cmd", cfg.LowerProjectName, "main.go")
 			Expect(renderedPath).To(BeAnExistingFile())
+
 			readme := filepath.Join(targetRoot, "README.md")
 			Expect(readme).To(BeAnExistingFile())
 

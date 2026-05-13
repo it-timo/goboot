@@ -14,15 +14,18 @@ import (
 	"github.com/it-timo/goboot/pkg/baseci"
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
+	"github.com/it-timo/goboot/pkg/baselogger"
 	"github.com/it-timo/goboot/pkg/baseproject"
 	"github.com/it-timo/goboot/pkg/basetest"
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/rs/zerolog"
 )
 
 // GoBoot orchestrates service registration and execution for one scaffold run.
 type GoBoot struct {
 	cfg *config.GoBoot
+	log zerolog.Logger
 
 	// ServiceMgr manages service order and lifecycle.
 	ServiceMgr *serviceManager
@@ -30,9 +33,15 @@ type GoBoot struct {
 
 // NewGoBoot returns a GoBoot wired to the provided config.
 func NewGoBoot(config *config.GoBoot) *GoBoot {
+	return NewGoBootWithLogger(config, zerolog.Nop())
+}
+
+// NewGoBootWithLogger returns a GoBoot wired to the provided config and logger.
+func NewGoBootWithLogger(config *config.GoBoot, logger zerolog.Logger) *GoBoot {
 	return &GoBoot{
 		cfg:        config,
-		ServiceMgr: newServiceManager(config.ConfManager),
+		log:        logger,
+		ServiceMgr: newServiceManager(config.ConfManager, logger.With().Str("subcomponent", "service_manager").Logger()),
 	}
 }
 
@@ -48,6 +57,8 @@ func (gb *GoBoot) RegisterServices() error {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
+	gb.log.Info().Str("target_path", gb.cfg.TargetPath).Msg("target directory ensured")
+
 	err = gb.registerPreServices()
 	if err != nil {
 		return fmt.Errorf("failed to register pre services: %w", err)
@@ -58,17 +69,23 @@ func (gb *GoBoot) RegisterServices() error {
 		return fmt.Errorf("failed to register main services: %w", err)
 	}
 
+	gb.log.Info().Msg("service registration completed")
+
 	return nil
 }
 
 // RunServices executes registered services in manager-defined order.
 func (gb *GoBoot) RunServices() error {
+	gb.log.Info().Msg("starting service execution")
+
 	return gb.ServiceMgr.runAll()
 }
 
 // RunGoModTidy runs `go mod tidy` when enabled and go.mod exists.
 func (gb *GoBoot) RunGoModTidy(execute bool) error {
 	if !execute {
+		gb.log.Debug().Msg("go mod tidy disabled")
+
 		return nil
 	}
 
@@ -78,6 +95,8 @@ func (gb *GoBoot) RunGoModTidy(execute bool) error {
 	_, err := os.Stat(goModPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
+			gb.log.Debug().Str("path", goModPath).Msg("go.mod not found, skipping tidy")
+
 			return nil
 		}
 
@@ -87,11 +106,14 @@ func (gb *GoBoot) RunGoModTidy(execute bool) error {
 	// Run in generated project root.
 	cmd := exec.CommandContext(context.Background(), "go", "mod", "tidy")
 	cmd.Dir = projectRoot
+	gb.log.Info().Str("project_root", projectRoot).Msg("running go mod tidy")
 
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to run go mod tidy: %w", err)
 	}
+
+	gb.log.Info().Str("project_root", projectRoot).Msg("go mod tidy completed")
 
 	return nil
 }
@@ -123,13 +145,14 @@ func (gb *GoBoot) registerPreServices() error {
 			continue
 		}
 
-		fmt.Printf("loaded pre-service %s\n", meta.ID)
+		gb.log.Info().Str("service_id", meta.ID).Msg("pre service registered")
 	}
 
 	return nil
 }
 
 // registerMainServices registers all non-pre services.
+//
 //nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (gb *GoBoot) registerMainServices() error {
 	for _, meta := range gb.cfg.Services {
@@ -159,12 +182,17 @@ func (gb *GoBoot) registerMainServices() error {
 			if err != nil {
 				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseTest, err)
 			}
+		case goboottypes.ServiceNameBaseLogger:
+			err := gb.ServiceMgr.register(baselogger.NewBaseLogger(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseLogger, err)
+			}
 		// Future services can be added here.
 		default:
 			return fmt.Errorf("unknown service ID: %s", meta.ID)
 		}
 
-		fmt.Printf("loaded service %s\n", meta.ID)
+		gb.log.Info().Str("service_id", meta.ID).Msg("service registered")
 	}
 
 	return nil

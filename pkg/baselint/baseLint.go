@@ -13,6 +13,7 @@ import (
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 	"github.com/it-timo/goboot/pkg/gobootutils"
+	"github.com/rs/zerolog"
 )
 
 // BaseLint renders linter config files and registers optional lint commands.
@@ -22,6 +23,7 @@ type BaseLint struct {
 	root      *os.Root
 	script    goboottypes.Registrar
 	ci        goboottypes.Registrar
+	log       zerolog.Logger
 }
 
 // NewBaseLint constructs BaseLint for a target directory.
@@ -30,7 +32,13 @@ func NewBaseLint(targetDir string) *BaseLint {
 		targetDir: targetDir,
 		script:    nil,
 		ci:        nil,
+		log:       zerolog.Nop(),
 	}
+}
+
+// SetLogger injects the service-specific logger.
+func (b *BaseLint) SetLogger(logger zerolog.Logger) {
+	b.log = logger
 }
 
 // SetScriptReceiver injects the registrar used for local script registration.
@@ -68,6 +76,8 @@ func (b *BaseLint) SetConfig(cfg config.ServiceConfig) error {
 
 // Run opens the target root and generates enabled linting files.
 func (b *BaseLint) Run() error {
+	b.log.Info().Str("project_name", b.cfg.ProjectName).Msg("running base_lint service")
+
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
@@ -76,7 +86,7 @@ func (b *BaseLint) Run() error {
 	defer func() {
 		err := curRoot.Close()
 		if err != nil {
-			fmt.Println("Failed to close root dir:", err)
+			b.log.Error().Err(err).Msg("failed to close root dir")
 		}
 	}()
 
@@ -87,10 +97,13 @@ func (b *BaseLint) Run() error {
 		return fmt.Errorf("failed to copy files: %w", err)
 	}
 
+	b.log.Info().Msg("base_lint service completed")
+
 	return nil
 }
 
 // copyFiles copies and renders configuration files for enabled linters.
+//
 //nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (b *BaseLint) copyFiles() error {
 	for name, info := range b.cfg.Linters {
@@ -139,6 +152,8 @@ func (b *BaseLint) copyFiles() error {
 		if err != nil {
 			return fmt.Errorf("failed to register scripts: %w", err)
 		}
+
+		b.log.Debug().Msg("registered lint commands in script registrar")
 	}
 
 	if b.ci != nil {
@@ -146,6 +161,8 @@ func (b *BaseLint) copyFiles() error {
 		if err != nil {
 			return fmt.Errorf("failed to register ci jobs: %w", err)
 		}
+
+		b.log.Debug().Msg("registered lint commands in CI registrar")
 	}
 
 	return nil

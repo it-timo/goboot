@@ -14,7 +14,7 @@ import (
 	"{{.RepoImportPath}}/pkg/{{.LowerProjectName}}utils"
 )
 
-{{- if eq .UseStyle "go" }}
+{{ if eq .UseStyle "go" }}
 // testEnv holds common per-test resources.
 type testEnv struct {
 	t       *testing.T
@@ -32,6 +32,7 @@ func newTestEnv(t *testing.T) *testEnv {
 
 func (e *testEnv) join(path ...string) string {
 	e.t.Helper()
+
 	return filepath.Join(append([]string{e.tempDir}, path...)...)
 }
 
@@ -61,9 +62,8 @@ func TestMethod(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt // capture range variable
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			env := newTestEnv(t)
@@ -71,20 +71,20 @@ func TestMethod(t *testing.T) {
 			// Example of using the temp dir for this test:
 			_ = env.join // remove once used
 
-			err := {{.LowerProjectName}}utils.SomeHelper(...)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("SomeHelper() error = %v, wantErr %v", err, tt.wantErr)
+			err := {{.LowerProjectName}}utils.SomeHelper()
+			if (err != nil) != testCase.wantErr {
+				t.Fatalf("SomeHelper() error = %v, wantErr %v", err, testCase.wantErr)
 			}
 
 			// TODO: call the function under test:
 			//
 			// got, err := {{.LowerProjectName}}utils.Method(...)
 			//
-			// if (err != nil) != tt.wantErr {
-			// 	 t.Fatalf("Method() error = %v, wantErr %v", err, tt.wantErr)
+			// if (err != nil) != testCase.wantErr {
+			// 	 t.Fatalf("Method() error = %v, wantErr %v", err, testCase.wantErr)
 			// }
 			//
-			// if diff := cmp.Diff(tt.want, got); diff != "" {
+			// if diff := cmp.Diff(testCase.want, got); diff != "" {
 			//	 t.Fatalf("Method() mismatch (-want +got):\n%s", diff)
 			// }
 		})
@@ -98,6 +98,7 @@ var _ = Describe("Utils Package", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "{{.LowerProjectName}}-utils-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})

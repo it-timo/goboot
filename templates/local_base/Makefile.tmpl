@@ -24,8 +24,8 @@ VERSION := $(shell cat .version)
 #  Setup
 #  ----------------------------------------
 ROOT_DIR := $(PWD)
-DOCKER_RUN := docker run --rm -v "$(ROOT_DIR):/workdir" -w /workdir
-SH_FILES := $(shell find . -type f -name '*.sh')
+DOCKER_RUN := docker run --rm --network host -v "$(ROOT_DIR):/workdir" -w /workdir
+SH_FILES := $(shell find . -path './.git' -prune -o -path './.idea' -prune -o -path './.gitlab-ci-local' -prune -o -path './bin' -prune -o -type f -name '*.sh' -print)
 
 # .PHONY declares non-file targets to always run when invoked
 .PHONY: all build clean test lint release version help

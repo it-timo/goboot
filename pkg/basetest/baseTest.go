@@ -14,6 +14,7 @@ import (
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 	"github.com/it-timo/goboot/pkg/gobootutils"
+	"github.com/rs/zerolog"
 )
 
 // BaseTest renders test scaffolding templates and registers optional test commands.
@@ -23,6 +24,7 @@ type BaseTest struct {
 	root      *os.Root
 	script    goboottypes.Registrar
 	ci        goboottypes.Registrar
+	log       zerolog.Logger
 }
 
 // NewBaseTest constructs BaseTest for a target directory.
@@ -31,7 +33,13 @@ func NewBaseTest(targetDir string) *BaseTest {
 		targetDir: targetDir,
 		script:    nil,
 		ci:        nil,
+		log:       zerolog.Nop(),
 	}
+}
+
+// SetLogger injects the service-specific logger.
+func (b *BaseTest) SetLogger(logger zerolog.Logger) {
+	b.log = logger
 }
 
 // SetScriptReceiver injects the registrar used for local script registration.
@@ -78,10 +86,18 @@ func (b *BaseTest) SetConfig(cfg config.ServiceConfig) error {
 
 // Run creates test files and optionally registers script/CI commands.
 func (b *BaseTest) Run() error {
+	b.log.Info().Str("project_name", b.cfg.ProjectName).Msg("running base_test service")
+
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
 	}
+	defer func() {
+		err := curRoot.Close()
+		if err != nil {
+			b.log.Error().Err(err).Msg("failed to close root dir")
+		}
+	}()
 
 	b.root = curRoot
 
@@ -95,6 +111,8 @@ func (b *BaseTest) Run() error {
 		if err != nil {
 			return fmt.Errorf("failed to register scripts: %w", err)
 		}
+
+		b.log.Debug().Msg("registered test command in script registrar")
 	}
 
 	if b.ci != nil {
@@ -102,7 +120,11 @@ func (b *BaseTest) Run() error {
 		if err != nil {
 			return fmt.Errorf("failed to register ci jobs: %w", err)
 		}
+
+		b.log.Debug().Msg("registered test command in CI registrar")
 	}
+
+	b.log.Info().Msg("base_test service completed")
 
 	return nil
 }

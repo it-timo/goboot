@@ -18,6 +18,7 @@ Start from:
 - `configs/base_project.yml`
 - `configs/base_lint.yml`
 - `configs/base_test.yml`
+- `configs/base_logger.yml`
 - `configs/base_local.yml`
 - `configs/base_ci.yml`
 
@@ -43,7 +44,11 @@ If `projectName` is `IntroProject` and `targetPath` is `outputs`, expect:
 - `outputs/IntroProject/Makefile` (when `base_local` enabled)
 - `outputs/IntroProject/scripts/lint.sh` (when `base_local` + lint registration enabled)
 - `outputs/IntroProject/.golangci.yml` (when `base_lint` enabled)
+- logger-aware CLI/service wiring for `slog` or `zerolog` (when `base_logger` enabled)
 - `outputs/IntroProject/.github/workflows/*.yml` or `outputs/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
+
+`base_logger` does not overwrite project files directly. It provides validated logger
+settings to `base_project`, which owns the generated runtime code.
 
 ## 5. Iterate safely
 

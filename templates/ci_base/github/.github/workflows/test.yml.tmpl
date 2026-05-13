@@ -1,10 +1,27 @@
 name: Test
 
+{{- $branches := .AutoBranches }}
 on:
   push:
-    branches: ["main", "master"]
+    branches:
+{{- if $branches }}
+{{- range $branch := $branches }}
+      - "{{ $branch }}"
+{{- end }}
+{{- else }}
+      - "main"
+      - "master"
+{{- end }}
   pull_request:
-    branches: ["main", "master"]
+    branches:
+{{- if $branches }}
+{{- range $branch := $branches }}
+      - "{{ $branch }}"
+{{- end }}
+{{- else }}
+      - "main"
+      - "master"
+{{- end }}
 
 jobs:
   test:

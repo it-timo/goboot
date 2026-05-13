@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+const (
+	argConfig          = "--config"
+	fixtureProjectName = "PROJECT_NAME"
+	fixtureTargetDir   = "TARGET_DIR"
+	fixtureSourceDir   = "SOURCE_DIR"
+	fixtureBaseProject = "BASE_PROJECT_PATH"
+	fileGolangCI       = ".golangci.yml"
+)
+
 func testRepoRoot() string {
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {

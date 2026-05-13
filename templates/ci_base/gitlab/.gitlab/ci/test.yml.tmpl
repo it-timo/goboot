@@ -42,7 +42,8 @@ test-branch:
 {{- $cmds := index .FileScripts "test.yml" }}
 {{- if $cmds }}
 {{- range $cmd := $cmds }}
-    - {{ oneLine $cmd }}
+    - |-
+{{ indent 6 $cmd }}
 {{- end }}
 {{- else }}
     - echo "No test commands registered."
@@ -90,7 +91,8 @@ test-auto:
 {{- $cmds := index .FileScripts "test.yml" }}
 {{- if $cmds }}
 {{- range $cmd := $cmds }}
-    - {{ oneLine $cmd }}
+    - |-
+{{ indent 6 $cmd }}
 {{- end }}
 {{- else }}
     - echo "No test commands registered."
@@ -130,7 +132,8 @@ test-tag:
 {{- $cmds := index .FileScripts "test.yml" }}
 {{- if $cmds }}
 {{- range $cmd := $cmds }}
-    - {{ oneLine $cmd }}
+    - |-
+{{ indent 6 $cmd }}
 {{- end }}
 {{- else }}
     - echo "No test commands registered."

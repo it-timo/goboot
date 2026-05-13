@@ -21,12 +21,13 @@ var _ = Describe("BaseTestConfig", func() {
 	BeforeEach(func() {
 		baseTest = &config.BaseTestConfig{
 			SourcePath:     "./templates/test_base",
-			ProjectName:    "testproject",
+			ProjectName:    testProjectName,
 			RepoImportPath: testPath,
 			UseStyle:       goboottypes.TestStyleGinkgo,
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "basetest-config-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -56,7 +57,7 @@ var _ = Describe("BaseTestConfig", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(baseTest.CapsProjectName).To(Equal("TESTPROJECT"))
-				Expect(baseTest.LowerProjectName).To(Equal("testproject"))
+				Expect(baseTest.LowerProjectName).To(Equal(testProjectName))
 			})
 
 			It("accepts ginkgo test style", func() {
@@ -129,7 +130,7 @@ var _ = Describe("BaseTestConfig", func() {
 			})
 
 			It("treats whitespace-only repoImportPath as missing", func() {
-				baseTest.RepoImportPath = "   "
+				baseTest.RepoImportPath = blankValue
 				err := baseTest.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("repoImportPath"))
@@ -154,7 +155,7 @@ var _ = Describe("BaseTestConfig", func() {
 			})
 
 			It("errors for empty string after trimming", func() {
-				baseTest.UseStyle = "   "
+				baseTest.UseStyle = blankValue
 				err := baseTest.Validate()
 				Expect(err).To(HaveOccurred())
 			})

@@ -26,8 +26,8 @@ variables:
   # --------------------------------------------------------------------------
   # Linter Images
   # --------------------------------------------------------------------------
-  # SHA256 of golangci/golangci-lint:v2.7.2
-  GOLANGCI_LINT_IMAGE: "golangci/golangci-lint@sha256:5d6d5c70a61f1356adfd9dd6316ce286799fefc9d743421356ff1b00842368ba"
+  # SHA256 of golangci/golangci-lint:v2.12.0
+  GOLANGCI_LINT_IMAGE: "golangci/golangci-lint@sha256:6d59509e0dd5117bd1d024ea3b7a69260200659d91d55b38b943d70bf4f53515"
   # SHA256 of pipelinecomponents/yamllint:0.35.9
   YAMLLINT_IMAGE: "pipelinecomponents/yamllint@sha256:3e9eb9bef568b904d9222e9174a1490f4e015aef3d61e7d3e56f60035e517b79"
   # SHA256 of ghcr.io/igorshubovych/markdownlint-cli:v0.47.0

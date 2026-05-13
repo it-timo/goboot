@@ -20,7 +20,7 @@ var _ = Describe("BaseCIConfig", func() {
 	BeforeEach(func() {
 		baseCI = &config.BaseCIConfig{
 			SourcePath:  "./templates/ci_base",
-			ProjectName: "testproject",
+			ProjectName: testProjectName,
 			GoVersion:   []string{"1.25", "1.26"},
 			GitProvider: goboottypes.GitProviderGitLab,
 			Jobs: map[string]*config.CIJob{
@@ -31,6 +31,7 @@ var _ = Describe("BaseCIConfig", func() {
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baseci-config-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -110,7 +111,7 @@ var _ = Describe("BaseCIConfig", func() {
 			})
 
 			It("errors when goVersions contains blank entries", func() {
-				baseCI.GoVersion = []string{"1.25", "   "}
+				baseCI.GoVersion = []string{"1.25", blankValue}
 				err := baseCI.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("goVersions contains empty string"))
@@ -144,7 +145,6 @@ var _ = Describe("BaseCIConfig", func() {
 				Expect(baseCI.Jobs["build"].File).To(Equal("build.yml"))
 			})
 		})
-
 	})
 
 	Describe("ReadConfig", func() {

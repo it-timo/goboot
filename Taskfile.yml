@@ -11,11 +11,25 @@ vars:
     sh: cat .version  #  Reads a version from a file (used for builds and prints)
 
   MD_FILES:
-    sh: find . -name '*.md' | tr '\n' ' '
+    sh: >-
+      find .
+      -path './.git' -prune -o
+      -path './.idea' -prune -o
+      -path './.gitlab-ci-local' -prune -o
+      -path './bin' -prune -o
+      -type f -name '*.md' -print
+      | tr '\n' ' '
   SH_FILES:
-    sh: find . -type f -name '*.sh' | tr '\n' ' '
+    sh: >-
+      find .
+      -path './.git' -prune -o
+      -path './.idea' -prune -o
+      -path './.gitlab-ci-local' -prune -o
+      -path './bin' -prune -o
+      -type f -name '*.sh' -print
+      | tr '\n' ' '
 
-  DOCKER_RUN_CMD: "docker run --rm -v {{.ROOT_DIR}}:/workdir -w /workdir"
+  DOCKER_RUN_CMD: "docker run --rm --network host -v {{.ROOT_DIR}}:/workdir -w /workdir"
 
   # Linter commands.
   GOLANGCI_LINT_CMD: '{{.DOCKER_RUN_CMD}} golangci/golangci-lint:{{.GOLANGCI_LINT_VERSION}} golangci-lint run ./...'
@@ -28,15 +42,22 @@ vars:
   SHFMT_CHECK_CMD: '{{.DOCKER_RUN_CMD}} mvdan/shfmt:{{.SHFMT_VERSION}} -d -i 2 -ci {{.SH_FILES}}'
 
   EDITORCONFIG_CHECKER_CONTAINER: 'mstruebing/editorconfig-checker:{{.EDITORCONFIG_CHECKER_VERSION}}'
-  EDITORCONFIG_CHECKER_CMD: '{{.DOCKER_RUN_CMD}} --entrypoint ec {{.EDITORCONFIG_CHECKER_CONTAINER}} -exclude "(\\.git|\\.idea)"'
+  EDITORCONFIG_CHECKER_CMD: >-
+    {{.DOCKER_RUN_CMD}} --entrypoint ec {{.EDITORCONFIG_CHECKER_CONTAINER}}
+    -exclude "(\\.git|\\.idea|\\.gitlab-ci-local|bin)"
 
   TEST_COVER_FILE: "coverage.txt"
 
 # Task definitions.
 tasks:
   default:
-    desc: Run build, lint, and test (default task)
-    deps: [build, lint, test]  #  Combines common developer workflows
+    desc: Run build, lint, test, and verification checks (default task)
+    cmds:
+      - task: build
+      - task: lint
+      - task: test
+      - task: verify:intro
+      - task: verify:ci-canary
 
   build:
     desc: Build the Go binary
@@ -77,9 +98,9 @@ tasks:
     cmd: 'echo "Current version: {{.VERSION}}"'
 
   verify:intro:
-    desc: Regenerate IntroProject and run the full root + output verification flow
+    desc: Regenerate Intro project matrix and run the full root + output verification flow
     cmd: ./scripts/verify_introproject.sh
 
   verify:ci-canary:
-    desc: Run local CI simulation (act + gitlab-ci-local) for root and IntroProject
+    desc: Run local CI simulation (act + gitlab-ci-local) for root and the default IntroProject
     cmd: ./scripts/verify_ci_canary.sh

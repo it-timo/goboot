@@ -6,9 +6,16 @@ version: "3"
 # Setup.
 
 vars:
-  DOCKER_RUN: 'docker run --rm -v {{"{{.ROOT_DIR}}"}}:/workdir -w /workdir'
+  DOCKER_RUN: 'docker run --rm --network host -v "$PWD":/workdir -w /workdir'
   SH_FILES:
-    sh: find . -type f -name '*.sh' | tr '\n' ' '
+    sh: >-
+      find .
+      -path './.git' -prune -o
+      -path './.idea' -prune -o
+      -path './.gitlab-ci-local' -prune -o
+      -path './bin' -prune -o
+      -type f -name '*.sh' -print
+      | tr '\n' ' '
 
 # Task definitions.
 

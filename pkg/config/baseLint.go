@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/rs/zerolog/log"
 )
 
 // BaseLintConfig configures lint template rendering and lint command defaults.
@@ -105,7 +106,7 @@ func (bl *BaseLintConfig) fillNeededInfos() {
 				continue
 			}
 
-			fmt.Printf("[WARN] Unknown linter %q; no default command defined", name)
+			log.Warn().Str("linter", name).Msg("unknown linter; no default command defined")
 		}
 	}
 }

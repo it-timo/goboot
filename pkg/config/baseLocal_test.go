@@ -20,11 +20,12 @@ var _ = Describe("BaseLocalConfig", func() {
 	BeforeEach(func() {
 		baseLocal = &config.BaseLocalConfig{
 			SourcePath:  "./templates/local_base",
-			ProjectName: "testproject",
-			FileList:    []string{"Makefile", "Taskfile.yml", ".editorconfig"},
+			ProjectName: testProjectName,
+			FileList:    []string{fileMakefile, "Taskfile.yml", fileEditorConfig},
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baselocal-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -109,16 +110,16 @@ var _ = Describe("BaseLocalConfig", func() {
 
 		Context("with valid fileList", func() {
 			It("accepts single file", func() {
-				baseLocal.FileList = []string{"Makefile"}
+				baseLocal.FileList = []string{fileMakefile}
 				err := baseLocal.Validate()
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("accepts multiple files", func() {
 				baseLocal.FileList = []string{
-					"Makefile",
+					fileMakefile,
 					"Taskfile.yml",
-					".editorconfig",
+					fileEditorConfig,
 					".gitignore",
 					"scripts/lint.sh",
 				}
@@ -129,14 +130,14 @@ var _ = Describe("BaseLocalConfig", func() {
 
 		Context("with invalid fileList entries", func() {
 			It("errors on blank entries", func() {
-				baseLocal.FileList = []string{"Makefile", " "}
+				baseLocal.FileList = []string{fileMakefile, " "}
 				err := baseLocal.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("blank entries"))
 			})
 
 			It("errors on duplicate entries", func() {
-				baseLocal.FileList = []string{"Makefile", "Makefile"}
+				baseLocal.FileList = []string{fileMakefile, fileMakefile}
 				err := baseLocal.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("duplicates"))
@@ -166,9 +167,9 @@ var _ = Describe("BaseLocalConfig", func() {
 				Expect(newConfig.SourcePath).To(Equal("./templates/local"))
 				Expect(newConfig.ProjectName).To(Equal(""))
 				Expect(newConfig.FileList).To(HaveLen(3))
-				Expect(newConfig.FileList).To(ContainElement("Makefile"))
+				Expect(newConfig.FileList).To(ContainElement(fileMakefile))
 				Expect(newConfig.FileList).To(ContainElement("Taskfile.yml"))
-				Expect(newConfig.FileList).To(ContainElement(".editorconfig"))
+				Expect(newConfig.FileList).To(ContainElement(fileEditorConfig))
 			})
 
 			It("loads single file in fileList", func() {
@@ -223,7 +224,7 @@ var _ = Describe("BaseLocalConfig", func() {
 
 			It("accepts dotfiles", func() {
 				baseLocal.FileList = []string{
-					".editorconfig",
+					fileEditorConfig,
 					".gitignore",
 					".dockerignore",
 				}

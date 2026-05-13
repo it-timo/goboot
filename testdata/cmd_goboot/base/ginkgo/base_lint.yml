@@ -2,7 +2,7 @@ sourcePath: ${TEMPLATES_LINT_BASE}
 linters:
   golang:
     cmd: |-
-      {{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...
+      {{DOCKER_RUN}} golangci/golangci-lint:v2.12.0 golangci-lint run ./...
     enabled: true
   yaml:
     cmd: |-

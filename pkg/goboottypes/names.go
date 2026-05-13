@@ -15,4 +15,6 @@ const (
 	ServiceNameBaseTest = "base_test"
 	// ServiceNameBaseCI identifies the CI generator.
 	ServiceNameBaseCI = "base_ci"
+	// ServiceNameBaseLogger identifies the logger wiring generator.
+	ServiceNameBaseLogger = "base_logger"
 )

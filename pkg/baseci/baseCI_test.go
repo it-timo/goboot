@@ -17,7 +17,12 @@ import (
 var _ = Describe("BaseCI Service", func() {
 	const (
 		policyStrict              = "strict"
+		policyBalanced            = "balanced"
 		gitProviderGitHub         = "github"
+		gitProviderGitLab         = "gitlab"
+		commandGoTest             = "go test ./..."
+		commandGolangCILintDocker = "{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./..."
+		jobLint                   = "lint"
 		fileScriptsLintYMLTmplStr = `{{ range $c := index .FileScripts "lint.yml" }}{{ $c }}{{ "\n" }}{{ end }}`
 	)
 
@@ -29,18 +34,19 @@ var _ = Describe("BaseCI Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baseci-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
 		validConfig = &config.BaseCIConfig{
 			SourcePath:  tempDir,
 			ProjectName: "testproject",
-			GitProvider: "gitlab",
+			GitProvider: gitProviderGitLab,
 			GoVersion:   []string{"1.25"},
 			AutoBranches: []string{
 				"main",
 			},
-			ImagePolicy: "balanced",
+			ImagePolicy: policyBalanced,
 		}
 
 		baseCI = baseci.NewBaseCI(tempDir)
@@ -76,6 +82,7 @@ var _ = Describe("BaseCI Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -116,8 +123,10 @@ var _ = Describe("BaseCI Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
+
 			validConfig.SourcePath = sourceDir
 			ensureProviderDir(validConfig.SourcePath, validConfig.GitProvider)
 			Expect(baseCI.SetConfig(validConfig)).To(Succeed())
@@ -131,7 +140,7 @@ var _ = Describe("BaseCI Service", func() {
 
 		Describe("RegisterLines", func() {
 			It("accepts script lines for registration", func() {
-				lines := []string{"go test ./..."}
+				lines := []string{commandGoTest}
 				err := baseCI.RegisterLines("test_service", lines)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -146,7 +155,7 @@ var _ = Describe("BaseCI Service", func() {
 
 		Describe("RegisterFile", func() {
 			It("accepts file registration", func() {
-				lines := []string{"go test ./..."}
+				lines := []string{commandGoTest}
 				err := baseCI.RegisterFile(goboottypes.CIFileLint, lines)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -175,8 +184,10 @@ var _ = Describe("BaseCI Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
+
 			validConfig.SourcePath = sourceDir
 			ensureProviderDir(validConfig.SourcePath, validConfig.GitProvider)
 			Expect(baseCI.SetConfig(validConfig)).To(Succeed())
@@ -195,7 +206,7 @@ var _ = Describe("BaseCI Service", func() {
 			createSourceFile(filepath.Join(".gitlab/ci", "lint.yml"),
 				"lint-{{len (index .FileScripts \"lint.yml\")}}")
 
-			Expect(baseCI.RegisterFile(goboottypes.CIFileLint, []string{"go test ./..."})).To(Succeed())
+			Expect(baseCI.RegisterFile(goboottypes.CIFileLint, []string{commandGoTest})).To(Succeed())
 
 			Expect(baseCI.Run()).To(Succeed())
 
@@ -251,7 +262,7 @@ var _ = Describe("BaseCI Service", func() {
 			)
 
 			Expect(baseCI.RegisterFile(goboottypes.CIFileLint, []string{
-				"{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...",
+				commandGolangCILintDocker,
 			})).To(Succeed())
 
 			Expect(baseCI.Run()).To(Succeed())
@@ -265,7 +276,7 @@ var _ = Describe("BaseCI Service", func() {
 
 		It("registers config jobs with allowFailure flags and sorted enabled job files", func() {
 			validConfig.Jobs = map[string]*config.CIJob{
-				"lint": {
+				jobLint: {
 					Commands:     []string{"echo lint"},
 					AllowFailure: false,
 				},
@@ -320,9 +331,9 @@ var _ = Describe("BaseCI Service", func() {
 		It("normalizes config job commands in strict policy mode", func() {
 			validConfig.ImagePolicy = policyStrict
 			validConfig.Jobs = map[string]*config.CIJob{
-				"lint": {
+				jobLint: {
 					Commands: []string{
-						"{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...",
+						commandGolangCILintDocker,
 					},
 				},
 			}
@@ -400,7 +411,7 @@ var _ = Describe("BaseCI Service", func() {
 			)
 
 			Expect(baseCI.RegisterFile(goboottypes.CIFileLint, []string{
-				"{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...",
+				commandGolangCILintDocker,
 			})).To(Succeed())
 
 			Expect(baseCI.Run()).To(Succeed())
@@ -419,12 +430,12 @@ var _ = Describe("BaseCI Service", func() {
 			}
 
 			cases := []providerPolicy{
-				{provider: "gitlab", policy: "balanced"},
-				{provider: "gitlab", policy: "strict"},
-				{provider: "gitlab", policy: "simple"},
-				{provider: "github", policy: "balanced"},
-				{provider: "github", policy: "strict"},
-				{provider: "github", policy: "simple"},
+				{provider: gitProviderGitLab, policy: policyBalanced},
+				{provider: gitProviderGitLab, policy: policyStrict},
+				{provider: gitProviderGitLab, policy: "simple"},
+				{provider: gitProviderGitHub, policy: policyBalanced},
+				{provider: gitProviderGitHub, policy: policyStrict},
+				{provider: gitProviderGitHub, policy: "simple"},
 			}
 
 			for _, curCase := range cases {
@@ -444,7 +455,7 @@ var _ = Describe("BaseCI Service", func() {
 				}
 
 				switch curCase.provider {
-				case "gitlab":
+				case gitProviderGitLab:
 					writeTemplate(".gitlab-ci.yml", "stages:\n  - lint")
 					writeTemplate(filepath.Join(".gitlab/ci", "commands.yml"), "vars")
 					writeTemplate(filepath.Join(".gitlab/ci", "versions.yml"), "vars")
@@ -452,7 +463,7 @@ var _ = Describe("BaseCI Service", func() {
 						filepath.Join(".gitlab/ci", "lint.yml"),
 						fileScriptsLintYMLTmplStr,
 					)
-				case "github":
+				case gitProviderGitHub:
 					writeTemplate(
 						filepath.Join(".github", "workflows", "lint.yml"),
 						fileScriptsLintYMLTmplStr,
@@ -474,20 +485,22 @@ var _ = Describe("BaseCI Service", func() {
 				curCI := baseci.NewBaseCI(tempDir)
 				Expect(curCI.SetConfig(curCfg)).To(Succeed())
 				Expect(curCI.RegisterFile(goboottypes.CIFileLint, []string{
-					"{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./...",
+					commandGolangCILintDocker,
 				})).To(Succeed())
 				Expect(curCI.Run()).To(Succeed())
 
 				var outPath string
+
 				switch curCase.provider {
-				case "gitlab":
+				case gitProviderGitLab:
 					outPath = filepath.Join(tempDir, curCfg.ProjectName, ".gitlab/ci", "lint.yml")
-				case "github":
+				case gitProviderGitHub:
 					outPath = filepath.Join(tempDir, curCfg.ProjectName, ".github", "workflows", "lint.yml")
 				}
 
 				content, err := os.ReadFile(outPath)
 				Expect(err).NotTo(HaveOccurred())
+
 				if curCase.policy == policyStrict {
 					Expect(string(content)).To(ContainSubstring("$GOLANGCI_LINT_IMAGE"))
 				} else {

@@ -14,5 +14,5 @@ useStyle: "ginkgo"
 #  Command to run tests. If empty, goboot fills in the default command.
 testCmd: |-
   go test -race -timeout=5m -coverprofile=coverage.txt ./... &&
-  go tool cover -func=coverage.txt;
+  go tool cover -func=coverage.txt &&
   rm -f coverage.txt

@@ -35,6 +35,8 @@ release/
 *.cover
 *.coverprofile
 coverage.*
+badges/*
+!badges/coverage.json
 profile.*
 *.prof
 *.perf
@@ -78,6 +80,7 @@ coverage-reports/
 build-reports/
 .gocache/
 .gitlab-ci-local/
+.gitlab-ci-local-canary.*.yml
 
 # ------------------------------------------------------------------------------
 # 🧠 OS & Filesystem Noise

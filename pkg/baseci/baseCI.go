@@ -15,6 +15,7 @@ import (
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 	"github.com/it-timo/goboot/pkg/gobootutils"
+	"github.com/rs/zerolog"
 )
 
 // BaseCI generates CI files from templates plus registered job commands.
@@ -22,6 +23,7 @@ type BaseCI struct {
 	cfg       *config.BaseCIConfig // Validated service configuration.
 	targetDir string               // Destination path for rendered files.
 	root      *os.Root             // Secure a root handle for safe file writes.
+	log       zerolog.Logger
 	ciRegistry
 	staticFiles []string
 }
@@ -43,12 +45,18 @@ type ciRegistry struct {
 func NewBaseCI(targetDir string) *BaseCI {
 	return &BaseCI{
 		targetDir: targetDir,
+		log:       zerolog.Nop(),
 		ciRegistry: ciRegistry{
 			JobScripts:       make(map[string][]string),
 			FileScripts:      make(map[string][]string),
 			FileAllowFailure: make(map[string]bool),
 		},
 	}
+}
+
+// SetLogger injects the service-specific logger.
+func (b *BaseCI) SetLogger(logger zerolog.Logger) {
+	b.log = logger
 }
 
 // ID returns the service identifier.
@@ -85,6 +93,11 @@ func (b *BaseCI) SetConfig(cfg config.ServiceConfig) error {
 
 // Run renders provider CI files into the generated project.
 func (b *BaseCI) Run() error {
+	b.log.Info().
+		Str("project_name", b.cfg.ProjectName).
+		Str("git_provider", b.cfg.GitProvider).
+		Msg("running base_ci service")
+
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
@@ -93,7 +106,7 @@ func (b *BaseCI) Run() error {
 	defer func() {
 		err := curRoot.Close()
 		if err != nil {
-			fmt.Println("Failed to close root dir:", err)
+			b.log.Error().Err(err).Msg("failed to close root dir")
 		}
 	}()
 
@@ -121,6 +134,8 @@ func (b *BaseCI) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to copy files: %w", err)
 	}
+
+	b.log.Info().Int("job_file_count", len(b.EnabledJobFiles)).Msg("base_ci service completed")
 
 	return nil
 }

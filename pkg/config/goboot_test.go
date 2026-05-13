@@ -20,6 +20,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "goboot-config-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -89,7 +90,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 			It("populates project name", func() {
 				err := goBoot.Init()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(goBoot.ProjectName).To(Equal("testproject"))
+				Expect(goBoot.ProjectName).To(Equal(testProjectName))
 			})
 
 			It("populates target path", func() {
@@ -247,6 +248,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 					"BASE_LINT_PATH":    filepath.Join(tempDir, "base_lint.yml"),
 					"BASE_LOCAL_PATH":   filepath.Join(tempDir, "base_local.yml"),
 					"BASE_TEST_PATH":    filepath.Join(tempDir, "base_test.yml"),
+					"BASE_LOGGER_PATH":  filepath.Join(tempDir, "base_logger.yml"),
 					"BASE_CI_PATH":      filepath.Join(tempDir, "base_ci.yml"),
 				})
 				Expect(err).NotTo(HaveOccurred())
@@ -289,6 +291,13 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 				err = os.WriteFile(filepath.Join(tempDir, "base_ci.yml"), ciConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
+				// Create base_logger config
+				loggerConfig, err := loadTestFixture("config/goboot/multiple_base_logger.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_logger.yml"), loggerConfig, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
 				goBoot = config.NewGoBoot(configPath)
 			})
 
@@ -314,6 +323,10 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 
 				// Check base_ci (service)
 				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseCI)
+				Expect(exist).To(BeTrue())
+
+				// Check base_logger (service)
+				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseLogger)
 				Expect(exist).To(BeTrue())
 			})
 		})
@@ -344,7 +357,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 
 				testCfg, ok := rawCfg.(*config.BaseTestConfig)
 				Expect(ok).To(BeTrue())
-				Expect(testCfg.ProjectName).To(Equal("testproject"))
+				Expect(testCfg.ProjectName).To(Equal(testProjectName))
 				Expect(testCfg.RepoImportPath).To(Equal("github.com/user/testproject"))
 				Expect(testCfg.TestCMD).To(Equal(goboottypes.DefaultGoTestCMD))
 				Expect(testCfg.UseStyle).To(Equal(goboottypes.TestStyleGinkgo))

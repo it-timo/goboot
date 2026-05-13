@@ -14,6 +14,7 @@ import (
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 	"github.com/it-timo/goboot/pkg/gobootutils"
+	"github.com/rs/zerolog"
 )
 
 // BaseProject generates the base project structure from templates.
@@ -21,12 +22,28 @@ type BaseProject struct {
 	cfg       *config.BaseProjectConfig
 	targetDir string
 	root      *os.Root
+	log       zerolog.Logger
+	logger    goboottypes.LoggerSettings
 }
 
 // NewBaseProject returns a new BaseProject with an associated target path.
 func NewBaseProject(targetDir string) *BaseProject {
 	return &BaseProject{
 		targetDir: targetDir,
+		log:       zerolog.Nop(),
+	}
+}
+
+// SetLogger injects the service-specific logger.
+func (b *BaseProject) SetLogger(logger zerolog.Logger) {
+	b.log = logger
+}
+
+// SetLoggerSettings injects optional logger settings before rendering project-owned files.
+func (b *BaseProject) SetLoggerSettings(settings goboottypes.LoggerSettings) {
+	b.logger = settings
+	if b.cfg != nil {
+		b.cfg.Logger = settings
 	}
 }
 
@@ -43,6 +60,7 @@ func (b *BaseProject) SetConfig(cfg config.ServiceConfig) error {
 	}
 
 	b.cfg = baseCfg
+	b.cfg.Logger = b.logger
 
 	// Ensure source and target paths are different (prevent accidental overwrite).
 	err := gobootutils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
@@ -64,6 +82,8 @@ func (b *BaseProject) SetConfig(cfg config.ServiceConfig) error {
 
 // Run creates the root and generates project paths and file contents.
 func (b *BaseProject) Run() error {
+	b.log.Info().Str("project_name", b.cfg.ProjectName).Msg("running base_project service")
+
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
@@ -72,7 +92,7 @@ func (b *BaseProject) Run() error {
 	defer func() {
 		err := curRoot.Close()
 		if err != nil {
-			fmt.Println("Failed to close root dir:", err)
+			b.log.Error().Err(err).Msg("failed to close root dir")
 		}
 	}()
 
@@ -82,6 +102,8 @@ func (b *BaseProject) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to create new project: %w", err)
 	}
+
+	b.log.Info().Msg("base_project service completed")
 
 	return nil
 }

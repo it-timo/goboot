@@ -11,6 +11,8 @@ import (
 )
 
 var _ = Describe("Template helpers (rendering)", func() {
+	const worldName = "World"
+
 	var (
 		tempDir string
 		root    *os.Root
@@ -18,6 +20,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "goboot-template-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -39,7 +42,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 		Context("with valid template and data", func() {
 			It("renders the template correctly", func() {
 				template := "Hello {{.Name}}!"
-				data := struct{ Name string }{Name: "World"}
+				data := struct{ Name string }{Name: worldName}
 
 				result, err := gobootutils.ExecuteTemplateText("test", template, data)
 				Expect(err).NotTo(HaveOccurred())
@@ -67,7 +70,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 		Context("with invalid template syntax", func() {
 			It("returns an error", func() {
 				template := "Hello {{.Name" // Missing closing braces
-				data := struct{ Name string }{Name: "World"}
+				data := struct{ Name string }{Name: worldName}
 
 				_, err := gobootutils.ExecuteTemplateText("invalid", template, data)
 				Expect(err).To(HaveOccurred())
@@ -78,7 +81,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 		Context("with missing template data", func() {
 			It("returns an error when accessing undefined fields", func() {
 				template := "Hello {{.MissingField}}!"
-				data := struct{ Name string }{Name: "World"}
+				data := struct{ Name string }{Name: worldName}
 
 				_, err := gobootutils.ExecuteTemplateText("missing", template, data)
 				Expect(err).To(HaveOccurred())
@@ -141,6 +144,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 				file, err := root.Create("locked.txt")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(file.Close()).To(Succeed())
+
 				Expect(os.Chmod(filepath.Join(tempDir, "locked.txt"), 0o000)).To(Succeed())
 				defer func() {
 					Expect(os.Chmod(filepath.Join(tempDir, "locked.txt"), 0o644)).To(Succeed())

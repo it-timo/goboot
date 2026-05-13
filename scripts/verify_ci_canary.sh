@@ -14,6 +14,18 @@ TOOLCACHE_DIR="/tmp/act-toolcache"
 ACT_PULL="false"
 PREPULL_IMAGES="true"
 PROVIDER_MODE="${CI_CANARY_PROVIDER:-config}"
+GITLAB_CI_LOCAL_OPTS="--network host"
+GITLAB_CI_LOCAL_SHELL_OPTS="${GITLAB_CI_LOCAL_OPTS} --force-shell-executor --concurrency 1"
+TEMP_FILES=()
+
+cleanup_temp_files() {
+  local file
+  for file in "${TEMP_FILES[@]}"; do
+    rm -f "${file}"
+  done
+}
+
+trap cleanup_temp_files EXIT
 
 usage() {
   cat <<USAGE
@@ -130,6 +142,58 @@ cleanup_runtime_dirs() {
   # gitlab-ci-local writes transient build state under .gitlab-ci-local.
   # It must not leak into lint scope.
   rm -rf .gitlab-ci-local
+  rm -f .gitlab-ci-local-canary.*.yml
+}
+
+create_gitlab_lint_canary_file() {
+  local file
+
+  mkdir -p .gitlab-ci-local
+  file="${PWD}/.gitlab-ci-local/canary-lint.yml"
+  TEMP_FILES+=("${file}")
+
+  cat >"${file}" <<'YAML'
+stages:
+  - lint
+
+include:
+  - local: .gitlab/ci/versions.yml
+
+variables:
+  DOCKER_HOST: unix:///var/run/docker.sock
+  GOLANGCI_LINT_IMAGE: golangci/golangci-lint:v2.12.0
+  YAMLLINT_IMAGE: pipelinecomponents/yamllint:0.35.9
+  MARKDOWNLINT_IMAGE: ghcr.io/igorshubovych/markdownlint-cli:v0.47.0
+  CHECKMAKE_IMAGE: cytopia/checkmake:latest-0.5
+  SHELLCHECK_IMAGE: koalaman/shellcheck:v0.11.0
+  SHFMT_IMAGE: mvdan/shfmt:v3.12.0
+  EDITORCONFIG_CHECKER_IMAGE: mstruebing/editorconfig-checker:v3.6.0
+
+.lint-local:
+  stage: lint
+  script:
+    - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
+    - DOCKER_RUN_CMD="docker run --rm --network host -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
+    - $DOCKER_RUN_CMD $GOLANGCI_LINT_IMAGE golangci-lint run ./...
+    - $DOCKER_RUN_CMD $YAMLLINT_IMAGE yamllint .
+    - $DOCKER_RUN_CMD $MARKDOWNLINT_IMAGE "**/*.md"
+    - $DOCKER_RUN_CMD $CHECKMAKE_IMAGE Makefile
+    - $DOCKER_RUN_CMD $SHELLCHECK_IMAGE -x $SH_FILES
+    - $DOCKER_RUN_CMD $SHFMT_IMAGE -d -i 2 -ci $SH_FILES
+    - $DOCKER_RUN_CMD --entrypoint ec $EDITORCONFIG_CHECKER_IMAGE -exclude "(\.git|\.gitlab-ci-local|\.gitlab-ci-local-canary.*\.yml)"
+
+lint-branch:
+  extends: .lint-local
+
+lint-auto:
+  extends: .lint-local
+
+lint-tag:
+  extends: .lint-local
+YAML
+
+  echo ".gitlab-ci-local/canary-lint.yml"
 }
 
 prepull_act_images() {
@@ -282,11 +346,12 @@ run_ci_suite() {
       temp_git_repo="true"
     fi
     cleanup_runtime_dirs
-    run_step "${scope}: gitlab-ci-local build" "gitlab-ci-local --stage build"
+    run_step "${scope}: gitlab-ci-local build (docker -> shell fallback)" "gitlab-ci-local ${GITLAB_CI_LOCAL_OPTS} --stage build || gitlab-ci-local ${GITLAB_CI_LOCAL_SHELL_OPTS} --stage build"
     cleanup_runtime_dirs
-    run_step "${scope}: gitlab-ci-local test" "gitlab-ci-local --force-shell-executor --shell-isolation --stage test"
+    run_step "${scope}: gitlab-ci-local test" "gitlab-ci-local ${GITLAB_CI_LOCAL_SHELL_OPTS} --stage test"
     cleanup_runtime_dirs
-    run_step "${scope}: gitlab-ci-local lint (shell -> privileged fallback)" "gitlab-ci-local --force-shell-executor --shell-isolation --stage lint || gitlab-ci-local --stage lint --privileged"
+    lint_canary_file="$(create_gitlab_lint_canary_file)"
+    run_step "${scope}: gitlab-ci-local lint (local shell Docker)" "gitlab-ci-local --file '${lint_canary_file}' --force-shell-executor --concurrency 1 --stage lint"
     cleanup_runtime_dirs
     if [[ "${temp_git_repo}" == "true" ]]; then
       run_step "${scope}: cleanup temporary git workspace" "rm -rf .git"

@@ -13,6 +13,11 @@ import (
 )
 
 var _ = Describe("BaseLocal Service", func() {
+	const (
+		lineCmd  = "cmd"
+		lineEcho = "echo"
+	)
+
 	var (
 		tempDir     string
 		baseLocal   *baselocal.BaseLocal
@@ -21,6 +26,7 @@ var _ = Describe("BaseLocal Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baselocal-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -61,6 +67,7 @@ var _ = Describe("BaseLocal Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -100,8 +107,10 @@ var _ = Describe("BaseLocal Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
+
 			validConfig.FileList = []string{
 				goboottypes.ScriptNameMake,
 				goboottypes.ScriptNameTask,
@@ -132,8 +141,8 @@ var _ = Describe("BaseLocal Service", func() {
 			})
 
 			It("prevents duplicate registrations for the same service", func() {
-				Expect(baseLocal.RegisterLines("dup_service", []string{"cmd"})).To(Succeed())
-				err := baseLocal.RegisterLines("dup_service", []string{"cmd"})
+				Expect(baseLocal.RegisterLines("dup_service", []string{lineCmd})).To(Succeed())
+				err := baseLocal.RegisterLines("dup_service", []string{lineCmd})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("already registered"))
 			})
@@ -142,7 +151,7 @@ var _ = Describe("BaseLocal Service", func() {
 				validConfig.FileList = []string{goboottypes.ScriptNameMake}
 				Expect(baseLocal.SetConfig(validConfig)).To(Succeed())
 
-				Expect(baseLocal.RegisterLines("svc", []string{"cmd"})).To(Succeed())
+				Expect(baseLocal.RegisterLines("svc", []string{lineCmd})).To(Succeed())
 				Expect(baseLocal.TaskScripts).To(BeEmpty())
 				Expect(baseLocal.MakeScripts).To(HaveKey("svc"))
 			})
@@ -160,7 +169,7 @@ var _ = Describe("BaseLocal Service", func() {
 				validConfig.FileList = []string{goboottypes.ScriptNameScript}
 				Expect(baseLocal.SetConfig(validConfig)).To(Succeed())
 
-				Expect(baseLocal.RegisterFile("lint.sh", []string{"echo"})).To(Succeed())
+				Expect(baseLocal.RegisterFile("lint.sh", []string{lineEcho})).To(Succeed())
 				err := baseLocal.RegisterFile("lint.sh", []string{"echo again"})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("already registered"))
@@ -170,7 +179,7 @@ var _ = Describe("BaseLocal Service", func() {
 				validConfig.FileList = []string{goboottypes.ScriptNameMake}
 				Expect(baseLocal.SetConfig(validConfig)).To(Succeed())
 
-				Expect(baseLocal.RegisterFile("lint.sh", []string{"echo"})).To(Succeed())
+				Expect(baseLocal.RegisterFile("lint.sh", []string{lineEcho})).To(Succeed())
 				Expect(baseLocal.ScriptFiles).To(BeEmpty())
 			})
 		})
@@ -187,8 +196,10 @@ var _ = Describe("BaseLocal Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
+
 			validConfig.SourcePath = sourceDir
 			validConfig.FileList = []string{
 				goboottypes.ScriptNameMake,
@@ -236,6 +247,7 @@ var _ = Describe("BaseLocal Service", func() {
 
 		It("skips script directory when no scripts are registered", func() {
 			createSourceFile("Makefile", "make")
+
 			validConfig.FileList = []string{goboottypes.ScriptNameScript}
 			Expect(baseLocal.SetConfig(validConfig)).To(Succeed())
 
@@ -265,6 +277,7 @@ var _ = Describe("BaseLocal Service", func() {
 
 		It("propagates errors from scripts copy", func() {
 			createSourceFile(filepath.Join(goboottypes.ScriptDirNameScript, "lint.sh"), "script")
+
 			validConfig.FileList = []string{goboottypes.ScriptNameScript}
 			Expect(baseLocal.SetConfig(validConfig)).To(Succeed())
 

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/rs/zerolog"
 
 	"gopkg.in/yaml.v3"
 )
@@ -38,6 +39,8 @@ type GoBoot struct {
 
 	// ConfManager stores validated service configs by ID.
 	ConfManager *Manager
+
+	logger zerolog.Logger
 }
 
 // NewGoBoot returns a GoBoot with an empty config manager.
@@ -45,7 +48,13 @@ func NewGoBoot(confPath string) *GoBoot {
 	return &GoBoot{
 		configPath:  confPath,
 		ConfManager: NewConfigManager(),
+		logger:      zerolog.Nop(),
 	}
+}
+
+// SetLogger sets the logger used during config load and validation.
+func (gb *GoBoot) SetLogger(logger zerolog.Logger) {
+	gb.logger = logger
 }
 
 // Init loads the root config, validates it, then loads and registers enabled services.
@@ -65,7 +74,7 @@ func (gb *GoBoot) Init() error {
 			continue
 		}
 
-		fmt.Printf("loading service config for %q\n", svc.ID)
+		gb.logger.Info().Str("service_id", svc.ID).Str("conf_path", svc.ConfPath).Msg("loading service config")
 
 		cfg := createServiceConfig(svc.ID, gb.ProjectName)
 		if cfg == nil {
@@ -81,6 +90,8 @@ func (gb *GoBoot) Init() error {
 		if err != nil {
 			return fmt.Errorf("failed to register config for %q: %w", svc.ID, err)
 		}
+
+		gb.logger.Debug().Str("service_id", svc.ID).Msg("service config loaded")
 	}
 
 	return nil
@@ -116,7 +127,8 @@ func (gb *GoBoot) validateBase() error {
 		isExempt := svc.ID == goboottypes.ServiceNameBaseProject ||
 			svc.ID == goboottypes.ServiceNameBaseLint ||
 			svc.ID == goboottypes.ServiceNameBaseTest ||
-			svc.ID == goboottypes.ServiceNameBaseCI
+			svc.ID == goboottypes.ServiceNameBaseCI ||
+			svc.ID == goboottypes.ServiceNameBaseLogger
 
 		if !importPathMissing && !isExempt {
 			if strings.TrimSpace(gb.RepoURL) == "" {
@@ -153,6 +165,8 @@ func createServiceConfig(id, projectName string) ServiceConfig {
 		return newBaseTestConfig(projectName)
 	case goboottypes.ServiceNameBaseCI:
 		return newBaseCIConfig(projectName)
+	case goboottypes.ServiceNameBaseLogger:
+		return newBaseLoggerConfig(projectName)
 	// Extend with more cases for additional service types.
 	default:
 		return nil

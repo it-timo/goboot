@@ -42,21 +42,20 @@ func withFakeGoScript(script string) func() {
 
 var _ = Describe("CLI entrypoint", func() {
 	// No BeforeEach needed for flag cleanup anymore as strictly local FlagSets are used.
-
 	It("runs end-to-end with a minimal valid config", func() {
 		tempDir := GinkgoT().TempDir()
 		configFile := filepath.Join(tempDir, "goboot.yml")
 		targetDir := filepath.Join(tempDir, "out")
 
 		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
-			"PROJECT_NAME": "cli-project",
-			"TARGET_DIR":   targetDir,
+			fixtureProjectName: "cli-project",
+			fixtureTargetDir:   targetDir,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
 
 		// Pass args explicitly, avoiding os.Args hacks
-		err = run([]string{"--config", configFile})
+		err = run([]string{argConfig, configFile})
 		Expect(err).To(Succeed())
 
 		info, err := os.Stat(targetDir)
@@ -65,7 +64,7 @@ var _ = Describe("CLI entrypoint", func() {
 	})
 
 	It("returns error for missing config file", func() {
-		err := run([]string{"--config", "/nonexistent/path.yml"})
+		err := run([]string{argConfig, "/nonexistent/path.yml"})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("failed to initialize configuration"))
 	})
@@ -76,6 +75,12 @@ var _ = Describe("CLI entrypoint", func() {
 		Expect(err.Error()).To(ContainSubstring("failed to parse flags"))
 	})
 
+	It("returns error for invalid log level", func() {
+		err := run([]string{"--log-level", "verbose"})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("invalid --log-level value"))
+	})
+
 	It("returns error for malformed YAML", func() {
 		tempDir := GinkgoT().TempDir()
 		configFile := filepath.Join(tempDir, "goboot.yml")
@@ -83,7 +88,7 @@ var _ = Describe("CLI entrypoint", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
 
-		err = run([]string{"--config", configFile})
+		err = run([]string{argConfig, configFile})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("failed to initialize configuration"))
 	})
@@ -93,12 +98,12 @@ var _ = Describe("CLI entrypoint", func() {
 		configFile := filepath.Join(tempDir, "goboot.yml")
 		// no services declared -> RegisterServices fails
 		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/missing_services.yml", map[string]string{
-			"TARGET_DIR": filepath.Join(tempDir, "out"),
+			fixtureTargetDir: filepath.Join(tempDir, "out"),
 		})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
 
-		err = run([]string{"--config", configFile})
+		err = run([]string{argConfig, configFile})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("service registration failed"))
 	})
@@ -114,21 +119,37 @@ var _ = Describe("CLI entrypoint", func() {
 
 		baseProjContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/service_execution_base_project.yml",
 			map[string]string{
-				"SOURCE_DIR": sourceDir,
+				fixtureSourceDir: sourceDir,
 			})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.WriteFile(baseProjConfig, baseProjContent, 0o644)).To(Succeed())
 
 		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/service_execution_goboot.yml", map[string]string{
-			"TARGET_DIR":        filepath.Join(tempDir, "out"),
-			"BASE_PROJECT_PATH": baseProjConfig,
+			fixtureTargetDir:   filepath.Join(tempDir, "out"),
+			fixtureBaseProject: baseProjConfig,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
 
-		err = run([]string{"--config", configFile})
+		err = run([]string{argConfig, configFile})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("service execution failed"))
+	})
+
+	It("accepts a valid log level", func() {
+		tempDir := GinkgoT().TempDir()
+		configFile := filepath.Join(tempDir, "goboot.yml")
+		targetDir := filepath.Join(tempDir, "out")
+
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			fixtureProjectName: "cli-project",
+			fixtureTargetDir:   targetDir,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
+
+		err = run([]string{argConfig, configFile, "--log-level", "debug"})
+		Expect(err).To(Succeed())
 	})
 
 	Describe("main", func() {
@@ -152,13 +173,14 @@ var _ = Describe("CLI entrypoint", func() {
 
 		It("runs without triggering exit on success", func() {
 			defer withFakeGo()()
+
 			tempDir := GinkgoT().TempDir()
 			configFile := filepath.Join(tempDir, "goboot.yml")
 			targetDir := filepath.Join(tempDir, "out")
 
 			yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
-				"PROJECT_NAME": "cli-main",
-				"TARGET_DIR":   targetDir,
+				fixtureProjectName: "cli-main",
+				fixtureTargetDir:   targetDir,
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
@@ -167,7 +189,7 @@ var _ = Describe("CLI entrypoint", func() {
 			outputWriter = buf
 			exitCalled := false
 			exitFunc = func(code int) { exitCalled = true }
-			os.Args = []string{"goboot", "--config", configFile}
+			os.Args = []string{"goboot", argConfig, configFile}
 
 			main()
 
@@ -181,11 +203,14 @@ var _ = Describe("CLI entrypoint", func() {
 
 		It("prints the error and exits with non-zero status on failure", func() {
 			defer withFakeGo()()
+
 			buf := &bytes.Buffer{}
 			outputWriter = buf
+
 			var exitCode int
+
 			exitFunc = func(code int) { exitCode = code }
-			os.Args = []string{"goboot", "--config", "/nonexistent/path.yml"}
+			os.Args = []string{"goboot", argConfig, "/nonexistent/path.yml"}
 
 			main()
 

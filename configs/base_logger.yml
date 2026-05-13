@@ -1,0 +1,6 @@
+# Config for the `base_logger` service.
+# Safe to commit; no secrets.
+
+# Logger backend to scaffold.
+# Supported values: "slog", "zerolog".
+loggerType: "slog"

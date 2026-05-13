@@ -4,6 +4,9 @@ A modular, versioned starting point for production-grade Go projects.
 
 [![License](https://img.shields.io/github/license/it-timo/goboot)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/it-timo/goboot?include_prereleases)](https://github.com/it-timo/goboot/releases)
+[![Test](https://github.com/it-timo/goboot/actions/workflows/test.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
+[![Lint](https://github.com/it-timo/goboot/actions/workflows/lint.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/lint.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/it-timo/goboot/main/badges/coverage.json)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
 
 ---
 
@@ -30,6 +33,8 @@ and policy-based image pinning.
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
 - **CI Generation**: GitLab and GitHub CI templates generated from explicit contracts and image policies.
+- **Logger-Aware Scaffolding**: Generated projects can use `slog` or `zerolog`
+  through explicit logger settings owned by the project templates.
 
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 

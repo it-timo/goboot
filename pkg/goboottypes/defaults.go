@@ -66,6 +66,14 @@ const (
 	GitProviderGitHub = "github"
 )
 
+// Logger provider IDs.
+const (
+	// LoggerTypeZerolog selects zerolog-based scaffolded logging.
+	LoggerTypeZerolog = "zerolog"
+	// LoggerTypeSlog selects slog-based scaffolded logging.
+	LoggerTypeSlog = "slog"
+)
+
 // Local output selector names.
 const (
 	// ScriptNameMake is the default name for the "make" script.

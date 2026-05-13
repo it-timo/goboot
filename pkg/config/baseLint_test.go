@@ -21,7 +21,7 @@ var _ = Describe("BaseLintConfig", func() {
 	BeforeEach(func() {
 		baseLint = &config.BaseLintConfig{
 			SourcePath:     "./templates/lint_base",
-			ProjectName:    "testproject",
+			ProjectName:    testProjectName,
 			RepoImportPath: testPath,
 			Linters: map[string]*config.Linter{
 				goboottypes.LinterGo: {
@@ -38,6 +38,7 @@ var _ = Describe("BaseLintConfig", func() {
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baselint-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})

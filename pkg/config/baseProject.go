@@ -54,6 +54,9 @@ type BaseProjectConfig struct {
 
 	// GitUser is the provider account/org used in generated links.
 	GitUser string `yaml:"gitUser"`
+
+	// Logger contains optional logger settings supplied by base_logger.
+	Logger goboottypes.LoggerSettings `yaml:"-"`
 }
 
 // newBaseProjectConfig creates a BaseProjectConfig with the given project name.

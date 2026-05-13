@@ -27,6 +27,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "goboot-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -82,6 +83,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 			It("succeeds when target directory already exists", func() {
 				// tempDir already exists from BeforeEach
 				cfg.TargetPath = tempDir
+
 				Expect(goBoot.RegisterServices()).To(Succeed())
 				// Verify directory still exists
 				info, err := os.Stat(tempDir)
@@ -160,6 +162,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 						Enabled: false,
 					},
 				}
+
 				Expect(goBoot.RegisterServices()).To(Succeed())
 			})
 		})
@@ -181,6 +184,10 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 					},
 					{
 						ID:      goboottypes.ServiceNameBaseTest,
+						Enabled: true,
+					},
+					{
+						ID:      goboottypes.ServiceNameBaseLogger,
 						Enabled: true,
 					},
 				}
@@ -205,6 +212,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				writeGoMod(tempDir)
+
 				err = goBoot.RunServices()
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -223,14 +231,17 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 
 			BeforeEach(func() {
 				var err error
+
 				goBinDir, err = os.MkdirTemp("", "fake-go-bin-*")
 				Expect(err).NotTo(HaveOccurred())
+
 				origPath = os.Getenv("PATH")
 				Expect(os.Setenv("PATH", goBinDir+string(os.PathListSeparator)+origPath)).To(Succeed())
 			})
 
 			AfterEach(func() {
 				Expect(os.Setenv("PATH", origPath)).To(Succeed())
+
 				if goBinDir != "" {
 					Expect(os.RemoveAll(goBinDir)).To(Succeed())
 				}
@@ -247,6 +258,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 			It("runs go mod tidy when go.mod exists", func() {
 				targetDir := filepath.Join(tempDir, "tidy-success")
 				Expect(os.MkdirAll(targetDir, 0o755)).To(Succeed())
+
 				cfg.ProjectName = "tidyproj"
 				projectRoot := filepath.Join(targetDir, cfg.ProjectName)
 				Expect(os.MkdirAll(projectRoot, 0o755)).To(Succeed())
@@ -262,6 +274,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 
 				data, err := os.ReadFile(marker)
 				Expect(err).NotTo(HaveOccurred())
+
 				output := string(data)
 				Expect(strings.HasPrefix(output, projectRoot)).To(BeTrue())
 				Expect(output).To(ContainSubstring("modtidy"))
@@ -270,12 +283,14 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 			It("propagates go command failures", func() {
 				targetDir := filepath.Join(tempDir, "tidy-fail")
 				Expect(os.MkdirAll(targetDir, 0o755)).To(Succeed())
+
 				cfg.ProjectName = "tidyproj"
 				projectRoot := filepath.Join(targetDir, cfg.ProjectName)
 				Expect(os.MkdirAll(projectRoot, 0o755)).To(Succeed())
 				writeGoMod(projectRoot)
 
 				writeFakeGo("#!/usr/bin/env bash\nexit 1\n")
+
 				cfg.TargetPath = targetDir
 				goBoot = goboot.NewGoBoot(cfg)
 
@@ -344,6 +359,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 				Entry("base_project", goboottypes.ServiceNameBaseProject),
 				Entry("base_lint", goboottypes.ServiceNameBaseLint),
 				Entry("base_local", goboottypes.ServiceNameBaseLocal),
+				Entry("base_logger", goboottypes.ServiceNameBaseLogger),
 			)
 		})
 	})

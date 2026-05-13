@@ -42,6 +42,7 @@ var _ = Describe("CI template render-field contract", func() {
 		root := baseCIRepoRoot(GinkgoT())
 		templateRoot := filepath.Join(root, "templates", "ci_base")
 		fieldPattern := regexp.MustCompile(`\.[A-Z][A-Za-z0-9_]*`)
+
 		var violations []string
 
 		err := filepath.WalkDir(templateRoot, func(path string, dirEntry os.DirEntry, walkErr error) error {

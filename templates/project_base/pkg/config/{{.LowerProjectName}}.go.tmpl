@@ -15,7 +15,8 @@ import (
 
 // {{.ProjectName}}Config defines the configuration structure for {{.ProjectName}}.
 type {{.ProjectName}}Config struct {
-	// configPath is the path to the main {{.ProjectName}} YAML config file (e.g., ./configs/{{.LowerProjectName}}.yml).
+	// configPath is the path to the main {{.ProjectName}} YAML config file.
+	// Example: ./configs/{{.LowerProjectName}}.yml.
 	configPath string `yaml:"-"`
 	// SomeVar is a placeholder for a configuration variable.
 	SomeVar string `yaml:"someVar"`

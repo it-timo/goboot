@@ -6,6 +6,7 @@ extends: default  #  Start from yamllint's default rules
 ignore: |
   testdata/**/*
   .gitlab-ci-local/**/*
+  .gitlab-ci-local-canary.*.yml
 
 rules:
   # Line length.

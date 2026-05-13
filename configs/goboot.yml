@@ -32,6 +32,9 @@ services:
   - id: "base_test"
     confPath: "./configs/base_test.yml"
     enabled: true
+  - id: "base_logger"
+    confPath: "./configs/base_logger.yml"
+    enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"
     enabled: true

@@ -23,8 +23,16 @@ set -euo pipefail
 # Setup
 # -----------------------------------------------------------------------------
 ROOT_DIR="$(pwd)"
-DOCKER_RUN="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
-SH_FILES="$(find . -type f -name '*.sh' | tr '\n' ' ')"
+DOCKER_RUN="docker run --rm --network host -v ${ROOT_DIR}:/workdir -w /workdir"
+SH_FILES="$(
+  find . \
+    -path './.git' -prune -o \
+    -path './.idea' -prune -o \
+    -path './.gitlab-ci-local' -prune -o \
+    -path './bin' -prune -o \
+    -type f -name '*.sh' -print |
+    tr '\n' ' '
+)"
 
 run() {
   local -r cmd="$1"
