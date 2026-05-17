@@ -11,13 +11,23 @@ test-branch:
   stage: test
   allow_failure: true
   rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: on_success
+      allow_failure: false
 {{- $branches := .AutoBranches }}
 {{- if $branches }}
-{{- range $branch := $branches }}
-    - if: $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != 'merge_request_event' && $CI_COMMIT_BRANCH != '{{ $branch }}'
+    - if: >-
+        $CI_COMMIT_TAG == null &&
+        $CI_PIPELINE_SOURCE != 'merge_request_event'
+{{- range $branch := $branches }} &&
+        $CI_COMMIT_BRANCH != '{{ $branch }}'
 {{- end }}
 {{- else }}
-    - if: $CI_COMMIT_TAG == null && $CI_PIPELINE_SOURCE != 'merge_request_event' && $CI_COMMIT_BRANCH != 'main' && $CI_COMMIT_BRANCH != 'master'
+    - if: >-
+        $CI_COMMIT_TAG == null &&
+        $CI_PIPELINE_SOURCE != 'merge_request_event' &&
+        $CI_COMMIT_BRANCH != 'main' &&
+        $CI_COMMIT_BRANCH != 'master'
 {{- end }}
       when: manual
   parallel:

@@ -476,7 +476,7 @@ exit 0
 		targetDir := filepath.Join(lockedParent, "out")
 		configFile := filepath.Join(tempDir, "goboot.yml")
 		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
-			fixtureProjectName: "perm-fail",
+			fixtureProjectName: "PermFail",
 			fixtureTargetDir:   targetDir,
 		})
 		Expect(err).NotTo(HaveOccurred())

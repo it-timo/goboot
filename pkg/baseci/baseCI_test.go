@@ -21,7 +21,7 @@ var _ = Describe("BaseCI Service", func() {
 		gitProviderGitHub         = "github"
 		gitProviderGitLab         = "gitlab"
 		commandGoTest             = "go test ./..."
-		commandGolangCILintDocker = "{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./..."
+		commandGolangCILintDocker = "{{DOCKER_RUN}} golangci/golangci-lint:v2.12.2 golangci-lint run ./..."
 		jobLint                   = "lint"
 		fileScriptsLintYMLTmplStr = `{{ range $c := index .FileScripts "lint.yml" }}{{ $c }}{{ "\n" }}{{ end }}`
 	)
@@ -42,7 +42,7 @@ var _ = Describe("BaseCI Service", func() {
 			SourcePath:  tempDir,
 			ProjectName: "testproject",
 			GitProvider: gitProviderGitLab,
-			GoVersion:   []string{"1.25"},
+			GoVersion:   []string{"1.26"},
 			AutoBranches: []string{
 				"main",
 			},
@@ -271,7 +271,7 @@ var _ = Describe("BaseCI Service", func() {
 			content, err := os.ReadFile(filepath.Join(targetRoot, ".gitlab/ci", "lint.yml"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("$GOLANGCI_LINT_IMAGE"))
-			Expect(string(content)).NotTo(ContainSubstring("golangci/golangci-lint:v2.7.2"))
+			Expect(string(content)).NotTo(ContainSubstring("golangci/golangci-lint:v2.12.2"))
 		})
 
 		It("registers config jobs with allowFailure flags and sorted enabled job files", func() {
@@ -354,7 +354,7 @@ var _ = Describe("BaseCI Service", func() {
 			content, err := os.ReadFile(filepath.Join(targetRoot, ".gitlab/ci", "lint.yml"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("$GOLANGCI_LINT_IMAGE"))
-			Expect(string(content)).NotTo(ContainSubstring("golangci/golangci-lint:v2.7.2"))
+			Expect(string(content)).NotTo(ContainSubstring("golangci/golangci-lint:v2.12.2"))
 		})
 
 		It("fails when config job collides with an already registered service job", func() {
@@ -420,7 +420,7 @@ var _ = Describe("BaseCI Service", func() {
 			content, err := os.ReadFile(filepath.Join(targetRoot, ".github", "workflows", "lint.yml"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("$GOLANGCI_LINT_IMAGE"))
-			Expect(string(content)).NotTo(ContainSubstring("golangci/golangci-lint:v2.7.2"))
+			Expect(string(content)).NotTo(ContainSubstring("golangci/golangci-lint:v2.12.2"))
 		})
 
 		It("renders provider and imagePolicy combinations without template leftovers", func() {
@@ -474,7 +474,7 @@ var _ = Describe("BaseCI Service", func() {
 					SourcePath:  sourceCaseDir,
 					ProjectName: fmt.Sprintf("proj-%s-%s", curCase.provider, curCase.policy),
 					GitProvider: curCase.provider,
-					GoVersion:   []string{"1.25", "1.26"},
+					GoVersion:   []string{"1.26"},
 					AutoBranches: []string{
 						"main",
 						"master",
@@ -504,7 +504,7 @@ var _ = Describe("BaseCI Service", func() {
 				if curCase.policy == policyStrict {
 					Expect(string(content)).To(ContainSubstring("$GOLANGCI_LINT_IMAGE"))
 				} else {
-					Expect(string(content)).To(ContainSubstring("golangci/golangci-lint:v2.7.2"))
+					Expect(string(content)).To(ContainSubstring("golangci/golangci-lint:v2.12.2"))
 				}
 
 				Expect(os.RemoveAll(sourceCaseDir)).To(Succeed())

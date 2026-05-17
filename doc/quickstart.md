@@ -24,10 +24,10 @@ Start from:
 
 Set in `configs/goboot.yml`:
 
-- `projectName`
-- `repoUrl`
-- `gitProvider`
-- `targetPath`
+- `projectName: "IntroProject"`
+- `repoUrl: "https://github.com/projects"`
+- `gitProvider: "gitlab"`
+- `targetPath: "/tmp/goboot-demo"`
 
 ## 3. Run goboot
 
@@ -37,15 +37,16 @@ go run ./cmd/goboot --config ./configs/goboot.yml
 
 ## 4. Check expected output
 
-If `projectName` is `IntroProject` and `targetPath` is `outputs`, expect:
+If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expect:
 
-- `outputs/IntroProject/go.mod`
-- `outputs/IntroProject/README.md`
-- `outputs/IntroProject/Makefile` (when `base_local` enabled)
-- `outputs/IntroProject/scripts/lint.sh` (when `base_local` + lint registration enabled)
-- `outputs/IntroProject/.golangci.yml` (when `base_lint` enabled)
+- `/tmp/goboot-demo/IntroProject/go.mod`
+- `/tmp/goboot-demo/IntroProject/README.md`
+- `/tmp/goboot-demo/IntroProject/Makefile` (when `base_local` enabled)
+- `/tmp/goboot-demo/IntroProject/scripts/lint.sh` (when `base_local` + lint registration enabled)
+- `/tmp/goboot-demo/IntroProject/.golangci.yml` (when `base_lint` enabled)
 - logger-aware CLI/service wiring for `slog` or `zerolog` (when `base_logger` enabled)
-- `outputs/IntroProject/.github/workflows/*.yml` or `outputs/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
+- `/tmp/goboot-demo/IntroProject/.github/workflows/*.yml` or
+  `/tmp/goboot-demo/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
 
 `base_logger` does not overwrite project files directly. It provides validated logger
 settings to `base_project`, which owns the generated runtime code.

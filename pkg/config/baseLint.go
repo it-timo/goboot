@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -86,7 +87,35 @@ func (bl *BaseLintConfig) Validate() error {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := validateProjectName(bl.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	err = bl.validateLinters()
+	if err != nil {
+		return err
+	}
+
 	bl.fillNeededInfos()
+
+	return nil
+}
+
+func (bl *BaseLintConfig) validateLinters() error {
+	if len(bl.Linters) == 0 {
+		return errors.New("invalid config: linters must not be empty")
+	}
+
+	for name, linter := range bl.Linters {
+		if _, exists := lintCmds[name]; !exists {
+			return fmt.Errorf("invalid config: linter %q is not supported", name)
+		}
+
+		if linter == nil {
+			return fmt.Errorf("invalid config: linter %q is nil", name)
+		}
+	}
 
 	return nil
 }
@@ -94,6 +123,10 @@ func (bl *BaseLintConfig) Validate() error {
 // fillNeededInfos assigns default lint commands for enabled linters.
 func (bl *BaseLintConfig) fillNeededInfos() {
 	for name, linter := range bl.Linters {
+		if linter == nil {
+			continue
+		}
+
 		if strings.TrimSpace(linter.Cmd) != "" {
 			continue
 		}

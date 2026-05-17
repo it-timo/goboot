@@ -3,20 +3,20 @@ package goboottypes
 // Default lint commands (overridable via config).
 const (
 	// DefaultGoLintCmd is the default command for the "go" linter.
-	DefaultGoLintCmd = "{{DOCKER_RUN}} golangci/golangci-lint:v2.7.2 golangci-lint run ./..."
+	DefaultGoLintCmd = "{{DOCKER_RUN}} golangci/golangci-lint:v2.12.2 golangci-lint run ./..."
 	// DefaultYMLLintCmd is the default command for the "yaml" linter.
 	DefaultYMLLintCmd = "{{DOCKER_RUN}} pipelinecomponents/yamllint:0.35.9 yamllint ."
 	// DefaultMakeLintCmd is the default command for the "make" linter.
 	DefaultMakeLintCmd = "{{DOCKER_RUN}} cytopia/checkmake:latest-0.5 Makefile"
 	// DefaultMDLintCmd is the default command for the "md" linter.
-	DefaultMDLintCmd = "{{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.47.0 markdownlint \"**/*.md\""
+	DefaultMDLintCmd = "{{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.48.0 markdownlint \"**/*.md\""
 	// DefaultShellLintCmd is the default command for the "shell" linter.
-	DefaultShellLintCmd = "{{DOCKER_RUN}} cytopia/shellcheck:latest-0.8.0 shellcheck {{SH_FILES}}"
+	DefaultShellLintCmd = "{{DOCKER_RUN}} koalaman/shellcheck:v0.11.0 shellcheck {{SH_FILES}}"
 	// DefaultSHFMTCmd is the default command for the "shfmt" linter.
-	DefaultSHFMTCmd = "{{DOCKER_RUN}} cytopia/shfmt:latest-1.10 shfmt -d {{SH_FILES}}"
+	DefaultSHFMTCmd = "{{DOCKER_RUN}} mvdan/shfmt:v3.13.1 shfmt -d {{SH_FILES}}"
 	// DefaultEditorLintCmd is the default command for the "editor" linter.
 	DefaultEditorLintCmd = "{{DOCKER_RUN}} --entrypoint ec " +
-		"mstruebing/editorconfig-checker:v3.6.0 -exclude '(\\.git|\\.idea|\\.vscode)'"
+		"mstruebing/editorconfig-checker:v3.6.1 -exclude '(\\.git|\\.idea|\\.vscode)'"
 )
 
 // Default test commands.

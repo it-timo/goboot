@@ -14,15 +14,15 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        # Used commit SHA for actions/checkout@v4.2.2
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # Used commit SHA for actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Run golangci-lint
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workdir \
             -w /workdir \
-            golangci/golangci-lint@sha256:5d6d5c70a61f1356adfd9dd6316ce286799fefc9d743421356ff1b00842368ba \
+            golangci/golangci-lint@sha256:5cceeef04e53efe1470638d4b4b4f5ceefd574955ab3941b2d9a68a8c9ad5240 \
             golangci-lint run ./...
 
       - name: Run yamllint
@@ -38,7 +38,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workdir \
             -w /workdir \
-            ghcr.io/igorshubovych/markdownlint-cli@sha256:9f06c8c9a75aa08b87b235b66d618f7df351f09f08faf703177f670e38ee6511 \
+            ghcr.io/igorshubovych/markdownlint-cli@sha256:c97f19b52cf7371ff767c080e3e15c15f1cbd3336fc41aeca7a93bb2cdb9843c \
             "**/*.md"
 
       - name: Run checkmake
@@ -62,7 +62,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workdir \
             -w /workdir \
-            mvdan/shfmt@sha256:307d265ffd25ce832899ae17c93ed5062fc3375c514bba8f52cbf52792735c4d \
+            mvdan/shfmt@sha256:f22f3936140be1ba02d493b5d2b91d0e8b4af93fd903e7f46c477822bca4a3be \
             -d -i 2 -ci $(find . -type f -name "*.sh" -not -path "./templates/*")
 
       - name: Run editorconfig-checker
@@ -71,5 +71,5 @@ jobs:
             -v ${{ github.workspace }}:/workdir \
             -w /workdir \
             --entrypoint ec \
-            mstruebing/editorconfig-checker@sha256:3fee6fe35c9ec21367b92ca50b3bea856ffc8a7a186044c329ac8bb23b33284a \
+            mstruebing/editorconfig-checker@sha256:af556694c3eb0a16b598efbe84c1171d40dfb779fdac6f01b89baedde065556f \
             -exclude "(\.git)"

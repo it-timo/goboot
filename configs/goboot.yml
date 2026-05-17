@@ -4,7 +4,7 @@
 
 # Output root.
 
-#  Directory where the templates will be read from
+#  Directory where generated projects will be written
 targetPath: "outputs"
 
 # Project identity.

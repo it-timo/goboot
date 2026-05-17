@@ -131,6 +131,11 @@ func (bp *BaseProjectConfig) Validate() error {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := validateProjectName(bp.ProjectName)
+	if err != nil {
+		return err
+	}
+
 	bp.fillNeededInfos()
 
 	return nil

@@ -24,15 +24,20 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 ROOT_DIR="$(pwd)"
 DOCKER_RUN="docker run --rm --network host -v ${ROOT_DIR}:/workdir -w /workdir"
-SH_FILES="$(
+# shellcheck disable=SC2312 # find failures are still surfaced by set -e in this script context.
+mapfile -d '' -t SH_FILES < <(
   find . \
     -path './.git' -prune -o \
     -path './.idea' -prune -o \
     -path './.gitlab-ci-local' -prune -o \
     -path './bin' -prune -o \
-    -type f -name '*.sh' -print |
-    tr '\n' ' '
-)"
+    -path './outputs' -prune -o \
+    -type f -name '*.sh' -print0
+)
+SH_FILES_ARG=""
+if ((${#SH_FILES[@]} > 0)); then
+  printf -v SH_FILES_ARG '%q ' "${SH_FILES[@]}"
+fi
 
 run() {
   local -r cmd="$1"
@@ -56,7 +61,7 @@ exit 0
 {{- else }}
 {{- range $linter := $linters }}
 
-run "{{ replace (replace $linter "{{DOCKER_RUN}}" "${DOCKER_RUN}") "{{SH_FILES}}" "${SH_FILES}" | oneLine }}"
+run "{{ replace (replace $linter "{{DOCKER_RUN}}" "${DOCKER_RUN}") "{{SH_FILES}}" "${SH_FILES_ARG}" | oneLine }}"
 
 {{- end }}
 

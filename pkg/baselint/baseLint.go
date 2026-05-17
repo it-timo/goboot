@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/it-timo/goboot/pkg/config"
@@ -69,6 +70,11 @@ func (b *BaseLint) SetConfig(cfg config.ServiceConfig) error {
 	err := gobootutils.ComparePaths(b.cfg.SourcePath, b.targetDir, true)
 	if err != nil {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
+	}
+
+	err = gobootutils.ComparePaths(b.cfg.SourcePath, filepath.Join(b.targetDir, b.cfg.ProjectName), true)
+	if err != nil {
+		return fmt.Errorf("failed path comparison of src and project root: %w", err)
 	}
 
 	return nil
@@ -197,16 +203,9 @@ func (b *BaseLint) copyFile(fileName string) error {
 		return fmt.Errorf("failed to read template file %q: %w", src, err)
 	}
 
-	// Create and write a file into the secured target root.
-	dstFile, err := b.root.Create(fileName)
+	err = gobootutils.WriteRootFile(b.root, fileName, content, goboottypes.FilePerm)
 	if err != nil {
-		return fmt.Errorf("failed to create file %q in root: %w", fileName, err)
-	}
-	defer gobootutils.CloseFileWithErr(dstFile)
-
-	_, err = dstFile.Write(content)
-	if err != nil {
-		return fmt.Errorf("failed to write file %q: %w", fileName, err)
+		return fmt.Errorf("failed to write template file %q: %w", fileName, err)
 	}
 
 	return nil

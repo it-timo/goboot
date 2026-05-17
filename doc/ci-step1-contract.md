@@ -22,7 +22,7 @@ This step defines:
 
 Result: runtime wiring is aligned with the v1 contract and covered by provider/policy tests.
 
-## Contract v1 (Target)
+## Contract v1 (Current)
 
 ### Config Keys
 
@@ -105,8 +105,8 @@ Reasoning:
 - Config keys: lowerCamelCase (existing project style).
 - Template render fields: exported Go field names.
 - CI env vars: upper snake case.
-- Version-derived CI variable names must normalize dots: `1.25` -> `1_25`.
-  - Example: `GO_1_25_DIGEST`.
+- Version-derived CI variable names must normalize dots: `1.26` -> `1_26`.
+  - Example: `GO_1_26_DIGEST`.
 - Generated output ordering must be deterministic:
   - sort enabled job files
   - stable include order
@@ -155,6 +155,5 @@ Policy behavior:
 - generation timestamp metadata (`GeneratedAt`).
 - external config schema publication (JSON Schema/CUE) for IDE autocomplete.
 
-## Step 2 Boundary
-
-Step 2 implements runtime code and tests to match this contract.
+This document records the current v1 CI contract. Operator-facing commands and
+canary behavior live in [`ci.md`](./ci.md).

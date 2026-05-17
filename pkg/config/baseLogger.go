@@ -69,6 +69,11 @@ func (bl *BaseLoggerConfig) Validate() error {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := validateProjectName(bl.ProjectName)
+	if err != nil {
+		return err
+	}
+
 	bl.fillNeededInfos()
 
 	return bl.validateValues()

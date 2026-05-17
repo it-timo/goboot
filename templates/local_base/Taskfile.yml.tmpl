@@ -14,8 +14,9 @@ vars:
       -path './.idea' -prune -o
       -path './.gitlab-ci-local' -prune -o
       -path './bin' -prune -o
-      -type f -name '*.sh' -print
-      | tr '\n' ' '
+      -path './outputs' -prune -o
+      -type f -name '*.sh' -print0
+      | xargs -0 printf '%q '
 
 # Task definitions.
 

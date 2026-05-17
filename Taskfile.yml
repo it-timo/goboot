@@ -17,8 +17,9 @@ vars:
       -path './.idea' -prune -o
       -path './.gitlab-ci-local' -prune -o
       -path './bin' -prune -o
-      -type f -name '*.md' -print
-      | tr '\n' ' '
+      -path './outputs' -prune -o
+      -type f -name '*.md' -print0
+      | xargs -0 printf '%q '
   SH_FILES:
     sh: >-
       find .
@@ -26,8 +27,9 @@ vars:
       -path './.idea' -prune -o
       -path './.gitlab-ci-local' -prune -o
       -path './bin' -prune -o
-      -type f -name '*.sh' -print
-      | tr '\n' ' '
+      -path './outputs' -prune -o
+      -type f -name '*.sh' -print0
+      | xargs -0 printf '%q '
 
   DOCKER_RUN_CMD: "docker run --rm --network host -v {{.ROOT_DIR}}:/workdir -w /workdir"
 
@@ -47,6 +49,7 @@ vars:
     -exclude "(\\.git|\\.idea|\\.gitlab-ci-local|bin)"
 
   TEST_COVER_FILE: "coverage.txt"
+  MIN_COVERAGE: "80"
 
 # Task definitions.
 tasks:
@@ -91,6 +94,7 @@ tasks:
             -coverprofile "{{.TEST_COVER_FILE}}" \
             ${TEST_PKGS}
       - go tool cover -func="{{.TEST_COVER_FILE}}"
+      - ./scripts/check_coverage.sh "{{.TEST_COVER_FILE}}" "{{.MIN_COVERAGE}}"
       - rm -f "{{.TEST_COVER_FILE}}"
 
   version:
@@ -102,5 +106,5 @@ tasks:
     cmd: ./scripts/verify_introproject.sh
 
   verify:ci-canary:
-    desc: Run local CI simulation (act + gitlab-ci-local) for root and the default IntroProject
-    cmd: ./scripts/verify_ci_canary.sh
+    desc: Run local CI simulation for both providers
+    cmd: ./scripts/verify_ci_canary.sh --provider=both

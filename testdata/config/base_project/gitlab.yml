@@ -1,8 +1,5 @@
 sourcePath: ./templates
-projectUrl: https://gitlab.com/group/project
-repoPath: gitlab.com/group/project
-projectName: project
-usedGoVersion: "1.21.0"
+usedGoVersion: "1.26.3"
 usedNodeVersion: "18.0.0"
 releaseCurrentWindow: Q1 2025
 releaseUpcomingWindow: Q2 2025

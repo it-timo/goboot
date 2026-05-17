@@ -72,6 +72,11 @@ func (b *BaseTest) SetConfig(cfg config.ServiceConfig) error {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
 
+	err = gobootutils.ComparePaths(b.cfg.SourcePath, filepath.Join(b.targetDir, b.cfg.ProjectName), true)
+	if err != nil {
+		return fmt.Errorf("failed path comparison of src and project root: %w", err)
+	}
+
 	err = gobootutils.EnforceTemplateSourceLimits(
 		b.cfg.SourcePath,
 		goboottypes.MaxTemplateSourceFiles,
@@ -209,16 +214,9 @@ func (b *BaseTest) renderPath(relTemplatePath string, dirEntry fs.DirEntry) erro
 		return fmt.Errorf("failed to ensure destination directory %q: %w", filepath.Dir(renderedPath), err)
 	}
 
-	// Create and write a file into root.
-	dstFile, err := b.root.Create(renderedPath)
+	err = gobootutils.WriteRootFile(b.root, renderedPath, content, goboottypes.FilePerm)
 	if err != nil {
-		return fmt.Errorf("failed to create file %q in root: %w", renderedPath, err)
-	}
-	defer gobootutils.CloseFileWithErr(dstFile)
-
-	_, err = dstFile.Write(content)
-	if err != nil {
-		return fmt.Errorf("failed to write file %q: %w", renderedPath, err)
+		return fmt.Errorf("failed to write template file %q: %w", renderedPath, err)
 	}
 
 	return nil

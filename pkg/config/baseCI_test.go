@@ -11,6 +11,11 @@ import (
 	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
+const (
+	goVersion126 = "1.26"
+	mainBranch   = "main"
+)
+
 var _ = Describe("BaseCIConfig", func() {
 	var (
 		baseCI  *config.BaseCIConfig
@@ -21,7 +26,7 @@ var _ = Describe("BaseCIConfig", func() {
 		baseCI = &config.BaseCIConfig{
 			SourcePath:  "./templates/ci_base",
 			ProjectName: testProjectName,
-			GoVersion:   []string{"1.25", "1.26"},
+			GoVersion:   []string{goVersion126},
 			GitProvider: goboottypes.GitProviderGitLab,
 			Jobs: map[string]*config.CIJob{
 				"build": {
@@ -54,7 +59,7 @@ var _ = Describe("BaseCIConfig", func() {
 			It("validates successfully", func() {
 				err := baseCI.Validate()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(baseCI.AutoBranches).To(Equal([]string{"main", "master"}))
+				Expect(baseCI.AutoBranches).To(Equal([]string{mainBranch, "master"}))
 				Expect(baseCI.ImagePolicy).To(Equal("balanced"))
 			})
 
@@ -75,7 +80,7 @@ var _ = Describe("BaseCIConfig", func() {
 
 			Context("with invalid optional fields", func() {
 				It("errors when autoBranches contains blank entries", func() {
-					baseCI.AutoBranches = []string{"main", " "}
+					baseCI.AutoBranches = []string{mainBranch, " "}
 					err := baseCI.Validate()
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("autoBranches contains empty string"))
@@ -111,10 +116,24 @@ var _ = Describe("BaseCIConfig", func() {
 			})
 
 			It("errors when goVersions contains blank entries", func() {
-				baseCI.GoVersion = []string{"1.25", blankValue}
+				baseCI.GoVersion = []string{goVersion126, blankValue}
 				err := baseCI.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("goVersions contains empty string"))
+			})
+
+			It("errors when goVersions contains unsafe image-tag content", func() {
+				baseCI.GoVersion = []string{goVersion126, "1.26; echo bad"}
+				err := baseCI.Validate()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("goVersion"))
+			})
+
+			It("errors when autoBranches contains unsafe expression content", func() {
+				baseCI.AutoBranches = []string{mainBranch, "feature branch"}
+				err := baseCI.Validate()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("autoBranch"))
 			})
 		})
 
@@ -169,7 +188,7 @@ var _ = Describe("BaseCIConfig", func() {
 				Expect(newConfig.SourcePath).To(Equal("./templates/ci_base"))
 				Expect(newConfig.Jobs).To(HaveKey("build"))
 				Expect(newConfig.GitProvider).To(Equal(goboottypes.GitProviderGitLab))
-				Expect(newConfig.GoVersion).To(ContainElement("1.25"))
+				Expect(newConfig.GoVersion).To(ContainElement(goVersion126))
 			})
 		})
 

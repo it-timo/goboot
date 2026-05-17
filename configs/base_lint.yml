@@ -16,7 +16,7 @@ sourcePath: "templates/lint_base"
 linters:
   golang:          #  name of the linter scope
     cmd: |-
-      {{DOCKER_RUN}} golangci/golangci-lint:v2.12.0 golangci-lint run ./...
+      {{DOCKER_RUN}} golangci/golangci-lint:v2.12.2 golangci-lint run ./...
     enabled: true  #  enable state
   yaml:
     cmd: |-
@@ -28,7 +28,7 @@ linters:
     enabled: true
   markdown:
     cmd: |-
-      {{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.47.0 markdownlint "**/*.md"
+      {{DOCKER_RUN}} ghcr.io/igorshubovych/markdownlint-cli:v0.48.0 markdownlint "**/*.md"
     enabled: true
   shellcheck:
     cmd: |-
@@ -36,11 +36,11 @@ linters:
     enabled: true
   shfmt:
     cmd: |-
-      {{DOCKER_RUN}} mvdan/shfmt:v3.12.0 -d -i 2 -ci {{SH_FILES}}
+      {{DOCKER_RUN}} mvdan/shfmt:v3.13.1 -d -i 2 -ci {{SH_FILES}}
     enabled: true
   editor:
     cmd: |-
-      {{DOCKER_RUN}} --entrypoint ec mstruebing/editorconfig-checker:v3.6.0 -exclude '(\.git|\.idea|\.vscode)'
+      {{DOCKER_RUN}} --entrypoint ec mstruebing/editorconfig-checker:v3.6.1 -exclude '(\.git|\.idea|\.vscode)'
     enabled: true
 
 # Allowed import exceptions for depguard.

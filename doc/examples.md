@@ -92,7 +92,7 @@ files it does not own.
 
 ```yaml
 imagePolicy: "balanced"
-goVersions: ["1.25", "1.26"]
+goVersions: ["1.26"]
 autoBranches: ["main", "master"]
 ```
 

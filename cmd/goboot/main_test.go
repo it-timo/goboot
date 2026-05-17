@@ -48,7 +48,7 @@ var _ = Describe("CLI entrypoint", func() {
 		targetDir := filepath.Join(tempDir, "out")
 
 		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
-			fixtureProjectName: "cli-project",
+			fixtureProjectName: "CliProject",
 			fixtureTargetDir:   targetDir,
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -142,13 +142,31 @@ var _ = Describe("CLI entrypoint", func() {
 		targetDir := filepath.Join(tempDir, "out")
 
 		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
-			fixtureProjectName: "cli-project",
+			fixtureProjectName: "CliProject",
 			fixtureTargetDir:   targetDir,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
 
 		err = run([]string{argConfig, configFile, "--log-level", "debug"})
+		Expect(err).To(Succeed())
+	})
+
+	It("skips host go mod tidy when requested", func() {
+		defer withFakeGoScript("#!/usr/bin/env bash\nexit 42\n")()
+
+		tempDir := GinkgoT().TempDir()
+		configFile := filepath.Join(tempDir, "goboot.yml")
+		targetDir := filepath.Join(tempDir, "out")
+
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			fixtureProjectName: "CliSkipTidy",
+			fixtureTargetDir:   targetDir,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
+
+		err = run([]string{argConfig, configFile, "--skip-go-mod-tidy"})
 		Expect(err).To(Succeed())
 	})
 
@@ -179,7 +197,7 @@ var _ = Describe("CLI entrypoint", func() {
 			targetDir := filepath.Join(tempDir, "out")
 
 			yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
-				fixtureProjectName: "cli-main",
+				fixtureProjectName: "CliMain",
 				fixtureTargetDir:   targetDir,
 			})
 			Expect(err).NotTo(HaveOccurred())

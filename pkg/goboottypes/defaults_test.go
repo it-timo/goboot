@@ -30,7 +30,7 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 
 		Context("when inspecting specific default commands", func() {
 			It("matches full golangci-lint command", func() {
-				Expect(goboottypes.DefaultGoLintCmd).To(ContainSubstring("golangci/golangci-lint:v2.7.2"))
+				Expect(goboottypes.DefaultGoLintCmd).To(ContainSubstring("golangci/golangci-lint:v2.12.2"))
 				Expect(goboottypes.DefaultGoLintCmd).To(ContainSubstring("golangci-lint run ./..."))
 			})
 
@@ -45,22 +45,22 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			})
 
 			It("pins markdownlint docker image, mount, and pattern", func() {
-				Expect(goboottypes.DefaultMDLintCmd).To(ContainSubstring("ghcr.io/igorshubovych/markdownlint-cli:v0.47.0"))
+				Expect(goboottypes.DefaultMDLintCmd).To(ContainSubstring("ghcr.io/igorshubovych/markdownlint-cli:v0.48.0"))
 				Expect(goboottypes.DefaultMDLintCmd).To(ContainSubstring("markdownlint \"**/*.md\""))
 			})
 
 			It("pins shellcheck docker image, mount, and pattern", func() {
-				Expect(goboottypes.DefaultShellLintCmd).To(ContainSubstring("cytopia/shellcheck:latest-0.8.0"))
+				Expect(goboottypes.DefaultShellLintCmd).To(ContainSubstring("koalaman/shellcheck:v0.11.0"))
 				Expect(goboottypes.DefaultShellLintCmd).To(ContainSubstring("shellcheck {{SH_FILES}}"))
 			})
 
 			It("pins shfmt docker image, mount, and pattern", func() {
-				Expect(goboottypes.DefaultSHFMTCmd).To(ContainSubstring("cytopia/shfmt:latest-1.10"))
+				Expect(goboottypes.DefaultSHFMTCmd).To(ContainSubstring("mvdan/shfmt:v3.13.1"))
 				Expect(goboottypes.DefaultSHFMTCmd).To(ContainSubstring("shfmt -d {{SH_FILES}}"))
 			})
 
 			It("pins editorconfig-checker docker image, mount, and pattern", func() {
-				Expect(goboottypes.DefaultEditorLintCmd).To(ContainSubstring("mstruebing/editorconfig-checker:v3.6.0"))
+				Expect(goboottypes.DefaultEditorLintCmd).To(ContainSubstring("mstruebing/editorconfig-checker:v3.6.1"))
 				Expect(goboottypes.DefaultEditorLintCmd).To(ContainSubstring("-exclude '(\\.git|\\.idea|\\.vscode)'"))
 			})
 		})

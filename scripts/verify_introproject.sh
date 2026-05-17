@@ -10,12 +10,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SKIP_TASK="false"
 TEMP_DIR=""
+OUTPUT_DIR=""
 
 PROJECT_CASES=(
   "IntroProject:ginkgo:slog:gitlab"
   "IntroGoSlogGitLab:go:slog:gitlab"
   "IntroGinkgoZerologGitLab:ginkgo:zerolog:gitlab"
   "IntroGoZerologGitLab:go:zerolog:gitlab"
+  "IntroGoSlogGitHub:go:slog:github"
 )
 
 cleanup() {
@@ -91,9 +93,10 @@ write_goboot_config() {
   local git_provider="$3"
   local base_test_cfg="$4"
   local base_logger_cfg="$5"
+  local output_dir="$6"
 
   cat >"${path}" <<YAML
-targetPath: "outputs"
+targetPath: "${output_dir}"
 projectName: "${project_name}"
 repoUrl: "https://github.com/projects"
 gitProvider: "${git_provider}"
@@ -141,11 +144,7 @@ generate_project_case() {
 
   write_base_test_config "${base_test_cfg}" "${test_style}"
   write_base_logger_config "${base_logger_cfg}" "${logger_type}"
-  write_goboot_config "${goboot_cfg}" "${project_name}" "${git_provider}" "${base_test_cfg}" "${base_logger_cfg}"
-
-  if [[ -d "${PROJECT_ROOT}/outputs/${project_name}" ]]; then
-    run_step "Reset existing outputs/${project_name}" "rm -rf '${PROJECT_ROOT}/outputs/${project_name}'"
-  fi
+  write_goboot_config "${goboot_cfg}" "${project_name}" "${git_provider}" "${base_test_cfg}" "${base_logger_cfg}" "${OUTPUT_DIR}"
 
   run_step "Generate ${project_name} (${test_style}, ${logger_type}, ${git_provider})" "go run cmd/goboot/main.go --config '${goboot_cfg}'"
 }
@@ -159,7 +158,7 @@ validate_project_case() {
   local project_root
 
   IFS=":" read -r project_name test_style logger_type git_provider <<<"${case_spec}"
-  project_root="${PROJECT_ROOT}/outputs/${project_name}"
+  project_root="${OUTPUT_DIR}/${project_name}"
 
   cd "${project_root}"
 
@@ -176,6 +175,8 @@ validate_project_case() {
 
   if [[ "${git_provider}" == "gitlab" ]]; then
     run_step "${project_name}: GitLab CI files exist" "test -f .gitlab-ci.yml && test -f .gitlab/ci/lint.yml && test -f .gitlab/ci/test.yml && test -f .gitlab/ci/build.yml"
+  elif [[ "${git_provider}" == "github" ]]; then
+    run_step "${project_name}: GitHub CI files exist" "test -f .github/workflows/lint.yml && test -f .github/workflows/test.yml && test -f .github/workflows/build.yml"
   fi
 
   if [[ "${test_style}" == "go" ]]; then
@@ -217,6 +218,8 @@ fi
 
 cd "${PROJECT_ROOT}"
 TEMP_DIR="$(mktemp -d)"
+OUTPUT_DIR="${TEMP_DIR}/outputs"
+mkdir -p "${OUTPUT_DIR}"
 
 for case_spec in "${PROJECT_CASES[@]}"; do
   generate_project_case "${case_spec}"

@@ -157,7 +157,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 		})
 
 		Context("when template content is invalid", func() {
-			It("returns a rendering error", func() {
+			It("returns a rendering error and preserves the original file", func() {
 				file, err := root.Create("broken.txt")
 				Expect(err).NotTo(HaveOccurred())
 				_, err = file.WriteString("{{")
@@ -167,7 +167,58 @@ var _ = Describe("Template helpers (rendering)", func() {
 				err = gobootutils.RenderTemplateToFile("broken", root, "broken.txt", struct{}{})
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("failed template render"))
+
+				content, err := os.ReadFile(filepath.Join(tempDir, "broken.txt"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).To(Equal("{{"))
 			})
+		})
+
+		Context("when rendering succeeds", func() {
+			It("does not leave a temporary file behind", func() {
+				file, err := root.Create("cleanup.txt")
+				Expect(err).NotTo(HaveOccurred())
+				_, err = file.WriteString("Hello {{.Name}}")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(file.Close()).To(Succeed())
+
+				err = gobootutils.RenderTemplateToFile("cleanup", root, "cleanup.txt", struct{ Name string }{Name: "goboot"})
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(tempDir, ".cleanup.txt.goboot-tmp"))
+				Expect(os.IsNotExist(err)).To(BeTrue())
+			})
+
+			It("preserves the original file mode", func() {
+				file, err := root.Create("script.sh")
+				Expect(err).NotTo(HaveOccurred())
+				_, err = file.WriteString("#!/usr/bin/env bash\necho {{.Value}}\n")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(file.Close()).To(Succeed())
+				Expect(os.Chmod(filepath.Join(tempDir, "script.sh"), 0o755)).To(Succeed())
+
+				err = gobootutils.RenderTemplateToFile("mode", root, "script.sh", struct{ Value string }{Value: "ok"})
+				Expect(err).NotTo(HaveOccurred())
+
+				info, err := os.Stat(filepath.Join(tempDir, "script.sh"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info.Mode().Perm()).To(Equal(os.FileMode(0o755)))
+			})
+		})
+	})
+
+	Describe("WriteRootFile", func() {
+		It("writes content and preserves the requested file mode", func() {
+			err := gobootutils.WriteRootFile(root, "written.txt", []byte("content"), 0o640)
+			Expect(err).NotTo(HaveOccurred())
+
+			content, err := os.ReadFile(filepath.Join(tempDir, "written.txt"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).To(Equal("content"))
+
+			info, err := os.Stat(filepath.Join(tempDir, "written.txt"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(info.Mode().Perm()).To(Equal(os.FileMode(0o640)))
 		})
 	})
 

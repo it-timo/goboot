@@ -75,6 +75,11 @@ func (bt *BaseTestConfig) Validate() error {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := validateProjectName(bt.ProjectName)
+	if err != nil {
+		return err
+	}
+
 	bt.fillNeededInfos()
 
 	return bt.validateValues()

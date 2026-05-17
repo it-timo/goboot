@@ -21,7 +21,12 @@ var _ = Describe("BaseLocalConfig", func() {
 		baseLocal = &config.BaseLocalConfig{
 			SourcePath:  "./templates/local_base",
 			ProjectName: testProjectName,
-			FileList:    []string{fileMakefile, "Taskfile.yml", fileEditorConfig},
+			FileList: []string{
+				goboottypes.ScriptNameMake,
+				goboottypes.ScriptNameTask,
+				goboottypes.ScriptNameScript,
+				goboottypes.ScriptNameCommit,
+			},
 		}
 
 		var err error
@@ -110,18 +115,17 @@ var _ = Describe("BaseLocalConfig", func() {
 
 		Context("with valid fileList", func() {
 			It("accepts single file", func() {
-				baseLocal.FileList = []string{fileMakefile}
+				baseLocal.FileList = []string{goboottypes.ScriptNameMake}
 				err := baseLocal.Validate()
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("accepts multiple files", func() {
 				baseLocal.FileList = []string{
-					fileMakefile,
-					"Taskfile.yml",
-					fileEditorConfig,
-					".gitignore",
-					"scripts/lint.sh",
+					goboottypes.ScriptNameMake,
+					goboottypes.ScriptNameTask,
+					goboottypes.ScriptNameScript,
+					goboottypes.ScriptNameCommit,
 				}
 				err := baseLocal.Validate()
 				Expect(err).NotTo(HaveOccurred())
@@ -130,17 +134,25 @@ var _ = Describe("BaseLocalConfig", func() {
 
 		Context("with invalid fileList entries", func() {
 			It("errors on blank entries", func() {
-				baseLocal.FileList = []string{fileMakefile, " "}
+				baseLocal.FileList = []string{goboottypes.ScriptNameMake, " "}
 				err := baseLocal.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("blank entries"))
 			})
 
 			It("errors on duplicate entries", func() {
-				baseLocal.FileList = []string{fileMakefile, fileMakefile}
+				baseLocal.FileList = []string{goboottypes.ScriptNameMake, goboottypes.ScriptNameMake}
 				err := baseLocal.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("duplicates"))
+			})
+
+			It("errors on unsupported entries", func() {
+				baseLocal.FileList = []string{goboottypes.ScriptNameMake, "scripts"}
+				err := baseLocal.Validate()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("unsupported entry"))
+				Expect(err.Error()).To(ContainSubstring("scripts"))
 			})
 		})
 	})
@@ -167,9 +179,9 @@ var _ = Describe("BaseLocalConfig", func() {
 				Expect(newConfig.SourcePath).To(Equal("./templates/local"))
 				Expect(newConfig.ProjectName).To(Equal(""))
 				Expect(newConfig.FileList).To(HaveLen(3))
-				Expect(newConfig.FileList).To(ContainElement(fileMakefile))
-				Expect(newConfig.FileList).To(ContainElement("Taskfile.yml"))
-				Expect(newConfig.FileList).To(ContainElement(fileEditorConfig))
+				Expect(newConfig.FileList).To(ContainElement(goboottypes.ScriptNameMake))
+				Expect(newConfig.FileList).To(ContainElement(goboottypes.ScriptNameTask))
+				Expect(newConfig.FileList).To(ContainElement(goboottypes.ScriptNameCommit))
 			})
 
 			It("loads single file in fileList", func() {
@@ -184,7 +196,7 @@ var _ = Describe("BaseLocalConfig", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(newConfig.FileList).To(HaveLen(1))
-				Expect(newConfig.FileList[0]).To(Equal("single.txt"))
+				Expect(newConfig.FileList[0]).To(Equal(goboottypes.ScriptNameMake))
 			})
 		})
 
@@ -212,24 +224,22 @@ var _ = Describe("BaseLocalConfig", func() {
 
 	Describe("FileList behavior", func() {
 		Context("when validating fileList content", func() {
-			It("accepts paths with subdirectories", func() {
+			It("rejects paths with subdirectories", func() {
 				baseLocal.FileList = []string{
 					"scripts/lint.sh",
-					"scripts/format.sh",
-					".github/workflows/ci.yml",
 				}
 				err := baseLocal.Validate()
-				Expect(err).NotTo(HaveOccurred())
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("unsupported entry"))
 			})
 
-			It("accepts dotfiles", func() {
+			It("rejects dotfiles", func() {
 				baseLocal.FileList = []string{
 					fileEditorConfig,
-					".gitignore",
-					".dockerignore",
 				}
 				err := baseLocal.Validate()
-				Expect(err).NotTo(HaveOccurred())
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("unsupported entry"))
 			})
 		})
 	})

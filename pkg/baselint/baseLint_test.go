@@ -139,6 +139,16 @@ var _ = Describe("BaseLint Service", func() {
 			err := baseLint.SetConfig(validConfig)
 			Expect(err).To(HaveOccurred())
 		})
+
+		It("fails when source is the final project root", func() {
+			projectRoot := filepath.Join(tempDir, validConfig.ProjectName)
+			Expect(os.MkdirAll(projectRoot, 0o755)).To(Succeed())
+
+			validConfig.SourcePath = projectRoot
+			err := baseLint.SetConfig(validConfig)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("project root"))
+		})
 	})
 
 	Describe("SetScriptReceiver", func() {

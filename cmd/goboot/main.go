@@ -25,6 +25,12 @@ var (
 	outputWriter io.Writer = os.Stdout
 )
 
+type cliOptions struct {
+	configPath    string
+	logLevel      string
+	skipGoModTidy bool
+}
+
 func writeOutputLine(msg string) {
 	_, err := io.WriteString(outputWriter, msg+"\n")
 	if err != nil {
@@ -32,36 +38,48 @@ func writeOutputLine(msg string) {
 	}
 }
 
-// run executes the whole goboot CLI with config load, app init, service registration and execution.
-func run(args []string) error {
-	// Step 0: Parse flags explicitly using a local FlagSet to avoid global state.
+func parseCLIOptions(args []string) (cliOptions, error) {
 	flagSet := flag.NewFlagSet("goboot", flag.ContinueOnError)
-	configPath := ""
-	logLevel := "info"
+	opts := cliOptions{
+		configPath: "./configs/goboot.yml",
+		logLevel:   "info",
+	}
 
-	flagSet.StringVar(&configPath, "config", "./configs/goboot.yml", "Path to the goboot config file")
-	flagSet.StringVar(&logLevel, "log-level", "info", "Log level: debug|info|warn|error")
+	flagSet.StringVar(&opts.configPath, "config", opts.configPath, "Path to the goboot config file")
+	flagSet.StringVar(&opts.logLevel, "log-level", opts.logLevel, "Log level: debug|info|warn|error")
+	flagSet.BoolVar(&opts.skipGoModTidy, "skip-go-mod-tidy", false, "Skip running go mod tidy after generation")
 
 	err := flagSet.Parse(args)
 	if err != nil {
-		return fmt.Errorf("failed to parse flags: %w", err)
+		return cliOptions{}, fmt.Errorf("failed to parse flags: %w", err)
 	}
 
-	level, err := zerolog.ParseLevel(logLevel)
+	return opts, nil
+}
+
+// run executes the whole goboot CLI with config load, app init, service registration and execution.
+func run(args []string) error {
+	// Step 0: Parse flags explicitly using a local FlagSet to avoid global state.
+	opts, err := parseCLIOptions(args)
 	if err != nil {
-		return fmt.Errorf("invalid --log-level value %q (allowed: debug, info, warn, error)", logLevel)
+		return err
+	}
+
+	level, err := zerolog.ParseLevel(opts.logLevel)
+	if err != nil {
+		return fmt.Errorf("invalid --log-level value %q (allowed: debug, info, warn, error)", opts.logLevel)
 	}
 
 	zerolog.SetGlobalLevel(level)
 
 	logger := zerolog.New(os.Stderr).With().Timestamp().Str("app", "goboot").Logger()
 	log.Logger = logger
-	logger.Info().Str("log_level", logLevel).Msg("logger configured")
+	logger.Info().Str("log_level", opts.logLevel).Msg("logger configured")
 
 	runStart := time.Now()
 
 	// Step 1: Load and validate goboot configuration from YAML.
-	cfg := config.NewGoBoot(configPath)
+	cfg := config.NewGoBoot(opts.configPath)
 	cfg.SetLogger(logger.With().Str("component", "config").Logger())
 
 	err = cfg.Init()
@@ -84,14 +102,14 @@ func run(args []string) error {
 		return fmt.Errorf("service execution failed: %w", err)
 	}
 
-	// Step 5: Run go mod tidy if the go.mod file exists.
-	err = app.RunGoModTidy(true)
+	// Step 5: Run go mod tidy if the go.mod file exists and the user did not opt out.
+	err = app.RunGoModTidy(!opts.skipGoModTidy)
 	if err != nil {
 		return fmt.Errorf("failed to run go mod tidy: %w", err)
 	}
 
 	logger.Info().
-		Str("config_path", configPath).
+		Str("config_path", opts.configPath).
 		Str("target_path", cfg.TargetPath).
 		Str("project_name", cfg.ProjectName).
 		Int64("duration_ms", time.Since(runStart).Milliseconds()).

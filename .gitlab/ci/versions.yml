@@ -14,8 +14,7 @@ variables:
   # --------------------------------------------------------------------------
   # Go Runtime Images
   # --------------------------------------------------------------------------
-  GO_1_25_DIGEST: "sha256:85c0ab0b73087fda36bf8692efe2cf67c54a06d7ca3b49c489bbff98c9954d64"
-  GO_1_26_DIGEST: "sha256:c83e68f3ebb6943a2904fa66348867d108119890a2c6a2e6f07b38d0eb6c25c5"
+  GO_1_26_DIGEST: "sha256:313faae491b410a35402c05d35e7518ae99103d957308e940e1ae2cfa0aac29b"
 
   # --------------------------------------------------------------------------
   # Docker-in-Docker
@@ -26,17 +25,17 @@ variables:
   # --------------------------------------------------------------------------
   # Linter Images
   # --------------------------------------------------------------------------
-  # SHA256 of golangci/golangci-lint:v2.12.0
-  GOLANGCI_LINT_IMAGE: "golangci/golangci-lint@sha256:6d59509e0dd5117bd1d024ea3b7a69260200659d91d55b38b943d70bf4f53515"
+  # SHA256 of golangci/golangci-lint:v2.12.2
+  GOLANGCI_LINT_IMAGE: "golangci/golangci-lint@sha256:5cceeef04e53efe1470638d4b4b4f5ceefd574955ab3941b2d9a68a8c9ad5240"
   # SHA256 of pipelinecomponents/yamllint:0.35.9
   YAMLLINT_IMAGE: "pipelinecomponents/yamllint@sha256:3e9eb9bef568b904d9222e9174a1490f4e015aef3d61e7d3e56f60035e517b79"
-  # SHA256 of ghcr.io/igorshubovych/markdownlint-cli:v0.47.0
-  MARKDOWNLINT_IMAGE: "ghcr.io/igorshubovych/markdownlint-cli@sha256:9f06c8c9a75aa08b87b235b66d618f7df351f09f08faf703177f670e38ee6511"
+  # SHA256 of ghcr.io/igorshubovych/markdownlint-cli:v0.48.0
+  MARKDOWNLINT_IMAGE: "ghcr.io/igorshubovych/markdownlint-cli@sha256:c97f19b52cf7371ff767c080e3e15c15f1cbd3336fc41aeca7a93bb2cdb9843c"
   # SHA256 of cytopia/checkmake:latest-0.5
   CHECKMAKE_IMAGE: "cytopia/checkmake@sha256:23116ee551144f1021b294d3ede266ecb760272e0d6f2833f8a3d38b81beffb8"
   # SHA256 of koalaman/shellcheck:v0.11.0
   SHELLCHECK_IMAGE: "koalaman/shellcheck@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d"
-  # SHA256 of mvdan/shfmt:v3.12.0
-  SHFMT_IMAGE: "mvdan/shfmt@sha256:307d265ffd25ce832899ae17c93ed5062fc3375c514bba8f52cbf52792735c4d"
-  # SHA256 of mstruebing/editorconfig-checker:v3.6.0
-  EDITORCONFIG_CHECKER_IMAGE: "mstruebing/editorconfig-checker@sha256:3fee6fe35c9ec21367b92ca50b3bea856ffc8a7a186044c329ac8bb23b33284a"
+  # SHA256 of mvdan/shfmt:v3.13.1
+  SHFMT_IMAGE: "mvdan/shfmt@sha256:f22f3936140be1ba02d493b5d2b91d0e8b4af93fd903e7f46c477822bca4a3be"
+  # SHA256 of mstruebing/editorconfig-checker:v3.6.1
+  EDITORCONFIG_CHECKER_IMAGE: "mstruebing/editorconfig-checker@sha256:af556694c3eb0a16b598efbe84c1171d40dfb779fdac6f01b89baedde065556f"

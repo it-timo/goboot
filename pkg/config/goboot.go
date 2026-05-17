@@ -5,7 +5,10 @@ It handles scaffold-time config only, not runtime application config.
 package config
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -149,6 +152,11 @@ func (gb *GoBoot) validateBase() error {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := validateProjectName(gb.ProjectName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -185,8 +193,11 @@ func readYMLConfig(confPath string, cfg interface{}) error {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	err = yaml.Unmarshal(data, cfg)
-	if err != nil {
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+
+	err = decoder.Decode(cfg)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 

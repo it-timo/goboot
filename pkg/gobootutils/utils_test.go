@@ -291,6 +291,21 @@ var _ = Describe("Utils Package", func() {
 			})
 		})
 
+		Context("when name attempts to escape target directory", func() {
+			DescribeTable("rejects unsafe root names before creating directories",
+				func(name string) {
+					_, err := gobootutils.CreateRootDir(targetDir, name)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("invalid root dir name"))
+				},
+				Entry("parent traversal", "../outside"),
+				Entry("nested parent traversal", "project/../../outside"),
+				Entry("current directory", "."),
+				Entry("empty", ""),
+				Entry("absolute path", filepath.Join(string(os.PathSeparator), "tmp", "outside")),
+			)
+		})
+
 		Context("when target directory is not writable", func() {
 			It("returns an error", func() {
 				Expect(os.Chmod(targetDir, 0o500)).To(Succeed())

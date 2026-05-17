@@ -54,7 +54,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 			gb := config.NewGoBoot(configPath)
 			err = gb.Init()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(gb.ProjectName).To(Equal("from-custom-path"))
+			Expect(gb.ProjectName).To(Equal("FromCustomPath"))
 			Expect(gb.TargetPath).To(Equal("/tmp/from-custom"))
 		})
 	})
@@ -130,6 +130,24 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 				Expect(err).To(HaveOccurred())
 			})
 
+			It("returns error for unknown root YAML fields", func() {
+				yamlContent := []byte("projectName: \"TestProject\"\n" +
+					"targetPath: \"/tmp/test\"\n" +
+					"repoUrl: \"https://github.com/test/testproject\"\n" +
+					"gitProvider: \"github\"\n" +
+					"projectNmae: \"typo\"\n" +
+					"services: []\n")
+
+				err := os.WriteFile(configPath, yamlContent, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				goBoot = config.NewGoBoot(configPath)
+				err = goBoot.Init()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("failed to read goboot config"))
+				Expect(err.Error()).To(ContainSubstring("field projectNmae not found"))
+			})
+
 			It("returns error when required base fields are missing", func() {
 				yamlContent, err := loadTestFixture("config/goboot/missing_required_fields.yml")
 				Expect(err).NotTo(HaveOccurred())
@@ -156,6 +174,30 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("services[base_project].confPath"))
 			})
+
+			DescribeTable("returns error when projectName is not a safe Go scaffold identifier",
+				func(projectName string) {
+					yamlContent := []byte("projectName: \"" + projectName + "\"\n" +
+						"targetPath: \"/tmp/test\"\n" +
+						"repoUrl: \"https://github.com/test/testproject\"\n" +
+						"gitProvider: \"github\"\n" +
+						"services: []\n")
+
+					err := os.WriteFile(configPath, yamlContent, 0644)
+					Expect(err).NotTo(HaveOccurred())
+
+					goBoot = config.NewGoBoot(configPath)
+					err = goBoot.Init()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("projectName"))
+				},
+				Entry("path traversal", "../outside"),
+				Entry("hyphen", "cli-project"),
+				Entry("space", "my project"),
+				Entry("leading digit", "123app"),
+				Entry("punctuation", "app!"),
+				Entry("leading whitespace", " app"),
+			)
 		})
 
 		Context("with disabled services", func() {

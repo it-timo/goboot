@@ -3,9 +3,15 @@ package config
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/it-timo/goboot/pkg/goboottypes"
+)
+
+var (
+	goVersionPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+){1,2}$`)
+	branchPattern    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._/-]*$`)
 )
 
 // BaseCIConfig contains inputs for CI template generation.
@@ -65,14 +71,8 @@ func (bc *BaseCIConfig) ReadConfig(confPath string, _ string, gitProvider string
 
 // Validate checks required fields and normalizes optional values.
 func (bc *BaseCIConfig) Validate() error {
-	var missing []string
-
-	if strings.TrimSpace(bc.SourcePath) == "" {
-		missing = append(missing, "sourcePath")
-	}
-
 	if len(bc.GoVersion) == 0 {
-		missing = append(missing, "goVersions")
+		return errors.New("missing required config fields: goVersions")
 	} else {
 		err := bc.validateGoVersion()
 		if err != nil {
@@ -90,6 +90,31 @@ func (bc *BaseCIConfig) Validate() error {
 		return err
 	}
 
+	err = bc.validateRequiredFields()
+	if err != nil {
+		return err
+	}
+
+	err = validateProjectName(bc.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	err = bc.validateJobs()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (bc *BaseCIConfig) validateRequiredFields() error {
+	var missing []string
+
+	if strings.TrimSpace(bc.SourcePath) == "" {
+		missing = append(missing, "sourcePath")
+	}
+
 	if strings.TrimSpace(bc.ProjectName) == "" {
 		missing = append(missing, "projectName")
 	}
@@ -102,19 +127,19 @@ func (bc *BaseCIConfig) Validate() error {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
 
-	err = bc.validateJobs()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // validateGoVersion rejects blank goVersions entries.
 func (bc *BaseCIConfig) validateGoVersion() error {
 	for _, version := range bc.GoVersion {
-		if strings.TrimSpace(version) == "" {
+		trimmed := strings.TrimSpace(version)
+		if trimmed == "" {
 			return errors.New("invalid config: goVersions contains empty string")
+		}
+
+		if !goVersionPattern.MatchString(trimmed) {
+			return fmt.Errorf("invalid config: goVersion %q is not supported", version)
 		}
 	}
 
@@ -130,8 +155,13 @@ func (bc *BaseCIConfig) validateAutoBranches() error {
 	}
 
 	for _, branch := range bc.AutoBranches {
-		if strings.TrimSpace(branch) == "" {
+		trimmed := strings.TrimSpace(branch)
+		if trimmed == "" {
 			return errors.New("invalid config: autoBranches contains empty string")
+		}
+
+		if !branchPattern.MatchString(trimmed) {
+			return fmt.Errorf("invalid config: autoBranch %q is not supported", branch)
 		}
 	}
 

@@ -20,12 +20,13 @@ lint:
       alias: docker
   script:
     - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
-    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
-    - SH_FILES=$(find . -type f -name "*.sh" -not -path "./templates/*")
+    - DOCKER_RUN_CMD=(docker run --rm -v "${ROOT_DIR}:/workdir" -w /workdir)
+    - mapfile -d '' -t SH_FILES < <(find . -type f -name "*.sh" -not -path "./templates/*" -print0)
 {{- $cmds := index .FileScripts "lint.yml" }}
 {{- if $cmds }}
 {{- range $cmd := $cmds }}
-    - {{ oneLine (replace (replace $cmd "{{DOCKER_RUN}}" "$DOCKER_RUN_CMD") "{{SH_FILES}}" "$SH_FILES") }}
+    - |-
+{{ indent 6 (replace (replace (oneLine $cmd) "{{DOCKER_RUN}}" "\"${DOCKER_RUN_CMD[@]}\"") "{{SH_FILES}}" "\"${SH_FILES[@]}\"") }}
 {{- end }}
 {{- else }}
     - echo "No lint commands registered."

@@ -161,13 +161,13 @@ include:
 
 variables:
   DOCKER_HOST: unix:///var/run/docker.sock
-  GOLANGCI_LINT_IMAGE: golangci/golangci-lint:v2.12.0
+  GOLANGCI_LINT_IMAGE: golangci/golangci-lint:v2.12.2
   YAMLLINT_IMAGE: pipelinecomponents/yamllint:0.35.9
-  MARKDOWNLINT_IMAGE: ghcr.io/igorshubovych/markdownlint-cli:v0.47.0
+  MARKDOWNLINT_IMAGE: ghcr.io/igorshubovych/markdownlint-cli:v0.48.0
   CHECKMAKE_IMAGE: cytopia/checkmake:latest-0.5
   SHELLCHECK_IMAGE: koalaman/shellcheck:v0.11.0
-  SHFMT_IMAGE: mvdan/shfmt:v3.12.0
-  EDITORCONFIG_CHECKER_IMAGE: mstruebing/editorconfig-checker:v3.6.0
+  SHFMT_IMAGE: mvdan/shfmt:v3.13.1
+  EDITORCONFIG_CHECKER_IMAGE: mstruebing/editorconfig-checker:v3.6.1
 
 .lint-local:
   stage: lint
