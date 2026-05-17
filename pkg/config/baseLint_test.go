@@ -21,7 +21,7 @@ var _ = Describe("BaseLintConfig", func() {
 	BeforeEach(func() {
 		baseLint = &config.BaseLintConfig{
 			SourcePath:     "./templates/lint_base",
-			ProjectName:    "testproject",
+			ProjectName:    testProjectName,
 			RepoImportPath: testPath,
 			Linters: map[string]*config.Linter{
 				goboottypes.LinterGo: {
@@ -38,6 +38,7 @@ var _ = Describe("BaseLintConfig", func() {
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baselint-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -171,14 +172,14 @@ var _ = Describe("BaseLintConfig", func() {
 				Expect(baseLint.Linters[goboottypes.LinterGo].Cmd).To(BeEmpty())
 			})
 
-			It("leaves unknown enabled linters without a command", func() {
+			It("errors on unknown enabled linters", func() {
 				baseLint.Linters = map[string]*config.Linter{
 					"unknown": {Enabled: true},
 				}
 
 				err := baseLint.Validate()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(baseLint.Linters["unknown"].Cmd).To(BeEmpty())
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("unknown"))
 			})
 
 			It("keeps commands on disabled linters intact", func() {
@@ -203,10 +204,21 @@ var _ = Describe("BaseLintConfig", func() {
 				Expect(baseLint.Linters[goboottypes.LinterGo].Cmd).To(Equal(customCmd))
 			})
 
-			It("handles a nil linter map", func() {
+			It("errors on a nil linter map", func() {
 				baseLint.Linters = nil
 				err := baseLint.Validate()
-				Expect(err).NotTo(HaveOccurred())
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("linters"))
+			})
+
+			It("errors on nil linter entries", func() {
+				baseLint.Linters = map[string]*config.Linter{
+					goboottypes.LinterGo: nil,
+				}
+
+				err := baseLint.Validate()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(goboottypes.LinterGo))
 			})
 		})
 	})
@@ -256,6 +268,20 @@ var _ = Describe("BaseLintConfig", func() {
 				newConfig := &config.BaseLintConfig{}
 				err = newConfig.ReadConfig(configPath, testPath, "")
 				Expect(err).To(HaveOccurred())
+			})
+
+			It("returns an error for unknown YAML fields", func() {
+				yamlContent := []byte("sourcePath: ./templates/lint\n" +
+					"unknownField: true\n" +
+					"linters: {}\n")
+
+				err := os.WriteFile(configPath, yamlContent, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				newConfig := &config.BaseLintConfig{}
+				err = newConfig.ReadConfig(configPath, testPath, "")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("field unknownField not found"))
 			})
 		})
 	})

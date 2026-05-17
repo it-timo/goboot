@@ -1,4 +1,4 @@
 sourcePath: /tmp/local
 fileList:
-  - Makefile
-  - Taskfile.yml
+  - make
+  - task

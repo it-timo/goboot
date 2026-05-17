@@ -12,7 +12,6 @@ sourcePath: "./templates/ci_base"
 
 #  List of Go versions to use for CI. Used in build and test jobs.
 goVersions:
-  - "1.25"
   - "1.26"
 
 #  CI image policy:

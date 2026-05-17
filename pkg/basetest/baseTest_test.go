@@ -48,6 +48,13 @@ func (m *mockRegistrar) RegisterFile(id string, lines []string) error {
 }
 
 var _ = Describe("BaseTest", func() {
+	const (
+		projectName      = "MyProject"
+		repoImportPath   = "github.com/example/myproject"
+		capsProjectName  = "MYPROJECT"
+		lowerProjectName = "myproject"
+	)
+
 	var (
 		tmpUserDir string
 		tmpSrcDir  string
@@ -73,6 +80,7 @@ var _ = Describe("BaseTest", func() {
 		if tmpUserDir != "" {
 			Expect(os.RemoveAll(tmpUserDir)).To(Succeed())
 		}
+
 		if tmpSrcDir != "" {
 			Expect(os.RemoveAll(tmpSrcDir)).To(Succeed())
 		}
@@ -106,12 +114,12 @@ var _ = Describe("BaseTest", func() {
 			baseTest = basetest.NewBaseTest(tmpUserDir)
 			cfg = &config.BaseTestConfig{
 				SourcePath:       tmpSrcDir,
-				ProjectName:      "MyProject",
+				ProjectName:      projectName,
 				TestCMD:          goboottypes.DefaultGoTestCMD,
-				RepoImportPath:   "github.com/example/myproject",
+				RepoImportPath:   repoImportPath,
 				UseStyle:         goboottypes.TestStyleGinkgo,
-				CapsProjectName:  "MYPROJECT",
-				LowerProjectName: "myproject",
+				CapsProjectName:  capsProjectName,
+				LowerProjectName: lowerProjectName,
 			}
 		})
 

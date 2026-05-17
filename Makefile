@@ -19,33 +19,44 @@ VERSION := $(shell cat .version)
 include versions.env
 
 # Lint tooling (containerized)
-DOCKER_LINT_CMD := docker run --rm -v "$(PWD)":/workdir -w /workdir
+DOCKER_LINT_CMD := docker run --rm --network host -v "$(PWD)":/workdir -w /workdir
 
-SHELL_FILES := $(shell find . -type f -name '*.sh')
+FIND_OWNED_FILES := find . \
+	-path './.git' -prune -o \
+	-path './.idea' -prune -o \
+	-path './.gitlab-ci-local' -prune -o \
+	-path './bin' -prune -o \
+	-path './outputs' -prune -o \
+	-type f
+
+SHELL_FILES := $(shell $(FIND_OWNED_FILES) -name '*.sh' -print0 | xargs -0 printf '%q ')
+MD_FILES := $(shell $(FIND_OWNED_FILES) -name '*.md' -print0 | xargs -0 printf '%q ')
 
 GOLANGCI_LINT := $(DOCKER_LINT_CMD) golangci/golangci-lint:$(GOLANGCI_LINT_VERSION) golangci-lint run ./...
-MD_LINT := $(DOCKER_LINT_CMD) ghcr.io/igorshubovych/markdownlint-cli:$(MARKDOWNLINT_VERSION) markdownlint $(shell find . -name '*.md')
+MD_LINT := $(DOCKER_LINT_CMD) ghcr.io/igorshubovych/markdownlint-cli:$(MARKDOWNLINT_VERSION) markdownlint $(MD_FILES)
 YAML_LINT := $(DOCKER_LINT_CMD) pipelinecomponents/yamllint:$(YAMLLINT_VERSION) yamllint .
 CHECKMAKE_LINT := $(DOCKER_LINT_CMD) cytopia/checkmake:$(CHECKMAKE_VERSION) Makefile
 SHELLCHECK_LINT := $(DOCKER_LINT_CMD) koalaman/shellcheck:$(SHELLCHECK_VERSION) -x $(SHELL_FILES)
 SHFMT_LINT := $(DOCKER_LINT_CMD) mvdan/shfmt:$(SHFMT_VERSION) -d -i 2 -ci $(SHELL_FILES)
-EDITORCONFIG_CHECKER_LINT := $(DOCKER_LINT_CMD) --entrypoint ec mstruebing/editorconfig-checker:$(EDITORCONFIG_CHECKER_VERSION) -exclude '(\.git|\.idea)'
+EDITORCONFIG_CHECKER_LINT := $(DOCKER_LINT_CMD) --entrypoint ec mstruebing/editorconfig-checker:$(EDITORCONFIG_CHECKER_VERSION) -exclude '(\.git|\.idea|\.gitlab-ci-local|bin)'
 COVER_FILE := coverage.txt
+MIN_COVERAGE := 80
 TEST_PKGS := $$(go list ./... | grep -v '/test/noauto' | grep -v '/templates')
 
 # .PHONY declares non-file targets to always run when invoked
-.PHONY: all build clean test lint release version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
+.PHONY: all build clean test lint release release_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
 
 #  ----------------------------------------
 #  Default target (runs when `make` is called with no args)
 #  ----------------------------------------
-all: lint test
+all: build lint test verify_intro verify_ci_canary
 
 #  ----------------------------------------
 #  Build the project
 #  ----------------------------------------
 build:
 	@echo "Building $(PROJECT)..."
+	go build -ldflags="-X main.version=$(VERSION)" -o bin/goboot ./cmd/goboot
 
 #  ----------------------------------------
 #  Clean build/test artifacts
@@ -58,9 +69,7 @@ clean:
 #  ----------------------------------------
 test:
 	@echo "Running tests..."
-	go test -race -timeout=5m -coverprofile="$(COVER_FILE)" $(TEST_PKGS); \
-	go tool cover -func="$(COVER_FILE)"; \
-	rm -f "$(COVER_FILE)"
+	./scripts/test.sh
 
 #  ----------------------------------------
 #  Run linters
@@ -100,18 +109,20 @@ lint_editorconfig:
 #  Full local verification flow
 #  ----------------------------------------
 verify_intro:
-	@echo "Running full IntroProject verification flow..."
+	@echo "Running full Intro project matrix verification flow..."
 	./scripts/verify_introproject.sh
 
 verify_ci_canary:
 	@echo "Running canary CI verification flow..."
-	./scripts/verify_ci_canary.sh
+	./scripts/verify_ci_canary.sh --provider=both
 
 #  ----------------------------------------
 #  Release the project
 #  ----------------------------------------
-release:
-	@echo "Running release (version: $(VERSION))..."
+release_check: all
+
+release: release_check
+	@echo "Release checks passed for $(PROJECT) version: $(VERSION)"
 
 #  ----------------------------------------
 #  Show the current version
@@ -127,14 +138,14 @@ help: help_core help_project help_check help_lint
 
 help_core:
 	@echo "Usage:"
-	@echo "  make                    Default target (run all)"
+	@echo "  make                    Default target (run build, lint, test, verify_intro, verify_ci_canary)"
 	@echo "  make help               Show this help message"
 	@echo "  make clean              Remove build/test artifacts"
 
 help_project:
 	@echo "  make version            Show current project version"
 	@echo "  make build              Build the project"
-	@echo "  make release            Package the project using GoReleaser"
+	@echo "  make release            Run the full local release check sequence"
 
 help_check:
 	@echo "  make test               Run project tests"
@@ -148,5 +159,5 @@ help_lint:
 	@echo "  make lint_sh            Run ShellCheck"
 	@echo "  make fmtcheck_sh        Run shfmt (check only)"
 	@echo "  make lint_editorconfig  Run editorconfig-checker"
-	@echo "  make verify_intro       Regenerate IntroProject and run full root+output checks"
-	@echo "  make verify_ci_canary   Run local CI simulation (act + gitlab-ci-local) for root and IntroProject"
+	@echo "  make verify_intro       Regenerate Intro project matrix and run full root+output checks"
+	@echo "  make verify_ci_canary   Run local CI simulation for both providers"

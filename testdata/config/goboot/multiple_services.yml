@@ -15,6 +15,9 @@ services:
   - id: base_test
     confPath: ${BASE_TEST_PATH}
     enabled: true
+  - id: base_logger
+    confPath: ${BASE_LOGGER_PATH}
+    enabled: true
   - id: base_ci
     confPath: ${BASE_CI_PATH}
     enabled: true

@@ -1,5 +1,5 @@
 sourcePath: ./templates/local
 fileList:
-  - Makefile
-  - Taskfile.yml
-  - .editorconfig
+  - make
+  - task
+  - commit

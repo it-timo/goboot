@@ -121,5 +121,5 @@ Notes:
 - This flow is not fully dockerized: it requires host-installed `act` and `gitlab-ci-local`, plus Docker daemon/socket access.
 - Running inside heavily containerized or restricted environments can fail due to socket/privilege limits.
 - `act` runs in offline mode and with `--use-gitignore=false` to avoid missing dependency files such as `go.sum`.
-- `act` pre-pulls runner/lint images by default; use `--skip-act-prepull` to disable
-and `--refresh-images` to force fresh pulls.
+- `act` and GitLab canary image pre-pulls run by default; use `--skip-prepull` to disable
+them and `--refresh-images` to force fresh pulls.

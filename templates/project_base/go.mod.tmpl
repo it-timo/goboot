@@ -1,3 +1,8 @@
 module {{.RepoPath}}
 
 go {{.UsedGoVersion}}
+
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+
+require github.com/rs/zerolog v1.34.0
+{{- end }}

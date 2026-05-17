@@ -1,4 +1,3 @@
 sourcePath: ./templates
-projectName: proj
 fileList:
-  - single.txt
+  - make

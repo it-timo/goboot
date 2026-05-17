@@ -99,6 +99,7 @@ Accepted # or Proposed / Rejected / Superseded / Deprecated
 | [ADR-031](adr-031-generated-project-validation.md)     | Validate Generated Projects with Lint & Test Runs             | templates, quality, ci, generated-project, linting, testing                    |
 | [ADR-032](adr-032-centralized-local-tool-versions.md)  | Centralized Local Tool Versions via `versions.env`            | tooling, linting, dev-experience, versions                                     |
 | [ADR-033](adr-033-ci-policy-and-provider-layout.md)    | CI Policy Modes and Provider-Scoped Template Layout           | ci, templates, config, security, provider-layout                               |
+| [ADR-034](adr-034-logger-settings-provider.md)         | Logger Settings Provider                                      | logger, scaffolding, templates, service-boundaries, ownership                  |
 
 ---
 

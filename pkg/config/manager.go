@@ -20,9 +20,9 @@ type ServiceConfig interface {
 
 // ServiceConfigMeta declares a service config file to load.
 type ServiceConfigMeta struct {
-	ID string `yaml:"id"` // e.g., "base_project"
+	ID       string `yaml:"id"`       // e.g., "base_project"
 	ConfPath string `yaml:"confPath"` // e.g., "./configs/base_project.yml"
-	Enabled bool `yaml:"enabled"`
+	Enabled  bool   `yaml:"enabled"`
 }
 
 // IsEnabled returns the enabled state.

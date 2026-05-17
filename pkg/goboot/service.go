@@ -2,9 +2,11 @@ package goboot
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
+	"github.com/rs/zerolog"
 )
 
 // Service defines the lifecycle contract for generator services.
@@ -17,6 +19,10 @@ type Service interface {
 
 	// Run executes the service.
 	Run() error
+}
+
+type loggerAware interface {
+	SetLogger(logger zerolog.Logger)
 }
 
 // serviceManager coordinates registration, config assignment, and run order.
@@ -32,10 +38,12 @@ type serviceManager struct {
 
 	// subsequentServiceIDs run after regular services.
 	subsequentServiceIDs []string
+
+	log zerolog.Logger
 }
 
 // newServiceManager creates a service manager bound to cfgMgr.
-func newServiceManager(cfgMgr *config.Manager) *serviceManager {
+func newServiceManager(cfgMgr *config.Manager, logger zerolog.Logger) *serviceManager {
 	return &serviceManager{
 		services: make(map[string]Service),
 		cfgMgr:   cfgMgr,
@@ -48,6 +56,7 @@ func newServiceManager(cfgMgr *config.Manager) *serviceManager {
 			goboottypes.ServiceNameBaseLocal, // required to render aggregated local scripts.
 			// Future subsequent services can be added here.
 		},
+		log: logger,
 	}
 }
 
@@ -58,73 +67,62 @@ func (sm *serviceManager) register(service Service) error {
 		return fmt.Errorf("service %q already registered", service.ID())
 	}
 
+	if receiver, ok := service.(loggerAware); ok {
+		receiver.SetLogger(sm.log.With().Str("service_id", service.ID()).Logger())
+	}
+
 	sm.services[service.ID()] = service
+	sm.log.Info().Str("service_id", service.ID()).Msg("service attached to manager")
 
 	return nil
 }
 
 // runAll assigns configs and executes services in prior -> regular -> subsequent order.
 // Services without config are skipped.
-//
-//nolint:cyclop // branching required for service dispatch logic; each path reflects a distinct lifecycle phase.
 func (sm *serviceManager) runAll() error {
+	sm.log.Info().Int("service_count", len(sm.services)).Msg("starting service manager run")
+
 	err := sm.assignConfigs()
 	if err != nil {
 		return fmt.Errorf("failed to assign configs: %w", err)
 	}
 
-	// Run priority services first (for example base_project).
 	err = sm.runPriorServices()
 	if err != nil {
 		return fmt.Errorf("failed to run prior services: %w", err)
 	}
 
+	err = sm.runRegularServices()
+	if err != nil {
+		return fmt.Errorf("failed to run regular services: %w", err)
+	}
+
+	err = sm.runSubsequentServices()
+	if err != nil {
+		return fmt.Errorf("failed to run subsequent services: %w", err)
+	}
+
+	return nil
+}
+
+func (sm *serviceManager) runRegularServices() error {
 	for curID, svc := range sm.services {
-		// Skip services handled by prior/subsequent phases.
 		if sm.isPriorService(curID) || sm.isSubsequentService(curID) {
 			continue
 		}
 
-		_, ok := sm.cfgMgr.GetRegistrar(curID)
-		if !ok {
-			_, ok = sm.cfgMgr.GetService(curID)
-			if !ok {
-				fmt.Printf("Service %q skipped (no configuration loaded)\n", curID)
+		if !sm.hasConfig(curID) {
+			sm.log.Debug().Str("service_id", curID).Msg("service skipped because no configuration was loaded")
 
-				continue
-			}
+			continue
 		}
 
-		receiver, isScriptRec := svc.(goboottypes.ScriptReceiver)
-		if isScriptRec {
-			registrar, isRegistrar := sm.services[goboottypes.ServiceNameBaseLocal].(goboottypes.Registrar)
-			if isRegistrar {
-				fmt.Printf("Injecting script registrar into %q\n", curID)
+		sm.injectRegistrars(curID, svc)
 
-				receiver.SetScriptReceiver(registrar)
-			}
-		}
-
-		ciReceiver, isCIReceiver := svc.(goboottypes.CIReceiver)
-		if isCIReceiver {
-			registrar, isRegistrar := sm.services[goboottypes.ServiceNameBaseCI].(goboottypes.Registrar)
-			if isRegistrar {
-				fmt.Printf("Injecting ci registrar into %q\n", curID)
-
-				ciReceiver.SetCIReceiver(registrar)
-			}
-		}
-
-		err = svc.Run()
+		err := sm.runService(curID, svc, "service")
 		if err != nil {
-			return fmt.Errorf("failed to run service %q: %w", curID, err)
+			return err
 		}
-	}
-
-	// Run subsequent services last (for example base_local).
-	err = sm.runSubsequentServices()
-	if err != nil {
-		return fmt.Errorf("failed to run subsequent services: %w", err)
 	}
 
 	return nil
@@ -137,6 +135,8 @@ func (sm *serviceManager) assignConfigs() error {
 		if !ok {
 			cfg, ok = sm.cfgMgr.GetService(curID)
 			if !ok {
+				sm.log.Debug().Str("service_id", curID).Msg("no config found while assigning service configs")
+
 				continue
 			}
 		}
@@ -145,6 +145,20 @@ func (sm *serviceManager) assignConfigs() error {
 		if err != nil {
 			return fmt.Errorf("failed to set config for %q: %w", curID, err)
 		}
+
+		if receiver, ok := svc.(goboottypes.LoggerSettingsReceiver); ok {
+			loggerCfg, found := sm.cfgMgr.GetService(goboottypes.ServiceNameBaseLogger)
+			if found {
+				provider, providerOK := loggerCfg.(goboottypes.LoggerSettingsProvider)
+				if !providerOK {
+					return fmt.Errorf("logger config %q does not provide logger settings", goboottypes.ServiceNameBaseLogger)
+				}
+
+				receiver.SetLoggerSettings(provider.LoggerSettings())
+			}
+		}
+
+		sm.log.Debug().Str("service_id", curID).Msg("service configuration assigned")
 	}
 
 	return nil
@@ -174,58 +188,88 @@ func (sm *serviceManager) isSubsequentService(id string) bool {
 
 // runPriorServices executes configured prior-phase services.
 func (sm *serviceManager) runPriorServices() error {
-	for _, serviceID := range sm.priorServiceIDs {
+	return sm.runOrderedServices(sm.priorServiceIDs, "prior")
+}
+
+// runSubsequentServices executes configured subsequent-phase services.
+func (sm *serviceManager) runSubsequentServices() error {
+	return sm.runOrderedServices(sm.subsequentServiceIDs, "subsequent")
+}
+
+func (sm *serviceManager) runOrderedServices(serviceIDs []string, phase string) error {
+	for _, serviceID := range serviceIDs {
 		svc, okay := sm.services[serviceID]
 		if !okay {
-			fmt.Printf("Service %q skipped (not registered)\n", serviceID)
+			sm.log.Debug().Str("service_id", serviceID).Str("phase", phase).Msg("service skipped because it is not registered")
 
 			continue
 		}
 
-		_, ok := sm.cfgMgr.GetRegistrar(serviceID)
-		if !ok {
-			_, ok = sm.cfgMgr.GetService(serviceID)
-			if !ok {
-				fmt.Printf("Prior Service %q skipped (no configuration loaded)\n", serviceID)
+		if !sm.hasConfig(serviceID) {
+			sm.log.Debug().
+				Str("service_id", serviceID).
+				Str("phase", phase).
+				Msg("service skipped because no configuration was loaded")
 
-				continue
-			}
+			continue
 		}
 
-		err := svc.Run()
+		err := sm.runService(serviceID, svc, phase+" service")
 		if err != nil {
-			return fmt.Errorf("failed to run service %q: %w", serviceID, err)
+			return err
 		}
 	}
 
 	return nil
 }
 
-// runSubsequentServices executes configured subsequent-phase services.
-func (sm *serviceManager) runSubsequentServices() error {
-	for _, serviceID := range sm.subsequentServiceIDs {
-		svc, okay := sm.services[serviceID]
-		if !okay {
-			fmt.Printf("Service %q skipped (not registered)\n", serviceID)
+func (sm *serviceManager) hasConfig(serviceID string) bool {
+	_, registrarFound := sm.cfgMgr.GetRegistrar(serviceID)
+	if registrarFound {
+		return true
+	}
 
-			continue
-		}
+	_, serviceFound := sm.cfgMgr.GetService(serviceID)
 
-		_, ok := sm.cfgMgr.GetRegistrar(serviceID)
-		if !ok {
-			_, ok = sm.cfgMgr.GetService(serviceID)
-			if !ok {
-				fmt.Printf("Subsequent Service %q skipped (no configuration loaded)\n", serviceID)
+	return serviceFound
+}
 
-				continue
-			}
-		}
+func (sm *serviceManager) injectRegistrars(serviceID string, svc Service) {
+	receiver, receivesScripts := svc.(goboottypes.ScriptReceiver)
+	if receivesScripts {
+		registrar, hasRegistrar := sm.services[goboottypes.ServiceNameBaseLocal].(goboottypes.Registrar)
+		if hasRegistrar {
+			sm.log.Debug().Str("service_id", serviceID).Msg("injecting script registrar")
 
-		err := svc.Run()
-		if err != nil {
-			return fmt.Errorf("failed to run service %q: %w", serviceID, err)
+			receiver.SetScriptReceiver(registrar)
 		}
 	}
+
+	ciReceiver, receivesCI := svc.(goboottypes.CIReceiver)
+	if receivesCI {
+		registrar, hasRegistrar := sm.services[goboottypes.ServiceNameBaseCI].(goboottypes.Registrar)
+		if hasRegistrar {
+			sm.log.Debug().Str("service_id", serviceID).Msg("injecting CI registrar")
+
+			ciReceiver.SetCIReceiver(registrar)
+		}
+	}
+}
+
+func (sm *serviceManager) runService(serviceID string, svc Service, label string) error {
+	sm.log.Info().Str("service_id", serviceID).Msg("running " + label)
+
+	start := time.Now()
+
+	err := svc.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run service %q: %w", serviceID, err)
+	}
+
+	sm.log.Info().
+		Str("service_id", serviceID).
+		Int64("duration_ms", time.Since(start).Milliseconds()).
+		Msg(label + " completed")
 
 	return nil
 }

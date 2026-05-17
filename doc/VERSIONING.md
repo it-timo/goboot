@@ -21,9 +21,10 @@ layered rollout of features, tooling, and project hygiene.
 | `v0.0.x`      | Structural core: services, config, linting, testing, FS safety |
 | `v0.1.x`      | CI/CD & infrastructure: pipelines, release flow, templates     |
 | `v0.2.x`      | Packaging: Docker images, release artifacts                    |
-| `v0.3.x`      | Contribution: issue templates, governance, community docs      |
-| `v0.4.x`      | Supply chain & security checks                                 |
-| `v0.5.x`      | Benchmarking & performance                                     |
+| `v0.3.x`      | Template profiles and profile-aware scaffolding                |
+| `v0.4.x`      | Governance: contribution workflow, CODEOWNERS, security docs   |
+| `v0.5.x`      | Supply chain & security checks                                 |
+| `v0.6.x`      | Benchmarking & performance                                     |
 | `v1.0.0`+     | Stable public CLI with backward compatibility guarantees       |
 
 The project intentionally uses `v0.x.x` **to incrementally ship working layers** —

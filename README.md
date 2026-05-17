@@ -1,9 +1,12 @@
 # goboot
 
-A modular, versioned starting point for production-grade Go projects.
+A modular, versioned scaffold for reproducible Go project generation.
 
 [![License](https://img.shields.io/github/license/it-timo/goboot)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/it-timo/goboot?include_prereleases)](https://github.com/it-timo/goboot/releases)
+[![Test](https://github.com/it-timo/goboot/actions/workflows/test.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
+[![Lint](https://github.com/it-timo/goboot/actions/workflows/lint.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/lint.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/it-timo/goboot/main/badges/coverage.json)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
 
 ---
 
@@ -17,10 +20,12 @@ clear service boundaries, and auditable generation behavior.
 
 ---
 
-## 📁 Current State (v0.1.0)
+## 📁 Current State
 
-`v0.1.0` is the CI foundation milestone with provider-aware CI generation
-and policy-based image pinning.
+`v0.1.1` is the structured logging and release-hardening milestone.
+It builds on the `v0.1.0` CI foundation with provider-aware CI generation,
+policy-based image pinning, refreshed tool versions, stronger config guardrails,
+and explicit generated-project logger settings.
 
 ### Core Capabilities
 
@@ -30,7 +35,8 @@ and policy-based image pinning.
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
 - **CI Generation**: GitLab and GitHub CI templates generated from explicit contracts and image policies.
-
+- **Logger-Aware Scaffolding**: Generated projects can use `slog` or `zerolog`
+through explicit settings owned by the project templates.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -51,22 +57,19 @@ You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 
 ### Requirements
 
-- [Go 1.25+](https://go.dev/doc/install)
-- [Make](https://www.gnu.org/software/make/) (optional, for `Makefile` tasks)
-- [Task](https://taskfile.dev) (optional, for `Taskfile.yml` tasks)
-- [GolangCI-Lint](https://golangci-lint.run/) (for Go linting, see `.golangci.yml`)
-- [Yamllint](https://yamllint.readthedocs.io/) (for YAML linting, see `.yamllint.yaml`)
-- [Checkmake](https://github.com/mrtazz/checkmake) (for Makefile linting)
-- [Docker](https://www.docker.com/) (for running Markdown linting via container)
-- [act](https://github.com/nektos/act) (for local GitHub Actions simulation)
-- [gitlab-ci-local](https://github.com/firecow/gitlab-ci-local) (for local GitLab CI simulation)
-- [Markdownlint](https://github.com/DavidAnson/markdownlint) (for Markdown linting, see `.markdownlint.yaml`)
-- [EditorConfig Checker](https://github.com/editorconfig-checker/editorconfig-checker) (for `.editorconfig` validation)
+- [Go 1.26+](https://go.dev/doc/install)
+- [Make](https://www.gnu.org/software/make/) for `make` targets
+- [Task](https://taskfile.dev) for `task` targets and full `verify_intro`
+- [Docker](https://www.docker.com/) for containerized lint tooling
 
-For `make verify_ci_canary`, Docker daemon access
-(including `/var/run/docker.sock`) and a non-restricted host runtime are required.
-Provider selection for canary checks defaults to `gitProvider` in `configs/goboot.yml`
-and can be overridden with `./scripts/verify_ci_canary.sh --provider=<github|gitlab|both>`.
+Lint tools such as GolangCI-Lint, Yamllint, Checkmake, Markdownlint, ShellCheck,
+shfmt, and EditorConfig Checker run from pinned container images by default.
+
+For `make verify_ci_canary`, [act](https://github.com/nektos/act),
+[gitlab-ci-local](https://github.com/firecow/gitlab-ci-local), Docker daemon access
+(including `/var/run/docker.sock`), and a non-restricted host runtime are required.
+The Make/Task canary targets run both providers. Direct script runs can override
+provider selection with `./scripts/verify_ci_canary.sh --provider=<github|gitlab|both|config>`.
 
 ### Clone and Explore
 

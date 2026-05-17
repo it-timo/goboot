@@ -21,6 +21,7 @@ Coverage and test style need clear repository-wide expectations.
 
 - Use Ginkgo/Gomega across packages.
 - Maintain package-level coverage expectations for critical paths.
+- Enforce the root overall coverage gate in canonical test entry points.
 - Exercise real filesystem behavior for root/path/template flows.
 - Prefer table-style specs for permutation-heavy logic.
 

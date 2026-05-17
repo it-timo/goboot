@@ -21,6 +21,7 @@ var _ = Describe("BaseProject Service", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baseproject-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -31,7 +32,7 @@ var _ = Describe("BaseProject Service", func() {
 			ProjectName:           "testproject",
 			ProjectURL:            "https://github.com/test/testproject",
 			RepoPath:              "github.com/test/testproject",
-			UsedGoVersion:         "1.22.0",
+			UsedGoVersion:         "1.26.3",
 			UsedNodeVersion:       "20.0.0",
 			ReleaseCurrentWindow:  "Q1 2025",
 			ReleaseUpcomingWindow: "Q2 2025",
@@ -75,6 +76,7 @@ var _ = Describe("BaseProject Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -115,6 +117,16 @@ var _ = Describe("BaseProject Service", func() {
 				err := baseProj.SetConfig(validConfig)
 				Expect(err).To(HaveOccurred())
 			})
+
+			It("returns an error when source is the final project root", func() {
+				projectRoot := filepath.Join(tempDir, validConfig.ProjectName)
+				Expect(os.MkdirAll(projectRoot, 0o755)).To(Succeed())
+
+				validConfig.SourcePath = projectRoot
+				err := baseProj.SetConfig(validConfig)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("project root"))
+			})
 		})
 	})
 
@@ -133,7 +145,7 @@ var _ = Describe("BaseProject Service", func() {
 				ProjectName:           "testproject",
 				ProjectURL:            "https://github.com/test/testproject",
 				RepoPath:              "github.com/test/testproject",
-				UsedGoVersion:         "1.22.0",
+				UsedGoVersion:         "1.26.3",
 				UsedNodeVersion:       "20.0.0",
 				ReleaseCurrentWindow:  "Q1 2025",
 				ReleaseUpcomingWindow: "Q2 2025",
@@ -149,6 +161,7 @@ var _ = Describe("BaseProject Service", func() {
 
 		BeforeEach(func() {
 			var err error
+
 			sourceDir, err = os.MkdirTemp("", "bp-source-*")
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -172,6 +185,7 @@ var _ = Describe("BaseProject Service", func() {
 			targetRoot := filepath.Join(tempDir, cfg.ProjectName)
 			renderedPath := filepath.Join(targetRoot, "cmd", cfg.LowerProjectName, "main.go")
 			Expect(renderedPath).To(BeAnExistingFile())
+
 			readme := filepath.Join(targetRoot, "README.md")
 			Expect(readme).To(BeAnExistingFile())
 

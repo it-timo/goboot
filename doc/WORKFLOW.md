@@ -51,12 +51,12 @@ chore: Prepare v0.0.1 release tag
 ## 📦 Releases (Manual for Now)
 
 1. Complete and test the milestone
-2. Update `ROADMAP.md` and optionally `CHANGELOG.md`
+2. Update `.version`, `ROADMAP.md`, and release-facing docs
 3. Create annotated tag:
 
   ```bash
-  git tag v0.1.0 -m "Release v0.1.0 — Adds CI foundation and provider-aware generation"
-  git push origin v0.1.0
+  git tag v0.1.1 -m "Release v0.1.1 — Adds structured logging and release hardening"
+  git push origin v0.1.1
   ```
 
 ---

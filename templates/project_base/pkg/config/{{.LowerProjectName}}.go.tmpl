@@ -4,8 +4,10 @@ Package config defines the configuration structures used by {{.ProjectName}}.
 package config
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +17,8 @@ import (
 
 // {{.ProjectName}}Config defines the configuration structure for {{.ProjectName}}.
 type {{.ProjectName}}Config struct {
-	// configPath is the path to the main {{.ProjectName}} YAML config file (e.g., ./configs/{{.LowerProjectName}}.yml).
+	// configPath is the path to the main {{.ProjectName}} YAML config file.
+	// Example: ./configs/{{.LowerProjectName}}.yml.
 	configPath string `yaml:"-"`
 	// SomeVar is a placeholder for a configuration variable.
 	SomeVar string `yaml:"someVar"`
@@ -62,8 +65,11 @@ func (cfg *{{.ProjectName}}Config) Init() error {
 		return fmt.Errorf("failed to read config file %q: %w", cfg.configPath, err)
 	}
 
-	err = yaml.Unmarshal(data, cfg)
-	if err != nil {
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+
+	err = decoder.Decode(cfg)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 

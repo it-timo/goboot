@@ -20,6 +20,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "goboot-config-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -53,7 +54,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 			gb := config.NewGoBoot(configPath)
 			err = gb.Init()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(gb.ProjectName).To(Equal("from-custom-path"))
+			Expect(gb.ProjectName).To(Equal("FromCustomPath"))
 			Expect(gb.TargetPath).To(Equal("/tmp/from-custom"))
 		})
 	})
@@ -89,7 +90,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 			It("populates project name", func() {
 				err := goBoot.Init()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(goBoot.ProjectName).To(Equal("testproject"))
+				Expect(goBoot.ProjectName).To(Equal(testProjectName))
 			})
 
 			It("populates target path", func() {
@@ -129,6 +130,24 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 				Expect(err).To(HaveOccurred())
 			})
 
+			It("returns error for unknown root YAML fields", func() {
+				yamlContent := []byte("projectName: \"TestProject\"\n" +
+					"targetPath: \"/tmp/test\"\n" +
+					"repoUrl: \"https://github.com/test/testproject\"\n" +
+					"gitProvider: \"github\"\n" +
+					"projectNmae: \"typo\"\n" +
+					"services: []\n")
+
+				err := os.WriteFile(configPath, yamlContent, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				goBoot = config.NewGoBoot(configPath)
+				err = goBoot.Init()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("failed to read goboot config"))
+				Expect(err.Error()).To(ContainSubstring("field projectNmae not found"))
+			})
+
 			It("returns error when required base fields are missing", func() {
 				yamlContent, err := loadTestFixture("config/goboot/missing_required_fields.yml")
 				Expect(err).NotTo(HaveOccurred())
@@ -155,6 +174,30 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("services[base_project].confPath"))
 			})
+
+			DescribeTable("returns error when projectName is not a safe Go scaffold identifier",
+				func(projectName string) {
+					yamlContent := []byte("projectName: \"" + projectName + "\"\n" +
+						"targetPath: \"/tmp/test\"\n" +
+						"repoUrl: \"https://github.com/test/testproject\"\n" +
+						"gitProvider: \"github\"\n" +
+						"services: []\n")
+
+					err := os.WriteFile(configPath, yamlContent, 0644)
+					Expect(err).NotTo(HaveOccurred())
+
+					goBoot = config.NewGoBoot(configPath)
+					err = goBoot.Init()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("projectName"))
+				},
+				Entry("path traversal", "../outside"),
+				Entry("hyphen", "cli-project"),
+				Entry("space", "my project"),
+				Entry("leading digit", "123app"),
+				Entry("punctuation", "app!"),
+				Entry("leading whitespace", " app"),
+			)
 		})
 
 		Context("with disabled services", func() {
@@ -247,6 +290,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 					"BASE_LINT_PATH":    filepath.Join(tempDir, "base_lint.yml"),
 					"BASE_LOCAL_PATH":   filepath.Join(tempDir, "base_local.yml"),
 					"BASE_TEST_PATH":    filepath.Join(tempDir, "base_test.yml"),
+					"BASE_LOGGER_PATH":  filepath.Join(tempDir, "base_logger.yml"),
 					"BASE_CI_PATH":      filepath.Join(tempDir, "base_ci.yml"),
 				})
 				Expect(err).NotTo(HaveOccurred())
@@ -289,6 +333,13 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 				err = os.WriteFile(filepath.Join(tempDir, "base_ci.yml"), ciConfig, 0644)
 				Expect(err).NotTo(HaveOccurred())
 
+				// Create base_logger config
+				loggerConfig, err := loadTestFixture("config/goboot/multiple_base_logger.yml")
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(tempDir, "base_logger.yml"), loggerConfig, 0644)
+				Expect(err).NotTo(HaveOccurred())
+
 				goBoot = config.NewGoBoot(configPath)
 			})
 
@@ -314,6 +365,10 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 
 				// Check base_ci (service)
 				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseCI)
+				Expect(exist).To(BeTrue())
+
+				// Check base_logger (service)
+				_, exist = goBoot.ConfManager.GetService(goboottypes.ServiceNameBaseLogger)
 				Expect(exist).To(BeTrue())
 			})
 		})
@@ -344,7 +399,7 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 
 				testCfg, ok := rawCfg.(*config.BaseTestConfig)
 				Expect(ok).To(BeTrue())
-				Expect(testCfg.ProjectName).To(Equal("testproject"))
+				Expect(testCfg.ProjectName).To(Equal(testProjectName))
 				Expect(testCfg.RepoImportPath).To(Equal("github.com/user/testproject"))
 				Expect(testCfg.TestCMD).To(Equal(goboottypes.DefaultGoTestCMD))
 				Expect(testCfg.UseStyle).To(Equal(goboottypes.TestStyleGinkgo))

@@ -8,18 +8,34 @@ Errors during any stage cause early termination.
 package main
 
 import (
+{{- if .Logger.Enabled }}
+	"errors"
+{{- end }}
 	"flag"
 	"fmt"
 	"io"
+{{- if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	"log/slog"
+{{- end }}
 	"os"
+{{- if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	"strings"
+{{- end }}
 
 	"{{.RepoPath}}/pkg/config"
 	"{{.RepoPath}}/pkg/{{.LowerProjectName}}"
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+{{- end }}
 )
 
 var (
 	exitFunc               = os.Exit
 	outputWriter io.Writer = os.Stdout
+{{- if .Logger.Enabled }}
+	errInvalidLogLevel     = errors.New("invalid --log-level value")
+{{- end }}
 )
 
 // writef writes to outputWriter. If that fails, it falls back to fmt.Println.
@@ -27,9 +43,33 @@ var (
 func writef(format string, a ...any) {
 	_, err := fmt.Fprintf(outputWriter, format, a...)
 	if err != nil {
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+		log.Error().Err(err).Msg("failed to write to CLI output")
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+		slog.Error("failed to write to CLI output", "error", err)
+{{- else }}
 		fmt.Println("Failed to write to output:", err)
+{{- end }}
 	}
 }
+
+{{- if and .Logger.Enabled (eq .Logger.Type "slog") }}
+
+func parseLogLevel(raw string) (slog.Level, error) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "debug":
+		return slog.LevelDebug, nil
+	case "info":
+		return slog.LevelInfo, nil
+	case "warn", "warning":
+		return slog.LevelWarn, nil
+	case "error":
+		return slog.LevelError, nil
+	default:
+		return slog.LevelInfo, fmt.Errorf("%w %q (allowed: debug, info, warn, error)", errInvalidLogLevel, raw)
+	}
+}
+{{- end }}
 
 // run executes CLI setup, config initialization, and app execution.
 func run(args []string) error {
@@ -37,8 +77,22 @@ func run(args []string) error {
 	flagSet := flag.NewFlagSet("{{.LowerProjectName}}", flag.ContinueOnError)
 	flagSet.SetOutput(outputWriter) // keep flag parsing output testable
 
-	var configPath string
-	flagSet.StringVar(&configPath, "config", "./configs/{{.LowerProjectName}}.yml", "Path to the {{.LowerProjectName}} config file")
+	var (
+		configPath string
+{{- if .Logger.Enabled }}
+		logLevel   string
+{{- end }}
+	)
+
+	flagSet.StringVar(
+		&configPath,
+		"config",
+		"./configs/{{.LowerProjectName}}.yml",
+		"Path to the {{.LowerProjectName}} config file",
+	)
+{{- if .Logger.Enabled }}
+	flagSet.StringVar(&logLevel, "log-level", "info", "Log level: debug|info|warn|error")
+{{- end }}
 
 	flagSet.Usage = func() {
 		writef("Usage: %s [flags]\n\nFlags:\n", flagSet.Name())
@@ -50,6 +104,30 @@ func run(args []string) error {
 		return fmt.Errorf("failed to parse flags: %w", err)
 	}
 
+{{ if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	level, err := zerolog.ParseLevel(logLevel)
+	if err != nil {
+		return fmt.Errorf("%w %q (allowed: debug, info, warn, error)", errInvalidLogLevel, logLevel)
+	}
+
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("app", "{{.LowerProjectName}}").Logger()
+	log.Logger = logger
+
+	zerolog.SetGlobalLevel(level)
+	logger.Info().Str("log_level", logLevel).Msg("logger configured")
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	level, err := parseLogLevel(logLevel)
+	if err != nil {
+		return err
+	}
+
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+		Level: level,
+	})).With("app", "{{.LowerProjectName}}")
+	slog.SetDefault(logger)
+	logger.Info("logger configured", "log_level", logLevel)
+{{- end }}
+
 	// Step 1: Load and validate {{.ProjectName}} configuration from YAML.
 	cfg := config.New{{.ProjectName}}Config(configPath)
 
@@ -59,10 +137,22 @@ func run(args []string) error {
 	}
 
 	// Avoid dumping cfg (secrets / unstable output). Print only what’s safe & useful.
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	logger.Info().Str("config_path", configPath).Msg("configuration loaded")
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	logger.Info("configuration loaded", "config_path", configPath)
+{{- else }}
 	writef("Config loaded: %s\n", configPath)
+{{- end }}
 
 	// Step 2: Create a new {{.ProjectName}} application instance.
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	app := {{.LowerProjectName}}.New{{.ProjectName}}(cfg, logger.With().Str("component", "service").Logger())
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	app := {{.LowerProjectName}}.New{{.ProjectName}}(cfg, logger.With("component", "service"))
+{{- else }}
 	app := {{.LowerProjectName}}.New{{.ProjectName}}(cfg)
+{{- end }}
 
 	// Step 3: Execute application logic.
 	err = app.Run()
@@ -70,12 +160,23 @@ func run(args []string) error {
 		return fmt.Errorf("failed to run {{.ProjectName}}: %w", err)
 	}
 
+{{ if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	logger.Info().Msg("application run completed")
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	logger.Info("application run completed")
+{{- end }}
+
 	return nil
 }
 
 func main() {
 	err := run(os.Args[1:])
 	if err != nil {
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+		log.Error().Err(err).Msg("application failed")
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+		slog.Error("application failed", "error", err)
+{{- end }}
 		writef("%s\n", err)
 		exitFunc(1)
 	}

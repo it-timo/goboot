@@ -58,8 +58,6 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ### v0.1.0 — CI/CD Foundation (Released)
 
-Current release.
-
 **Focus:** reproducible automation
 
 - CI pipeline for goboot itself
@@ -69,15 +67,24 @@ Current release.
 
 ---
 
-## In Progress
+### v0.1.1 — Structured Logging & Release Hardening (Released)
 
-### v0.1.1 — Structured Logging
+Current release.
 
 **Focus:** observability without noise
 
 - Replace `fmt` usage with structured logging
 - Configurable logging in generated projects
 - ADR update for log handling
+- Refreshed Go, tool, action, and Docker image versions
+- Stronger config validation and generated-output guardrails
+- Release checks aligned across Make, Task, pre-commit, and CI canaries
+
+---
+
+## In Progress
+
+No active milestone is marked in progress in this tree.
 
 ## Planned Milestones
 

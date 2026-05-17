@@ -15,6 +15,7 @@ import (
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 	"github.com/it-timo/goboot/pkg/gobootutils"
+	"github.com/rs/zerolog"
 )
 
 // BaseCI generates CI files from templates plus registered job commands.
@@ -22,6 +23,7 @@ type BaseCI struct {
 	cfg       *config.BaseCIConfig // Validated service configuration.
 	targetDir string               // Destination path for rendered files.
 	root      *os.Root             // Secure a root handle for safe file writes.
+	log       zerolog.Logger
 	ciRegistry
 	staticFiles []string
 }
@@ -43,12 +45,18 @@ type ciRegistry struct {
 func NewBaseCI(targetDir string) *BaseCI {
 	return &BaseCI{
 		targetDir: targetDir,
+		log:       zerolog.Nop(),
 		ciRegistry: ciRegistry{
 			JobScripts:       make(map[string][]string),
 			FileScripts:      make(map[string][]string),
 			FileAllowFailure: make(map[string]bool),
 		},
 	}
+}
+
+// SetLogger injects the service-specific logger.
+func (b *BaseCI) SetLogger(logger zerolog.Logger) {
+	b.log = logger
 }
 
 // ID returns the service identifier.
@@ -71,6 +79,11 @@ func (b *BaseCI) SetConfig(cfg config.ServiceConfig) error {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
 
+	err = gobootutils.ComparePaths(b.cfg.SourcePath, filepath.Join(b.targetDir, b.cfg.ProjectName), true)
+	if err != nil {
+		return fmt.Errorf("failed path comparison of src and project root: %w", err)
+	}
+
 	err = gobootutils.EnforceTemplateSourceLimits(
 		filepath.Join(b.cfg.SourcePath, strings.ToLower(strings.TrimSpace(b.cfg.GitProvider))),
 		goboottypes.MaxTemplateSourceFiles,
@@ -85,6 +98,11 @@ func (b *BaseCI) SetConfig(cfg config.ServiceConfig) error {
 
 // Run renders provider CI files into the generated project.
 func (b *BaseCI) Run() error {
+	b.log.Info().
+		Str("project_name", b.cfg.ProjectName).
+		Str("git_provider", b.cfg.GitProvider).
+		Msg("running base_ci service")
+
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
@@ -93,7 +111,7 @@ func (b *BaseCI) Run() error {
 	defer func() {
 		err := curRoot.Close()
 		if err != nil {
-			fmt.Println("Failed to close root dir:", err)
+			b.log.Error().Err(err).Msg("failed to close root dir")
 		}
 	}()
 
@@ -121,6 +139,8 @@ func (b *BaseCI) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to copy files: %w", err)
 	}
+
+	b.log.Info().Int("job_file_count", len(b.EnabledJobFiles)).Msg("base_ci service completed")
 
 	return nil
 }
@@ -166,15 +186,15 @@ func (b *BaseCI) normalizeCommandsForPolicy() {
 
 func strictCommandReplacement(cmd string) string {
 	replacer := strings.NewReplacer(
-		"golangci/golangci-lint:v2.7.2", "$GOLANGCI_LINT_IMAGE",
+		"golangci/golangci-lint:v2.12.2", "$GOLANGCI_LINT_IMAGE",
 		"pipelinecomponents/yamllint:0.35.9", "$YAMLLINT_IMAGE",
-		"ghcr.io/igorshubovych/markdownlint-cli:v0.47.0", "$MARKDOWNLINT_IMAGE",
+		"ghcr.io/igorshubovych/markdownlint-cli:v0.48.0", "$MARKDOWNLINT_IMAGE",
 		"cytopia/checkmake:latest-0.5", "$CHECKMAKE_IMAGE",
 		"koalaman/shellcheck:v0.11.0", "$SHELLCHECK_IMAGE",
-		"cytopia/shellcheck:latest-0.8.0", "$SHELLCHECK_IMAGE",
-		"mvdan/shfmt:v3.12.0", "$SHFMT_IMAGE",
-		"cytopia/shfmt:latest-1.10", "$SHFMT_IMAGE",
-		"mstruebing/editorconfig-checker:v3.6.0", "$EDITORCONFIG_CHECKER_IMAGE",
+		"koalaman/shellcheck:v0.11.0", "$SHELLCHECK_IMAGE",
+		"mvdan/shfmt:v3.13.1", "$SHFMT_IMAGE",
+		"mvdan/shfmt:v3.13.1", "$SHFMT_IMAGE",
+		"mstruebing/editorconfig-checker:v3.6.1", "$EDITORCONFIG_CHECKER_IMAGE",
 	)
 
 	return replacer.Replace(cmd)
@@ -261,15 +281,9 @@ func (b *BaseCI) copyFile(relPath string) error {
 		return fmt.Errorf("failed to ensure directory %q: %w", filepath.Dir(relPath), err)
 	}
 
-	dstFile, err := b.root.Create(relPath)
+	err = gobootutils.WriteRootFile(b.root, relPath, content, goboottypes.FilePerm)
 	if err != nil {
-		return fmt.Errorf("failed to create file %q in root: %w", relPath, err)
-	}
-	defer gobootutils.CloseFileWithErr(dstFile)
-
-	_, err = dstFile.Write(content)
-	if err != nil {
-		return fmt.Errorf("failed to write file %q: %w", relPath, err)
+		return fmt.Errorf("failed to write template file %q: %w", relPath, err)
 	}
 
 	err = gobootutils.RenderTemplateToFile("ci_file", b.root, relPath, b.ciRegistry)

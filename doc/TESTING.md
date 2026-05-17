@@ -6,12 +6,16 @@ goboot uses **Ginkgo v2** and **Gomega** for BDD-style tests across packages.
 
 ## Coverage Targets
 
-The project enforces strict quality gates to ensure long-term maintainability:
+The project reports coverage during local and CI test runs and enforces the
+root overall threshold in Make, Task, script, GitHub, and GitLab test paths:
 
-- **Overall project coverage**: >80%
-- **Critical services** (`baseproject`, `config`, `goboot`): >90%
-- **Helpers & Utils**: >85%
+- **Overall project coverage gate**: >=80%
+- **Critical services target** (`baseproject`, `config`, `goboot`): >90%
+- **Helpers & Utils target**: >85%
 - **All tests**: Must pass with `-race` enabled
+
+Package-level thresholds remain targets until the critical-service baseline is
+high enough to enforce without encouraging low-value tests.
 
 ## Running Tests
 
@@ -58,27 +62,47 @@ go test -v ./pkg/goboottypes
 go test -v ./pkg/config
 ```
 
-### Updating Golden Digests (E2E)
+### Updating Generated Output Assertions (E2E)
 
-`cmd/goboot/main_e2e_test.go` contains deterministic digest assertions for
+`cmd/goboot/main_e2e_test.go` contains deterministic shape/content assertions for
 selected generated outputs.
 
 Update them only when output changes are intentional.
 
 ```bash
-# Run the relevant E2E specs and read the failing digest from test output
+# Run the relevant E2E specs and review failing output assertions
 go test ./cmd/goboot -ginkgo.focus "scaffolds a full project|supports go-style tests|generates deterministic output"
 
-# After updating expected digest constants, verify everything
+# After updating expected shape/content assertions, verify everything
 go test ./...
 make lint
 ```
 
 Rules:
 
-- Do not update digest constants to "make tests pass" without reviewing file diffs.
 - Confirm the changed generated files match the intended contract/policy changes.
-- Keep digest inputs stable (the tests intentionally hash a fixed high-signal file set).
+- Keep deterministic assertions focused on stable, high-signal generated files.
+
+### Generated Project Matrix
+
+`make verify_intro` regenerates representative Intro projects and validates them as
+real generated repositories in a temporary output directory. The matrix currently
+covers:
+
+- Ginkgo tests + `slog` + GitLab CI
+- stdlib Go tests + `slog` + GitLab CI
+- Ginkgo tests + `zerolog` + GitLab CI
+- stdlib Go tests + `zerolog` + GitLab CI
+- stdlib Go tests + `slog` + GitHub CI
+
+Each generated project runs its own `make test`, `make lint`, `scripts/test.sh`,
+and `scripts/lint.sh`. That wrapper repetition is intentional: it proves that
+the generated Makefile, Taskfile, and scripts stay aligned. The verifier also
+checks provider-specific CI files, test style, and logger implementation.
+
+Generated project tests are scaffold smoke tests. They prove the generated
+repository compiles and its own commands run; domain-specific behavior belongs
+to the application that is built on top of the scaffold.
 
 ## Test Organization
 
@@ -229,12 +253,11 @@ func (m *mockService) Run() error {
 }
 ```
 
-## Coverage Goals
+## Coverage Policy
 
-- **Overall Project**: 80%+
-- **Critical Packages** (utils, config): 90%+
-- **Type Packages**: 85%+
-- **Service Packages**: 80%+
+The enforced gate is the root overall >=80% coverage threshold described above.
+Package-level values are non-blocking targets until they can be enforced without
+encouraging low-value tests.
 
 ## Continuous Integration
 

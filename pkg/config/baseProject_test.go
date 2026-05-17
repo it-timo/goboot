@@ -25,7 +25,7 @@ var _ = Describe("BaseProjectConfig", func() {
 			ProjectURL:            testPath,
 			RepoPath:              "github.com/user/testproject",
 			ProjectName:           "testproject",
-			UsedGoVersion:         "1.22.0",
+			UsedGoVersion:         "1.26.3",
 			UsedNodeVersion:       "20.11.0",
 			ReleaseCurrentWindow:  "Q1 2025",
 			ReleaseUpcomingWindow: "Q3 2025",
@@ -36,6 +36,7 @@ var _ = Describe("BaseProjectConfig", func() {
 		}
 
 		var err error
+
 		tempDir, err = os.MkdirTemp("", "baseproject-test-*")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -186,6 +187,22 @@ var _ = Describe("BaseProjectConfig", func() {
 			)
 		})
 
+		Context("with invalid project names", func() {
+			DescribeTable("rejects names that cannot safely map to Go packages and output paths",
+				func(projectName string) {
+					baseProject.ProjectName = projectName
+					err := baseProject.Validate()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("projectName"))
+				},
+				Entry("path traversal", "../outside"),
+				Entry("hyphen", "cli-project"),
+				Entry("space", "my project"),
+				Entry("leading digit", "123app"),
+				Entry("underscore", "my_project"),
+			)
+		})
+
 		//nolint:dupl // Accept duplicated logic for clarity and extensibility.
 		Context("when filling derived fields", func() {
 			It("converts projectName to uppercase for CapsProjectName", func() {
@@ -242,6 +259,7 @@ var _ = Describe("BaseProjectConfig", func() {
 				newConfig := &config.BaseProjectConfig{}
 				err = newConfig.ReadConfig(configPath, testPath, goboottypes.GitProviderGitHub)
 				Expect(err).NotTo(HaveOccurred())
+
 				newConfig.ProjectName = "testproject"
 				Expect(newConfig.Validate()).To(Succeed())
 
@@ -249,7 +267,7 @@ var _ = Describe("BaseProjectConfig", func() {
 				Expect(newConfig.ProjectURL).To(Equal(testPath))
 				Expect(newConfig.RepoPath).To(Equal("github.com/user/testproject"))
 				Expect(newConfig.ProjectName).To(Equal("testproject"))
-				Expect(newConfig.UsedGoVersion).To(Equal("1.22.5"))
+				Expect(newConfig.UsedGoVersion).To(Equal("1.26.3"))
 				Expect(newConfig.UsedNodeVersion).To(Equal("20.12.0"))
 				Expect(newConfig.ReleaseCurrentWindow).To(Equal("Q2 2025"))
 				Expect(newConfig.ReleaseUpcomingWindow).To(Equal("Q4 2025"))
@@ -270,6 +288,7 @@ var _ = Describe("BaseProjectConfig", func() {
 				newConfig := &config.BaseProjectConfig{}
 				err = newConfig.ReadConfig(configPath, testPath, goboottypes.GitProviderGitLab)
 				Expect(err).NotTo(HaveOccurred())
+
 				newConfig.ProjectName = "project"
 				Expect(newConfig.Validate()).To(Succeed())
 

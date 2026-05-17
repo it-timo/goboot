@@ -5,31 +5,71 @@ foundation for its primary features.
 package {{.LowerProjectName}}
 
 import (
+{{- if not .Logger.Enabled }}
 	"fmt"
+{{- else if eq .Logger.Type "slog" }}
+	"log/slog"
+{{- end }}
 
 	"{{.RepoPath}}/pkg/config"
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	"github.com/rs/zerolog"
+{{- end }}
 )
 
 // Service represents the core application service.
 type Service struct {
 	// cfg is the configuration for the service.
 	cfg *config.{{.ProjectName}}Config
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	log zerolog.Logger
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	log *slog.Logger
+{{- end }}
 }
 
 // New{{.ProjectName}} creates a new service instance.
 //
 // Validation is expected to have happened beforehand.
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+func New{{.ProjectName}}(cfg *config.{{.ProjectName}}Config, logger zerolog.Logger) *Service {
+	return &Service{
+		cfg: cfg,
+		log: logger,
+	}
+}
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+func New{{.ProjectName}}(cfg *config.{{.ProjectName}}Config, logger *slog.Logger) *Service {
+	return &Service{
+		cfg: cfg,
+		log: logger,
+	}
+}
+{{- else }}
 func New{{.ProjectName}}(cfg *config.{{.ProjectName}}Config) *Service {
 	return &Service{
 		cfg: cfg,
 	}
 }
+{{- end }}
 
 // Run executes the service.
 func (s *Service) Run() error {
+{{- if and .Logger.Enabled (eq .Logger.Type "zerolog") }}
+	s.log.Info().Str("some_var", s.cfg.SomeVar).Msg("service run started")
+	// Example behavior (replace with real logic in generated projects).
+	s.log.Debug().Str("some_var", s.cfg.SomeVar).Msg("service run example step")
+	s.log.Info().Msg("service run completed")
+{{- else if and .Logger.Enabled (eq .Logger.Type "slog") }}
+	s.log.Info("service run started", "some_var", s.cfg.SomeVar)
+	// Example behavior (replace with real logic in generated projects).
+	s.log.Debug("service run example step", "some_var", s.cfg.SomeVar)
+	s.log.Info("service run completed")
+{{- else }}
 	// Example behavior
 	// (replace with real logic in generated projects)
 	fmt.Printf("Service running with SomeVar=%q\n", s.cfg.SomeVar)
+{{- end }}
 
 	return nil
 }

@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 	"github.com/it-timo/goboot/pkg/gobootutils"
+	"github.com/rs/zerolog"
 )
 
 // BaseLocal renders local tooling files (Makefile/Taskfile/pre-commit/scripts).
@@ -19,6 +21,7 @@ type BaseLocal struct {
 	cfg       *config.BaseLocalConfig
 	targetDir string
 	root      *os.Root
+	log       zerolog.Logger
 	scriptRegistry
 }
 
@@ -35,6 +38,7 @@ type scriptRegistry struct {
 func NewBaseLocal(targetDir string) *BaseLocal {
 	return &BaseLocal{
 		targetDir: targetDir,
+		log:       zerolog.Nop(),
 		scriptRegistry: scriptRegistry{
 			MakeScripts:   make(map[string][]string),
 			TaskScripts:   make(map[string][]string),
@@ -42,6 +46,11 @@ func NewBaseLocal(targetDir string) *BaseLocal {
 			ScriptFiles:   make(map[string][]string),
 		},
 	}
+}
+
+// SetLogger injects the service-specific logger.
+func (b *BaseLocal) SetLogger(logger zerolog.Logger) {
+	b.log = logger
 }
 
 // ID returns the service identifier.
@@ -64,11 +73,18 @@ func (b *BaseLocal) SetConfig(cfg config.ServiceConfig) error {
 		return fmt.Errorf("failed path comparison of src and target: %w", err)
 	}
 
+	err = gobootutils.ComparePaths(b.cfg.SourcePath, filepath.Join(b.targetDir, b.cfg.ProjectName), true)
+	if err != nil {
+		return fmt.Errorf("failed path comparison of src and project root: %w", err)
+	}
+
 	return nil
 }
 
 // Run opens the target root and generates enabled local tooling files.
 func (b *BaseLocal) Run() error {
+	b.log.Info().Str("project_name", b.cfg.ProjectName).Msg("running base_local service")
+
 	curRoot, err := gobootutils.CreateRootDir(b.targetDir, b.cfg.ProjectName)
 	if err != nil {
 		return fmt.Errorf("failed to create root dir: %w", err)
@@ -77,7 +93,7 @@ func (b *BaseLocal) Run() error {
 	defer func() {
 		err := curRoot.Close()
 		if err != nil {
-			fmt.Println("Failed to close root dir:", err)
+			b.log.Error().Err(err).Msg("failed to close root dir")
 		}
 	}()
 
@@ -88,6 +104,8 @@ func (b *BaseLocal) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to copy files: %w", err)
 	}
+
+	b.log.Info().Msg("base_local service completed")
 
 	return nil
 }
@@ -143,6 +161,7 @@ func (b *BaseLocal) RegisterFile(name string, lines []string) error {
 }
 
 // copyFiles copies and renders all enabled local tooling outputs.
+//
 //nolint:cyclop // flat logic preferred for clarity and extensibility.
 func (b *BaseLocal) copyFiles() error {
 	for _, entry := range b.cfg.FileList {
@@ -202,23 +221,14 @@ func (b *BaseLocal) copyFile(srcPath, targetPath, fileName string) error {
 		fileName = path.Join(targetPath, fileName)
 	}
 
-	// Create and write a file into the secured target root.
-	dstFile, err := b.root.Create(fileName)
-	if err != nil {
-		return fmt.Errorf("failed to create file %q in root: %w", fileName, err)
-	}
-	defer gobootutils.CloseFileWithErr(dstFile)
-
-	_, err = dstFile.Write(content)
-	if err != nil {
-		return fmt.Errorf("failed to write file %q: %w", fileName, err)
-	}
-
+	filePerm := os.FileMode(goboottypes.FilePerm)
 	if targetPath == goboottypes.ScriptDirNameScript {
-		err = dstFile.Chmod(goboottypes.ScriptPerm)
-		if err != nil {
-			return fmt.Errorf("failed to set executable permissions on %q: %w", fileName, err)
-		}
+		filePerm = goboottypes.ScriptPerm
+	}
+
+	err = gobootutils.WriteRootFile(b.root, fileName, content, filePerm)
+	if err != nil {
+		return fmt.Errorf("failed to write template file %q: %w", fileName, err)
 	}
 
 	err = gobootutils.RenderTemplateToFile("script_file", b.root, fileName, b.scriptRegistry)

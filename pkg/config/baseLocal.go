@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -57,19 +58,24 @@ func (bl *BaseLocalConfig) Validate() error {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := validateProjectName(bl.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	return bl.validateFileList()
+}
+
+func (bl *BaseLocalConfig) validateFileList() error {
 	seen := make(map[string]struct{})
 	invalid := []string{}
 
 	for _, file := range bl.FileList {
 		trimmed := strings.TrimSpace(file)
-		if trimmed == "" {
-			invalid = append(invalid, "fileList contains blank entries")
 
-			continue
-		}
-
-		if _, exists := seen[trimmed]; exists {
-			invalid = append(invalid, "fileList contains duplicates")
+		err := validateLocalFileListEntry(trimmed, seen)
+		if err != nil {
+			invalid = append(invalid, err.Error())
 
 			continue
 		}
@@ -82,4 +88,24 @@ func (bl *BaseLocalConfig) Validate() error {
 	}
 
 	return nil
+}
+
+func validateLocalFileListEntry(entry string, seen map[string]struct{}) error {
+	if entry == "" {
+		return errors.New("fileList contains blank entries")
+	}
+
+	if _, exists := seen[entry]; exists {
+		return errors.New("fileList contains duplicates")
+	}
+
+	switch entry {
+	case goboottypes.ScriptNameMake,
+		goboottypes.ScriptNameTask,
+		goboottypes.ScriptNameScript,
+		goboottypes.ScriptNameCommit:
+		return nil
+	default:
+		return fmt.Errorf("fileList contains unsupported entry %q", entry)
+	}
 }

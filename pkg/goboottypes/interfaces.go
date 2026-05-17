@@ -20,3 +20,24 @@ type CIReceiver interface {
 	// SetCIReceiver injects the registrar used for CI registration.
 	SetCIReceiver(registrar Registrar)
 }
+
+// LoggerSettings describes the logger variant requested for generated project code.
+type LoggerSettings struct {
+	// Enabled reports whether generated runtime code should include logger wiring.
+	Enabled bool
+
+	// Type is the selected logger implementation.
+	Type string
+}
+
+// LoggerSettingsProvider exposes logger settings to file-owning services.
+type LoggerSettingsProvider interface {
+	// LoggerSettings returns validated logger generation settings.
+	LoggerSettings() LoggerSettings
+}
+
+// LoggerSettingsReceiver accepts logger settings before rendering owned files.
+type LoggerSettingsReceiver interface {
+	// SetLoggerSettings injects logger settings from base_logger.
+	SetLoggerSettings(settings LoggerSettings)
+}

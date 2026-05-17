@@ -54,6 +54,9 @@ type BaseProjectConfig struct {
 
 	// GitUser is the provider account/org used in generated links.
 	GitUser string `yaml:"gitUser"`
+
+	// Logger contains optional logger settings supplied by base_logger.
+	Logger goboottypes.LoggerSettings `yaml:"-"`
 }
 
 // newBaseProjectConfig creates a BaseProjectConfig with the given project name.
@@ -126,6 +129,11 @@ func (bp *BaseProjectConfig) Validate() error {
 
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
+	}
+
+	err := validateProjectName(bp.ProjectName)
+	if err != nil {
+		return err
 	}
 
 	bp.fillNeededInfos()

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -108,11 +107,9 @@ func ComparePaths(first, second string, forceDiffer bool) error {
 
 // CreateRootDir creates `<targetDir>/<name>` and opens it as *os.Root.
 func CreateRootDir(targetDir, name string) (*os.Root, error) {
-	curPath := filepath.Join(targetDir, name)
-
-	cleanPath, err := filepath.Abs(path.Clean(curPath))
+	cleanPath, err := containedRootPath(targetDir, name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to clean path: %w", err)
+		return nil, err
 	}
 
 	err = os.MkdirAll(cleanPath, goboottypes.DirPerm)
@@ -126,6 +123,33 @@ func CreateRootDir(targetDir, name string) (*os.Root, error) {
 	}
 
 	return curRoot, nil
+}
+
+func containedRootPath(targetDir, name string) (string, error) {
+	targetAbs, err := filepath.Abs(filepath.Clean(targetDir))
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve target dir: %w", err)
+	}
+
+	if strings.TrimSpace(name) == "" || filepath.IsAbs(name) {
+		return "", fmt.Errorf("invalid root dir name %q", name)
+	}
+
+	cleanPath, err := filepath.Abs(filepath.Join(targetAbs, name))
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve root dir: %w", err)
+	}
+
+	relPath, err := filepath.Rel(targetAbs, cleanPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to compare root dir with target dir: %w", err)
+	}
+
+	if relPath == "." || strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) || relPath == ".." {
+		return "", fmt.Errorf("invalid root dir name %q: path escapes target dir", name)
+	}
+
+	return cleanPath, nil
 }
 
 // EnforceTemplateSourceLimits rejects template sources that exceed file count or total byte limits.

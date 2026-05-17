@@ -4,7 +4,7 @@
 
 # Output root.
 
-#  Directory where the templates will be read from
+#  Directory where generated projects will be written
 targetPath: "outputs"
 
 # Project identity.
@@ -31,6 +31,9 @@ services:
     enabled: true
   - id: "base_test"
     confPath: "./configs/base_test.yml"
+    enabled: true
+  - id: "base_logger"
+    confPath: "./configs/base_logger.yml"
     enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"
