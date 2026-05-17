@@ -181,7 +181,7 @@ variables:
     - $DOCKER_RUN_CMD $CHECKMAKE_IMAGE Makefile
     - $DOCKER_RUN_CMD $SHELLCHECK_IMAGE -x $SH_FILES
     - $DOCKER_RUN_CMD $SHFMT_IMAGE -d -i 2 -ci $SH_FILES
-    - $DOCKER_RUN_CMD --entrypoint ec $EDITORCONFIG_CHECKER_IMAGE -exclude "(\.git|\.gitlab-ci-local|\.gitlab-ci-local-canary.*\.yml)"
+    - $DOCKER_RUN_CMD --entrypoint ec $EDITORCONFIG_CHECKER_IMAGE -exclude "(\.git|\.idea|\.gitlab-ci-local|\.gitlab-ci-local-canary.*\.yml|bin)"
 
 lint-branch:
   extends: .lint-local

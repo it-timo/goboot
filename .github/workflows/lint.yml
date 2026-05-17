@@ -72,4 +72,4 @@ jobs:
             -w /workdir \
             --entrypoint ec \
             mstruebing/editorconfig-checker@sha256:af556694c3eb0a16b598efbe84c1171d40dfb779fdac6f01b89baedde065556f \
-            -exclude "(\.git)"
+            -exclude "(\.git|\.idea|\.gitlab-ci-local|bin)"

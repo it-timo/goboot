@@ -31,22 +31,22 @@ lint-branch:
       alias: docker
   script:
     - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
-    - DOCKER_RUN_CMD=(docker run --rm -v "${ROOT_DIR}:/workdir" -w /workdir)
-    - mapfile -d '' -t SH_FILES < <(find . -type f -name '*.sh' -not -path './templates/*' -print0)
+    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
     # GolangCI-Lint
-    - '"${DOCKER_RUN_CMD[@]}" "$GOLANGCI_LINT_IMAGE" golangci-lint run ./...'
+    - ${DOCKER_RUN_CMD} "$GOLANGCI_LINT_IMAGE" golangci-lint run ./...
     # Yamllint
-    - '"${DOCKER_RUN_CMD[@]}" "$YAMLLINT_IMAGE" yamllint .'
+    - ${DOCKER_RUN_CMD} "$YAMLLINT_IMAGE" yamllint .
     # Markdownlint
-    - '"${DOCKER_RUN_CMD[@]}" "$MARKDOWNLINT_IMAGE" "**/*.md"'
+    - ${DOCKER_RUN_CMD} "$MARKDOWNLINT_IMAGE" "**/*.md"
     # Checkmake
-    - '"${DOCKER_RUN_CMD[@]}" "$CHECKMAKE_IMAGE" Makefile'
+    - ${DOCKER_RUN_CMD} "$CHECKMAKE_IMAGE" Makefile
     # Shellcheck
-    - '"${DOCKER_RUN_CMD[@]}" "$SHELLCHECK_IMAGE" -x "${SH_FILES[@]}"'
+    - ${DOCKER_RUN_CMD} "$SHELLCHECK_IMAGE" -x ${SH_FILES}
     # Shfmt
-    - '"${DOCKER_RUN_CMD[@]}" "$SHFMT_IMAGE" -d -i 2 -ci "${SH_FILES[@]}"'
+    - ${DOCKER_RUN_CMD} "$SHFMT_IMAGE" -d -i 2 -ci ${SH_FILES}
     # EditorConfig checker
-    - '"${DOCKER_RUN_CMD[@]}" --entrypoint ec "$EDITORCONFIG_CHECKER_IMAGE" -exclude "(\.git)"'
+    - ${DOCKER_RUN_CMD} --entrypoint ec "$EDITORCONFIG_CHECKER_IMAGE" -exclude "(\.git)"
 
 lint-auto:
   stage: lint
@@ -61,22 +61,22 @@ lint-auto:
       alias: docker
   script:
     - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
-    - DOCKER_RUN_CMD=(docker run --rm -v "${ROOT_DIR}:/workdir" -w /workdir)
-    - mapfile -d '' -t SH_FILES < <(find . -type f -name '*.sh' -not -path './templates/*' -print0)
+    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
     # GolangCI-Lint
-    - '"${DOCKER_RUN_CMD[@]}" "$GOLANGCI_LINT_IMAGE" golangci-lint run ./...'
+    - ${DOCKER_RUN_CMD} "$GOLANGCI_LINT_IMAGE" golangci-lint run ./...
     # Yamllint
-    - '"${DOCKER_RUN_CMD[@]}" "$YAMLLINT_IMAGE" yamllint .'
+    - ${DOCKER_RUN_CMD} "$YAMLLINT_IMAGE" yamllint .
     # Markdownlint
-    - '"${DOCKER_RUN_CMD[@]}" "$MARKDOWNLINT_IMAGE" "**/*.md"'
+    - ${DOCKER_RUN_CMD} "$MARKDOWNLINT_IMAGE" "**/*.md"
     # Checkmake
-    - '"${DOCKER_RUN_CMD[@]}" "$CHECKMAKE_IMAGE" Makefile'
+    - ${DOCKER_RUN_CMD} "$CHECKMAKE_IMAGE" Makefile
     # Shellcheck
-    - '"${DOCKER_RUN_CMD[@]}" "$SHELLCHECK_IMAGE" -x "${SH_FILES[@]}"'
+    - ${DOCKER_RUN_CMD} "$SHELLCHECK_IMAGE" -x ${SH_FILES}
     # Shfmt
-    - '"${DOCKER_RUN_CMD[@]}" "$SHFMT_IMAGE" -d -i 2 -ci "${SH_FILES[@]}"'
+    - ${DOCKER_RUN_CMD} "$SHFMT_IMAGE" -d -i 2 -ci ${SH_FILES}
     # EditorConfig checker
-    - '"${DOCKER_RUN_CMD[@]}" --entrypoint ec "$EDITORCONFIG_CHECKER_IMAGE" -exclude "(\.git)"'
+    - ${DOCKER_RUN_CMD} --entrypoint ec "$EDITORCONFIG_CHECKER_IMAGE" -exclude "(\.git)"
 
 lint-tag:
   stage: lint
@@ -90,19 +90,19 @@ lint-tag:
       alias: docker
   script:
     - ROOT_DIR="${CI_PROJECT_DIR:-$PWD}"
-    - DOCKER_RUN_CMD=(docker run --rm -v "${ROOT_DIR}:/workdir" -w /workdir)
-    - mapfile -d '' -t SH_FILES < <(find . -type f -name '*.sh' -not -path './templates/*' -print0)
+    - DOCKER_RUN_CMD="docker run --rm -v ${ROOT_DIR}:/workdir -w /workdir"
+    - SH_FILES="$(find . -type f -name '*.sh' -not -path './templates/*')"
     # GolangCI-Lint
-    - '"${DOCKER_RUN_CMD[@]}" "$GOLANGCI_LINT_IMAGE" golangci-lint run ./...'
+    - ${DOCKER_RUN_CMD} "$GOLANGCI_LINT_IMAGE" golangci-lint run ./...
     # Yamllint
-    - '"${DOCKER_RUN_CMD[@]}" "$YAMLLINT_IMAGE" yamllint .'
+    - ${DOCKER_RUN_CMD} "$YAMLLINT_IMAGE" yamllint .
     # Markdownlint
-    - '"${DOCKER_RUN_CMD[@]}" "$MARKDOWNLINT_IMAGE" "**/*.md"'
+    - ${DOCKER_RUN_CMD} "$MARKDOWNLINT_IMAGE" "**/*.md"
     # Checkmake
-    - '"${DOCKER_RUN_CMD[@]}" "$CHECKMAKE_IMAGE" Makefile'
+    - ${DOCKER_RUN_CMD} "$CHECKMAKE_IMAGE" Makefile
     # Shellcheck
-    - '"${DOCKER_RUN_CMD[@]}" "$SHELLCHECK_IMAGE" -x "${SH_FILES[@]}"'
+    - ${DOCKER_RUN_CMD} "$SHELLCHECK_IMAGE" -x ${SH_FILES}
     # Shfmt
-    - '"${DOCKER_RUN_CMD[@]}" "$SHFMT_IMAGE" -d -i 2 -ci "${SH_FILES[@]}"'
+    - ${DOCKER_RUN_CMD} "$SHFMT_IMAGE" -d -i 2 -ci ${SH_FILES}
     # EditorConfig checker
-    - '"${DOCKER_RUN_CMD[@]}" --entrypoint ec "$EDITORCONFIG_CHECKER_IMAGE" -exclude "(\.git)"'
+    - ${DOCKER_RUN_CMD} --entrypoint ec "$EDITORCONFIG_CHECKER_IMAGE" -exclude "(\.git)"
