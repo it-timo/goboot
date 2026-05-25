@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run local CI simulation for goboot root and generated IntroProject.
+# Run local CI simulation for goboot root and generated projects.
 #
 # This script executes the exact act/gitlab-ci-local commands used to validate
 # generated CI behavior for both providers.
@@ -16,6 +16,8 @@ PREPULL_IMAGES="true"
 PROVIDER_MODE="${CI_CANARY_PROVIDER:-config}"
 GITLAB_CI_LOCAL_OPTS="--network host"
 GITLAB_CI_LOCAL_SHELL_OPTS="${GITLAB_CI_LOCAL_OPTS} --force-shell-executor --concurrency 1"
+GITHUB_CANARY_TEMP_DIR=""
+GITHUB_CANARY_OUTPUT_DIR=""
 TEMP_FILES=()
 
 cleanup_temp_files() {
@@ -23,6 +25,10 @@ cleanup_temp_files() {
   for file in "${TEMP_FILES[@]}"; do
     rm -f "${file}"
   done
+
+  if [[ -n "${GITHUB_CANARY_TEMP_DIR}" ]]; then
+    rm -rf "${GITHUB_CANARY_TEMP_DIR}"
+  fi
 }
 
 trap cleanup_temp_files EXIT
@@ -107,6 +113,117 @@ run_step() {
   bash -lc "${cmd}"
 }
 
+run_step_argv() {
+  local title="$1"
+  shift
+
+  echo ""
+  echo "==> ${title}"
+  printf "    %q" "$@"
+  echo ""
+  "$@"
+}
+
+gitlab_jobs_for_stage() {
+  local stage="$1"
+
+  gitlab-ci-local --list | awk -v stage="${stage}" '
+    index($0, "  " stage "  ") {
+      name = substr($0, 1, index($0, "  " stage "  ") - 1)
+      sub(/[[:space:]]+$/, "", name)
+      print name
+    }
+  '
+}
+
+run_gitlab_stage_jobs() {
+  local scope="$1"
+  local stage="$2"
+  local excluded_job="${3:-}"
+  local ran="false"
+  local job
+  local status
+  local jobs_output
+  local -a jobs=()
+
+  jobs_output="$(gitlab_jobs_for_stage "${stage}")"
+  mapfile -t jobs <<<"${jobs_output}"
+
+  for job in "${jobs[@]}"; do
+    if [[ -n "${excluded_job}" && "${job}" == "${excluded_job}" ]]; then
+      continue
+    fi
+
+    cleanup_runtime_dirs
+    ran="true"
+    set +e
+    run_step_argv "${scope}: gitlab-ci-local ${job} (docker)" gitlab-ci-local --network host "${job}"
+    status="$?"
+    set -e
+    if [[ "${status}" -ne 0 ]]; then
+      run_step_argv "${scope}: gitlab-ci-local ${job} (shell fallback)" \
+        gitlab-ci-local --network host --force-shell-executor --concurrency 1 "${job}"
+    fi
+  done
+
+  if [[ "${ran}" != "true" ]]; then
+    if [[ -n "${excluded_job}" ]] && grep -qx "${excluded_job}" <<<"${jobs_output}"; then
+      echo "${scope}: no non-${excluded_job} ${stage} jobs discovered; ${excluded_job} will be validated separately."
+      return 0
+    fi
+
+    echo "Error: ${scope}: no ${stage} jobs discovered by gitlab-ci-local --list."
+    exit 1
+  fi
+}
+
+generate_github_canary_project() {
+  local cfg_dir
+  local goboot_cfg
+
+  GITHUB_CANARY_TEMP_DIR="$(mktemp -d)"
+  cfg_dir="${GITHUB_CANARY_TEMP_DIR}/configs"
+  mkdir -p "${cfg_dir}"
+  goboot_cfg="${cfg_dir}/goboot.yml"
+
+  cat >"${goboot_cfg}" <<YAML
+targetPath: "${GITHUB_CANARY_TEMP_DIR}/outputs"
+projectName: "IntroGitHubCanary"
+repoUrl: "https://github.com/projects"
+gitProvider: "github"
+services:
+  - id: "base_project"
+    confPath: "${PROJECT_ROOT}/configs/base_project.yml"
+    enabled: true
+  - id: "base_lint"
+    confPath: "${PROJECT_ROOT}/configs/base_lint.yml"
+    enabled: true
+  - id: "base_test"
+    confPath: "${PROJECT_ROOT}/configs/base_test.yml"
+    enabled: true
+  - id: "base_logger"
+    confPath: "${PROJECT_ROOT}/configs/base_logger.yml"
+    enabled: true
+  - id: "base_docker"
+    confPath: "${PROJECT_ROOT}/configs/base_docker.yml"
+    enabled: true
+  - id: "base_local"
+    confPath: "${PROJECT_ROOT}/configs/base_local.yml"
+    enabled: true
+  - id: "base_ci"
+    confPath: "${PROJECT_ROOT}/configs/base_ci.yml"
+    enabled: true
+YAML
+
+  run_step "Generate IntroGitHubCanary for generated GitHub CI canary" "go run cmd/goboot/main.go --config '${goboot_cfg}'"
+  GITHUB_CANARY_OUTPUT_DIR="${GITHUB_CANARY_TEMP_DIR}/outputs/IntroGitHubCanary"
+
+  if [[ ! -d "${GITHUB_CANARY_OUTPUT_DIR}/.github/workflows" ]]; then
+    echo "Error: expected generated GitHub workflows at ${GITHUB_CANARY_OUTPUT_DIR}."
+    exit 1
+  fi
+}
+
 require_cmd() {
   local cmd="$1"
   if ! command -v "${cmd}" >/dev/null 2>&1; then
@@ -136,6 +253,10 @@ fi
 if [[ ! -d "${OUTPUT_DIR}" ]]; then
   echo "Error: expected generated output at ${OUTPUT_DIR}."
   exit 1
+fi
+
+if [[ "${SELECTED_PROVIDER}" =~ ^(github|both)$ && ! -d "${OUTPUT_DIR}/.github/workflows" ]]; then
+  generate_github_canary_project
 fi
 
 cleanup_runtime_dirs() {
@@ -288,6 +409,7 @@ run_ci_suite() {
   local user_opts
   local lint_opts
   local act_opts
+  local gitlab_build_jobs
 
   if [[ -d ".github/workflows" ]]; then
     has_github_ci="true"
@@ -331,6 +453,10 @@ run_ci_suite() {
     run_step "${scope}: act test" "act -j test --container-options \"${user_opts}\" ${act_opts}"
     cleanup_runtime_dirs
     run_step "${scope}: act lint" "act -j lint --container-options \"${lint_opts}\" ${act_opts}"
+    if [[ -f ".github/workflows/container.yml" ]]; then
+      cleanup_runtime_dirs
+      run_step "${scope}: act container" "act -j container --container-options \"${lint_opts}\" ${act_opts}"
+    fi
   else
     echo "Skipping ${scope}: act checks (.github/workflows not found)."
   fi
@@ -345,8 +471,17 @@ run_ci_suite() {
       run_step "${scope}: prepare temporary git workspace for gitlab-ci-local" "git init -q && git add -A -f && git -c user.name='goboot-ci-local' -c user.email='goboot-ci-local@local' commit -qm 'temp: ci-local workspace'"
       temp_git_repo="true"
     fi
-    cleanup_runtime_dirs
-    run_step "${scope}: gitlab-ci-local build (docker -> shell fallback)" "gitlab-ci-local ${GITLAB_CI_LOCAL_OPTS} --stage build || gitlab-ci-local ${GITLAB_CI_LOCAL_SHELL_OPTS} --stage build"
+    run_gitlab_stage_jobs "${scope}" "build" "container"
+    gitlab_build_jobs="$(gitlab_jobs_for_stage "build")"
+    if [[ -f ".gitlab/ci/container.yml" ]]; then
+      if ! grep -qx "container" <<<"${gitlab_build_jobs}"; then
+        echo "Error: ${scope}: .gitlab/ci/container.yml exists, but gitlab-ci-local --list did not discover build job 'container'."
+        exit 1
+      fi
+
+      cleanup_runtime_dirs
+      run_step_argv "${scope}: gitlab-ci-local container" gitlab-ci-local --privileged container
+    fi
     cleanup_runtime_dirs
     run_step "${scope}: gitlab-ci-local test" "gitlab-ci-local ${GITLAB_CI_LOCAL_SHELL_OPTS} --stage test"
     cleanup_runtime_dirs
@@ -366,5 +501,14 @@ run_ci_suite "Root"
 cd "${OUTPUT_DIR}"
 run_ci_suite "IntroProject"
 
+if [[ -n "${GITHUB_CANARY_OUTPUT_DIR}" ]]; then
+  cd "${GITHUB_CANARY_OUTPUT_DIR}"
+  run_ci_suite "IntroGitHubCanary"
+fi
+
 echo ""
-echo "CI canary verification completed successfully (root + IntroProject)."
+if [[ -n "${GITHUB_CANARY_OUTPUT_DIR}" ]]; then
+  echo "CI canary verification completed successfully (root + IntroProject + IntroGitHubCanary)."
+else
+  echo "CI canary verification completed successfully (root + IntroProject)."
+fi

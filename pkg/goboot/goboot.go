@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/it-timo/goboot/pkg/baseci"
+	"github.com/it-timo/goboot/pkg/basedocker"
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
 	"github.com/it-timo/goboot/pkg/baselogger"
@@ -186,6 +187,11 @@ func (gb *GoBoot) registerMainServices() error {
 			err := gb.ServiceMgr.register(baselogger.NewBaseLogger(gb.cfg.TargetPath))
 			if err != nil {
 				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseLogger, err)
+			}
+		case goboottypes.ServiceNameBaseDocker:
+			err := gb.ServiceMgr.register(basedocker.NewBaseDocker(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseDocker, err)
 			}
 		// Future services can be added here.
 		default:

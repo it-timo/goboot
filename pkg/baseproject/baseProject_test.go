@@ -125,7 +125,7 @@ var _ = Describe("BaseProject Service", func() {
 				validConfig.SourcePath = projectRoot
 				err := baseProj.SetConfig(validConfig)
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("project root"))
+				Expect(err.Error()).To(ContainSubstring("must not overlap"))
 			})
 		})
 	})

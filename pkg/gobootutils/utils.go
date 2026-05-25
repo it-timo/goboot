@@ -77,8 +77,8 @@ func CloseFileWithErr(curFile *os.File) {
 	_ = curFile.Close()
 }
 
-// ComparePaths resolves both paths and enforces either equality or inequality.
-// If forceDiffer is true, equal paths return an error; otherwise unequal paths return an error.
+// ComparePaths resolves both paths and enforces either equality or non-overlap.
+// If forceDiffer is true, equal or parent/child paths return an error; otherwise unequal paths return an error.
 func ComparePaths(first, second string, forceDiffer bool) error {
 	firstAbs, err := filepath.Abs(filepath.Clean(first))
 	if err != nil {
@@ -95,6 +95,10 @@ func ComparePaths(first, second string, forceDiffer bool) error {
 			return fmt.Errorf("first and second path must be different: %q == %q", firstAbs, secondAbs)
 		}
 
+		if pathsOverlap(firstAbs, secondAbs) {
+			return fmt.Errorf("first and second path must not overlap: %q and %q", firstAbs, secondAbs)
+		}
+
 		return nil
 	}
 
@@ -103,6 +107,26 @@ func ComparePaths(first, second string, forceDiffer bool) error {
 	}
 
 	return nil
+}
+
+func pathsOverlap(firstAbs, secondAbs string) bool {
+	firstToSecond, err := filepath.Rel(firstAbs, secondAbs)
+	if err == nil && isContainedRelativePath(firstToSecond) {
+		return true
+	}
+
+	secondToFirst, err := filepath.Rel(secondAbs, firstAbs)
+	if err == nil && isContainedRelativePath(secondToFirst) {
+		return true
+	}
+
+	return false
+}
+
+func isContainedRelativePath(relPath string) bool {
+	return relPath != "." &&
+		relPath != ".." &&
+		!strings.HasPrefix(relPath, ".."+string(os.PathSeparator))
 }
 
 // CreateRootDir creates `<targetDir>/<name>` and opens it as *os.Root.

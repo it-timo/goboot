@@ -95,10 +95,17 @@ covers:
 - stdlib Go tests + `zerolog` + GitLab CI
 - stdlib Go tests + `slog` + GitHub CI
 
-Each generated project runs its own `make test`, `make lint`, `scripts/test.sh`,
-and `scripts/lint.sh`. That wrapper repetition is intentional: it proves that
-the generated Makefile, Taskfile, and scripts stay aligned. The verifier also
-checks provider-specific CI files, test style, and logger implementation.
+Each generated project runs its own `make test`, `make lint`, `make
+container-check`, `task test`, `task lint`, `task container-check`,
+`scripts/test.sh`, and `scripts/lint.sh` when the corresponding services are
+enabled. That wrapper repetition is intentional: it proves that the generated
+Makefile, Taskfile, and scripts stay aligned. The verifier also checks
+provider-specific CI files, container CI files, test style, and logger
+implementation.
+
+Docker is required for the container matrix. Generated `container-check`
+validates compose configuration, builds the image, and smoke-runs the generated
+CLI help path.
 
 Generated project tests are scaffold smoke tests. They prove the generated
 repository compiles and its own commands run; domain-specific behavior belongs

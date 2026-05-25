@@ -1,0 +1,30 @@
+# Config for the `base_docker` service.
+# Safe to commit; no secrets.
+
+# Template source.
+
+#  Directory where Docker templates are read from.
+sourcePath: "./templates/docker_base"
+
+# Container build settings.
+
+#  Go version used by the Dockerfile build stage.
+goVersion: "1.26.3"
+
+#  Runtime image used by the final Dockerfile stage.
+runtimeImage: "gcr.io/distroless/static-debian12:nonroot"
+
+#  Optional override for the built binary name. Defaults to the lowercase project name.
+binaryName: ""
+
+#  Optional override for the Go main package. Defaults to ./cmd/<lowercase-project-name>.
+mainPackage: ""
+
+# Container outputs to generate.
+fileList:
+  - dockerfile
+  - compose
+  - dockerignore
+
+# Optional docker-compose port mappings, for example "8080:8080".
+ports: []

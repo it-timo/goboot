@@ -15,6 +15,9 @@ services:
   - id: base_logger
     confPath: ${BASE_LOGGER_CFG}
     enabled: true
+  - id: base_docker
+    confPath: ${BASE_DOCKER_CFG}
+    enabled: true
   - id: base_local
     confPath: ${BASE_LOCAL_CFG}
     enabled: true

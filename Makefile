@@ -39,12 +39,13 @@ CHECKMAKE_LINT := $(DOCKER_LINT_CMD) cytopia/checkmake:$(CHECKMAKE_VERSION) Make
 SHELLCHECK_LINT := $(DOCKER_LINT_CMD) koalaman/shellcheck:$(SHELLCHECK_VERSION) -x $(SHELL_FILES)
 SHFMT_LINT := $(DOCKER_LINT_CMD) mvdan/shfmt:$(SHFMT_VERSION) -d -i 2 -ci $(SHELL_FILES)
 EDITORCONFIG_CHECKER_LINT := $(DOCKER_LINT_CMD) --entrypoint ec mstruebing/editorconfig-checker:$(EDITORCONFIG_CHECKER_VERSION) -exclude '(\.git|\.idea|\.gitlab-ci-local|bin)'
+GOBOOT_IMAGE := goboot:$(VERSION)
 COVER_FILE := coverage.txt
 MIN_COVERAGE := 80
 TEST_PKGS := $$(go list ./... | grep -v '/test/noauto' | grep -v '/templates')
 
 # .PHONY declares non-file targets to always run when invoked
-.PHONY: all build clean test lint release release_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
+.PHONY: all build docker_build docker_smoke clean test lint release release_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
 
 #  ----------------------------------------
 #  Default target (runs when `make` is called with no args)
@@ -57,6 +58,14 @@ all: build lint test verify_intro verify_ci_canary
 build:
 	@echo "Building $(PROJECT)..."
 	go build -ldflags="-X main.version=$(VERSION)" -o bin/goboot ./cmd/goboot
+
+docker_build:
+	@echo "Building $(PROJECT) container image..."
+	docker build --build-arg VERSION="$(VERSION)" -t "$(GOBOOT_IMAGE)" .
+
+docker_smoke: docker_build
+	@echo "Running $(PROJECT) container smoke test..."
+	docker run --rm --entrypoint sh "$(GOBOOT_IMAGE)" -c 'status=0; goboot -h >/tmp/goboot-help 2>&1 || status=$$?; { test "$$status" -eq 0 || test "$$status" -eq 1; } && test -s /tmp/goboot-help'
 
 #  ----------------------------------------
 #  Clean build/test artifacts
@@ -119,7 +128,7 @@ verify_ci_canary:
 #  ----------------------------------------
 #  Release the project
 #  ----------------------------------------
-release_check: all
+release_check: all docker_smoke
 
 release: release_check
 	@echo "Release checks passed for $(PROJECT) version: $(VERSION)"
@@ -145,6 +154,8 @@ help_core:
 help_project:
 	@echo "  make version            Show current project version"
 	@echo "  make build              Build the project"
+	@echo "  make docker_build       Build the goboot container image"
+	@echo "  make docker_smoke       Build and smoke-test the goboot container image"
 	@echo "  make release            Run the full local release check sequence"
 
 help_check:

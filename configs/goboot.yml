@@ -35,6 +35,9 @@ services:
   - id: "base_logger"
     confPath: "./configs/base_logger.yml"
     enabled: true
+  - id: "base_docker"
+    confPath: "./configs/base_docker.yml"
+    enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"
     enabled: true

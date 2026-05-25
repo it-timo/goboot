@@ -22,7 +22,8 @@ vars:
 
 {{- $linters := index .TaskScripts "base_lint" }}
 {{- $tests := index .TaskScripts "base_test" }}
-{{- if or $linters $tests }}
+{{- $docker := index .TaskScripts "base_docker" }}
+{{- if or $linters $tests $docker }}
 tasks:
   default:
     desc: Run default developer workflow
@@ -32,6 +33,9 @@ tasks:
       {{- end }}
       {{- if $tests }}
       - test
+      {{- end }}
+      {{- if $docker }}
+      - container-check
       {{- end }}
 
   {{- if $linters }}
@@ -50,5 +54,25 @@ tasks:
     cmds:
       - |
 {{ indent 10 (index $tests 0) }}
+  {{- end }}
+
+  {{- if $docker }}
+  docker-build:
+    desc: Build the project container image
+    cmds:
+      - |
+{{ indent 10 (index $docker 0) }}
+
+  compose-up:
+    desc: Start the compose stack
+    cmds:
+      - |
+{{ indent 10 (index $docker 1) }}
+
+  container-check:
+    desc: Validate compose and image build
+    cmds:
+      - |
+{{ indent 10 (replace (index $docker 2) " && " " &&\n") }}
   {{- end }}
 {{- end }}

@@ -32,6 +32,7 @@ vars:
       | xargs -0 printf '%q '
 
   DOCKER_RUN_CMD: "docker run --rm --network host -v {{.ROOT_DIR}}:/workdir -w /workdir"
+  GOBOOT_IMAGE: "goboot:{{.VERSION}}"
 
   # Linter commands.
   GOLANGCI_LINT_CMD: '{{.DOCKER_RUN_CMD}} golangci/golangci-lint:{{.GOLANGCI_LINT_VERSION}} golangci-lint run ./...'
@@ -66,6 +67,21 @@ tasks:
     desc: Build the Go binary
     cmd: go build -ldflags="-X main.version={{.VERSION}}" -o bin/goboot ./cmd/goboot
     # `-X` injects version into `main.version`.
+
+  docker:build:
+    desc: Build the goboot container image
+    cmd: docker build --build-arg VERSION="{{.VERSION}}" -t "{{.GOBOOT_IMAGE}}" .
+
+  docker:smoke:
+    desc: Build and smoke-test the goboot container image
+    cmds:
+      - task: docker:build
+      - |
+          docker run --rm --entrypoint sh "{{.GOBOOT_IMAGE}}" -c '
+            status=0
+            goboot -h >/tmp/goboot-help 2>&1 || status=$?
+            { test "$status" -eq 0 || test "$status" -eq 1; } && test -s /tmp/goboot-help
+          '
 
   lint:
     desc: Run linters

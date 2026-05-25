@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+{{- $cmds := index .ScriptFiles "docker.sh" }}
+{{- range $cmd := $cmds }}
+{{ oneLine $cmd }}
+{{- end }}

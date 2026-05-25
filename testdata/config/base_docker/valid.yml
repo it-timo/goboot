@@ -1,0 +1,11 @@
+sourcePath: "./templates/docker_base"
+goVersion: "1.26.3"
+runtimeImage: "gcr.io/distroless/static-debian12:nonroot"
+binaryName: ""
+mainPackage: ""
+fileList:
+  - dockerfile
+  - compose
+  - dockerignore
+ports:
+  - "8080:8080"

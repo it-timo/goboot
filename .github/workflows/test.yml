@@ -3,8 +3,6 @@ name: Test
 on:
   push:
     branches: ["main", "master"]
-    paths-ignore:
-      - "badges/coverage.json"
   pull_request:
     branches: ["main", "master"]
 
@@ -17,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ['1.26']
+        go-version: ['1.26.3']
     steps:
       - name: Checkout code
         # Used commit SHA for actions/checkout@v6.0.2
@@ -45,70 +43,3 @@ jobs:
             coverage.txt
             coverage-summary.txt
           retention-days: 7
-
-  coverage-badge:
-    name: Update coverage badge payload
-    runs-on: ubuntu-24.04
-    needs: test
-    if: github.event_name == 'push'
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        # Used commit SHA for actions/checkout@v6.0.2
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Download coverage artifacts
-        # Used commit SHA for actions/download-artifact@v8.0.1
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          pattern: coverage-report-go-*
-          path: .tmp/coverage-artifacts
-          merge-multiple: false
-
-      - name: Generate badges/coverage.json
-        run: |
-          set -euo pipefail
-
-          mapfile -t coverage_values < <(
-            find .tmp/coverage-artifacts -type f -name "coverage-summary.txt" \
-              -exec awk '/^total:/ { gsub("%", "", $3); print $3 }' {} \;
-          )
-
-          if [[ "${#coverage_values[@]}" -eq 0 ]]; then
-            echo "No coverage summaries found."
-            exit 1
-          fi
-
-          coverage_min="$(
-            printf '%s\n' "${coverage_values[@]}" \
-              | awk 'NR == 1 || $1 < min { min = $1 } END { printf "%.1f", min }'
-          )"
-
-          coverage_color="$(
-            awk -v c="${coverage_min}" '
-              BEGIN {
-                if (c >= 90) print "brightgreen";
-                else if (c >= 80) print "green";
-                else if (c >= 70) print "yellow";
-                else print "red";
-              }'
-          )"
-
-          mkdir -p badges
-          cat > badges/coverage.json <<EOF
-          {"schemaVersion":1,"label":"coverage","message":"${coverage_min}%","color":"${coverage_color}"}
-          EOF
-
-      - name: Commit badge payload
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add badges/coverage.json
-          if git diff --cached --quiet; then
-            echo "Coverage payload unchanged."
-            exit 0
-          fi
-          git commit -m "chore(ci): update coverage badge payload [skip ci]"
-          git push

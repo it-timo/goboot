@@ -42,7 +42,7 @@ var _ = Describe("BaseCI Service", func() {
 			SourcePath:  tempDir,
 			ProjectName: "testproject",
 			GitProvider: gitProviderGitLab,
-			GoVersion:   []string{"1.26"},
+			GoVersion:   []string{"1.26.3"},
 			AutoBranches: []string{
 				"main",
 			},
@@ -474,7 +474,7 @@ var _ = Describe("BaseCI Service", func() {
 					SourcePath:  sourceCaseDir,
 					ProjectName: fmt.Sprintf("proj-%s-%s", curCase.provider, curCase.policy),
 					GitProvider: curCase.provider,
-					GoVersion:   []string{"1.26"},
+					GoVersion:   []string{"1.26.3"},
 					AutoBranches: []string{
 						"main",
 						"master",

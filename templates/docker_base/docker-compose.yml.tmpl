@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: {{.ImageName}}
+{{- if .Ports }}
+    ports:
+{{- range $port := .Ports }}
+      - "{{ $port }}"
+{{- end }}
+{{- end }}

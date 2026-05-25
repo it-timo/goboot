@@ -17,4 +17,6 @@ const (
 	ServiceNameBaseCI = "base_ci"
 	// ServiceNameBaseLogger identifies the logger wiring generator.
 	ServiceNameBaseLogger = "base_logger"
+	// ServiceNameBaseDocker identifies the containerization generator.
+	ServiceNameBaseDocker = "base_docker"
 )

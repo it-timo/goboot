@@ -113,6 +113,9 @@ services:
   - id: "base_logger"
     confPath: "${base_logger_cfg}"
     enabled: true
+  - id: "base_docker"
+    confPath: "${PROJECT_ROOT}/configs/base_docker.yml"
+    enabled: true
   - id: "base_local"
     confPath: "${PROJECT_ROOT}/configs/base_local.yml"
     enabled: true
@@ -164,19 +167,21 @@ validate_project_case() {
 
   run_step "${project_name}: make test" "make test"
   run_step "${project_name}: make lint" "make lint"
+  run_step "${project_name}: make container-check" "make container-check"
 
   if [[ "${SKIP_TASK}" != "true" ]]; then
     run_step "${project_name}: task test" "task test"
     run_step "${project_name}: task lint" "task lint"
+    run_step "${project_name}: task container-check" "task container-check"
   fi
 
   run_step "${project_name}: ./scripts/test.sh" "./scripts/test.sh"
   run_step "${project_name}: ./scripts/lint.sh" "./scripts/lint.sh"
 
   if [[ "${git_provider}" == "gitlab" ]]; then
-    run_step "${project_name}: GitLab CI files exist" "test -f .gitlab-ci.yml && test -f .gitlab/ci/lint.yml && test -f .gitlab/ci/test.yml && test -f .gitlab/ci/build.yml"
+    run_step "${project_name}: GitLab CI files exist" "test -f .gitlab-ci.yml && test -f .gitlab/ci/lint.yml && test -f .gitlab/ci/test.yml && test -f .gitlab/ci/build.yml && test -f .gitlab/ci/container.yml"
   elif [[ "${git_provider}" == "github" ]]; then
-    run_step "${project_name}: GitHub CI files exist" "test -f .github/workflows/lint.yml && test -f .github/workflows/test.yml && test -f .github/workflows/build.yml"
+    run_step "${project_name}: GitHub CI files exist" "test -f .github/workflows/lint.yml && test -f .github/workflows/test.yml && test -f .github/workflows/build.yml && test -f .github/workflows/container.yml"
   fi
 
   if [[ "${test_style}" == "go" ]]; then
@@ -208,6 +213,11 @@ fi
 
 if ! command -v make >/dev/null 2>&1; then
   echo "Error: make is required but not installed."
+  exit 1
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Error: docker is required but not installed."
   exit 1
 fi
 
