@@ -92,7 +92,7 @@ files it does not own.
 
 ```yaml
 imagePolicy: "balanced"
-goVersions: ["1.26"]
+goVersions: ["1.26.3"]
 autoBranches: ["main", "master"]
 ```
 
@@ -113,8 +113,54 @@ imagePolicy: "strict"
 - digest-oriented references where provider template supports it
 - explicit placeholders (for example `REPLACE_ME`) where user pinning is required
 
+## Example 5: CLI container packaging
+
+### Input (`services` in `goboot.yml`)
+
+```yaml
+services:
+  - id: "base_project"
+    confPath: "./configs/base_project.yml"
+    enabled: true
+  - id: "base_docker"
+    confPath: "./configs/base_docker.yml"
+    enabled: true
+  - id: "base_local"
+    confPath: "./configs/base_local.yml"
+    enabled: true
+  - id: "base_ci"
+    confPath: "./configs/base_ci.yml"
+    enabled: true
+```
+
+### Input (`base_docker.yml`)
+
+```yaml
+sourcePath: "./templates/docker_base"
+goVersion: "1.26.3"
+runtimeImage: "gcr.io/distroless/static-debian12:nonroot"
+fileList:
+  - dockerfile
+  - compose
+  - dockerignore
+ports: []
+```
+
+### Expected output
+
+- `Dockerfile` with a Go build stage and non-root runtime stage
+- `docker-compose.yml` for local CLI-container execution
+- `.dockerignore`
+- Docker helper targets in generated `Makefile` and `Taskfile.yml`
+- `scripts/docker.sh` when script generation is enabled
+- provider CI container job when `base_ci` is enabled
+
+The scaffolded app is currently CLI-style. Empty `ports` is intentional and
+does not indicate a missing service port.
+
 ## Validation checklist after generation
 
 - generated project has no unrendered template markers (`{{ ... }}`)
 - expected service files exist for enabled services
-- generated checks run (`make lint`, `make test`, CI syntax where applicable)
+- generated checks run (`make lint`, `make test`, `make container-check` when
+  Docker is enabled, and CI syntax where applicable)

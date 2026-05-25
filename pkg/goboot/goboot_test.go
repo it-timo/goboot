@@ -360,6 +360,7 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 				Entry("base_lint", goboottypes.ServiceNameBaseLint),
 				Entry("base_local", goboottypes.ServiceNameBaseLocal),
 				Entry("base_logger", goboottypes.ServiceNameBaseLogger),
+				Entry("base_docker", goboottypes.ServiceNameBaseDocker),
 			)
 		})
 	})

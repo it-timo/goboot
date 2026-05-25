@@ -1,0 +1,17 @@
+FROM golang:{{.GoVersion}} AS build
+
+WORKDIR /src
+
+COPY go.mod ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/{{.BinaryName}} {{.MainPackage}}
+
+FROM {{.RuntimeImage}}
+
+WORKDIR /app
+COPY --from=build /out/{{.BinaryName}} /app/{{.BinaryName}}
+
+USER nonroot:nonroot
+ENTRYPOINT ["/app/{{.BinaryName}}"]

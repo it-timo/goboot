@@ -8,9 +8,7 @@ Errors during any stage cause early termination.
 package main
 
 import (
-{{- if .Logger.Enabled }}
 	"errors"
-{{- end }}
 	"flag"
 	"fmt"
 	"io"
@@ -101,6 +99,10 @@ func run(args []string) error {
 
 	err := flagSet.Parse(args)
 	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+
 		return fmt.Errorf("failed to parse flags: %w", err)
 	}
 

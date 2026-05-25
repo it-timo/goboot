@@ -1,6 +1,6 @@
 sourcePath: "${TEMPLATES_CI_BASE}"
 goVersions:
-  - "1.26"
+  - "1.26.3"
 imagePolicy: "balanced"
 jobs:
   build:

@@ -116,6 +116,9 @@ Notes:
 - The flow runs the same `act` and `gitlab-ci-local` command sequence in:
   - repository root
   - `outputs/IntroProject`
+- When GitHub validation is requested but `outputs/IntroProject` is configured
+  for GitLab, the script generates a temporary `IntroGitHubCanary` project and
+  runs `act` against its generated workflows.
 - By default (`--provider=config`), provider selection is derived from `configs/goboot.yml` (`gitProvider`).
 - This verifies provider workflow behavior without pushing to remote canary repositories.
 - This flow is not fully dockerized: it requires host-installed `act` and `gitlab-ci-local`, plus Docker daemon/socket access.

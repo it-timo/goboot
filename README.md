@@ -22,21 +22,28 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.1.1` is the structured logging and release-hardening milestone.
-It builds on the `v0.1.0` CI foundation with provider-aware CI generation,
-policy-based image pinning, refreshed tool versions, stronger config guardrails,
-and explicit generated-project logger settings.
+`v0.2.0` is the active containerization milestone.
+It builds on the `v0.1.x` CI and logging foundation with Dockerfile,
+docker-compose, local Docker helper commands, and provider CI container jobs for
+generated CLI-style Go projects, plus a container image path for the `goboot`
+generator CLI itself.
 
 ### Core Capabilities
 
 - **Modular Service Architecture**: Logic is split into isolated services
-(`baseproject`, `baselint`, `basetest`, `baseci`) with strict contracts.
+(`base_project`, `base_lint`, `base_test`, `base_logger`, `base_docker`,
+`base_local`, `base_ci`) with strict contracts.
 - **Containerized Lint Tooling**: Lint jobs run via Docker by default, while CI simulation uses host tools (`act`, `gitlab-ci-local`).
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
 - **CI Generation**: GitLab and GitHub CI templates generated from explicit contracts and image policies.
 - **Logger-Aware Scaffolding**: Generated projects can use `slog` or `zerolog`
 through explicit settings owned by the project templates.
+- **CLI Container Packaging**: Generated projects can include a multi-stage
+Dockerfile, compose file, `.dockerignore`, local Docker commands, and CI image
+build validation through `base_docker`.
+- **Containerized Generator**: The `goboot` CLI itself can be built as a Docker
+image for mounted-workspace generation runs.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -47,7 +54,7 @@ Even in early stages, `goboot` is being built with:
 
 - Layered versioning and changelog visibility
 - Clear module boundaries (`cmd/`, `pkg/`, `configs/`, etc.)
-- Future support for Docker, CI/CD, and template-driven code generation
+- Incremental support for Docker, CI/CD, and template-driven code generation
 
 You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 
@@ -57,10 +64,11 @@ You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 
 ### Requirements
 
-- [Go 1.26+](https://go.dev/doc/install)
+- [Go 1.26.3+](https://go.dev/doc/install)
 - [Make](https://www.gnu.org/software/make/) for `make` targets
 - [Task](https://taskfile.dev) for `task` targets and full `verify_intro`
 - [Docker](https://www.docker.com/) for containerized lint tooling
+  and container image builds
 
 Lint tools such as GolangCI-Lint, Yamllint, Checkmake, Markdownlint, ShellCheck,
 shfmt, and EditorConfig Checker run from pinned container images by default.
@@ -104,9 +112,11 @@ These documents focus on input config -> expected output behavior.
 This repository uses:
 
 - [ROADMAP.md](./ROADMAP.md) for planned milestones
+- [CHANGELOG.md](./CHANGELOG.md) for release-facing change summaries
 - [doc/VERSIONING.md](./doc/VERSIONING.md) for semantic version handling
 - [doc/WORKFLOW.md](./doc/WORKFLOW.md) to define long-term contribution and CI logic
 - [doc/ci.md](./doc/ci.md) for CI policy modes and provider-specific generated CI behavior
+- [doc/containerization.md](./doc/containerization.md) for generated Docker behavior
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

@@ -19,6 +19,7 @@ Start from:
 - `configs/base_lint.yml`
 - `configs/base_test.yml`
 - `configs/base_logger.yml`
+- `configs/base_docker.yml`
 - `configs/base_local.yml`
 - `configs/base_ci.yml`
 
@@ -45,11 +46,16 @@ If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expec
 - `/tmp/goboot-demo/IntroProject/scripts/lint.sh` (when `base_local` + lint registration enabled)
 - `/tmp/goboot-demo/IntroProject/.golangci.yml` (when `base_lint` enabled)
 - logger-aware CLI/service wiring for `slog` or `zerolog` (when `base_logger` enabled)
+- `/tmp/goboot-demo/IntroProject/Dockerfile` and
+  `/tmp/goboot-demo/IntroProject/docker-compose.yml` (when `base_docker` enabled)
 - `/tmp/goboot-demo/IntroProject/.github/workflows/*.yml` or
   `/tmp/goboot-demo/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
 
 `base_logger` does not overwrite project files directly. It provides validated logger
 settings to `base_project`, which owns the generated runtime code.
+
+`base_docker` packages the generated CLI-style application. It does not assume
+the project is a network service, so compose port mappings are empty by default.
 
 ## 5. Iterate safely
 
@@ -60,7 +66,8 @@ Suggested loop:
 1. edit one config field
 2. run `go run ./cmd/goboot --config ...`
 3. inspect generated files
-4. run generated project checks (`make lint`, `make test` if present)
+4. run generated project checks (`make lint`, `make test`, and
+    `make container-check` when Docker is enabled)
 
 ## Notes
 

@@ -147,7 +147,7 @@ var _ = Describe("BaseLint Service", func() {
 			validConfig.SourcePath = projectRoot
 			err := baseLint.SetConfig(validConfig)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("project root"))
+			Expect(err.Error()).To(ContainSubstring("must not overlap"))
 		})
 	})
 

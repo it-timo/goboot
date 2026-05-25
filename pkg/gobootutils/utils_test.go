@@ -182,6 +182,26 @@ var _ = Describe("Utils Package", func() {
 				err := gobootutils.ComparePaths(sameFile, samePath, true)
 				Expect(err).To(HaveOccurred())
 			})
+
+			It("errors when the first path contains the second path", func() {
+				parent := filepath.Join(tempDir, "target")
+				child := filepath.Join(parent, "Project", "templates")
+				Expect(os.MkdirAll(child, 0o755)).To(Succeed())
+
+				err := gobootutils.ComparePaths(parent, child, true)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("must not overlap"))
+			})
+
+			It("errors when the second path contains the first path", func() {
+				parent := filepath.Join(tempDir, "target")
+				child := filepath.Join(parent, "Project", "templates")
+				Expect(os.MkdirAll(child, 0o755)).To(Succeed())
+
+				err := gobootutils.ComparePaths(child, parent, true)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("must not overlap"))
+			})
 		})
 
 		Context("when forceDiffer is false", func() {

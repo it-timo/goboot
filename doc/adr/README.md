@@ -100,6 +100,7 @@ Accepted # or Proposed / Rejected / Superseded / Deprecated
 | [ADR-032](adr-032-centralized-local-tool-versions.md)  | Centralized Local Tool Versions via `versions.env`            | tooling, linting, dev-experience, versions                                     |
 | [ADR-033](adr-033-ci-policy-and-provider-layout.md)    | CI Policy Modes and Provider-Scoped Template Layout           | ci, templates, config, security, provider-layout                               |
 | [ADR-034](adr-034-logger-settings-provider.md)         | Logger Settings Provider                                      | logger, scaffolding, templates, service-boundaries, ownership                  |
+| [ADR-035](adr-035-base-docker-cli-containerization.md) | CLI Containerization for `goboot` and Generated Projects      | docker, containerization, service, templates, ci, cli                          |
 
 ---
 

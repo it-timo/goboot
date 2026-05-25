@@ -1,0 +1,30 @@
+name: Container
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  container:
+    name: Container
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        # Used commit SHA for actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Build goboot image
+        run: |
+          docker build --build-arg VERSION="$(cat .version)" -t goboot:ci .
+
+      - name: Smoke-test goboot image
+        run: |
+          docker run --rm --entrypoint sh goboot:ci -c '
+            status=0
+            goboot -h >/tmp/goboot-help 2>&1 || status=$?
+            { test "$status" -eq 0 || test "$status" -eq 1; } && test -s /tmp/goboot-help
+          '

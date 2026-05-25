@@ -28,12 +28,12 @@ DOCKER_RUN := docker run --rm --network host -v "$(ROOT_DIR):/workdir" -w /workd
 SH_FILES := $(shell find . -path './.git' -prune -o -path './.idea' -prune -o -path './.gitlab-ci-local' -prune -o -path './bin' -prune -o -path './outputs' -prune -o -type f -name '*.sh' -print0 | xargs -0 printf '%q ')
 
 # .PHONY declares non-file targets to always run when invoked
-.PHONY: all build clean test lint release version help
+.PHONY: all build clean test lint docker-build compose-up container-check release version help
 
 #  ----------------------------------------
 #  Default target (runs when `make` is called with no args)
 #  ----------------------------------------
-all: lint
+all: lint test container-check
 
 #  ----------------------------------------
 #  Build the project
@@ -102,6 +102,32 @@ lint_2:
 
 
 #  ----------------------------------------
+#  Run container workflows
+#  ----------------------------------------
+{{- $docker := index .MakeScripts "base_docker" }}
+{{- if not $docker }}
+
+docker-build compose-up container-check:
+	@echo "No container workflows enabled in docker config."
+
+{{- else }}
+
+docker-build:
+	@echo "Building container image..."
+	{{ index $docker 0 }}
+
+compose-up:
+	@echo "Starting compose stack..."
+	{{ index $docker 1 }}
+
+container-check:
+	@echo "Checking container configuration..."
+	{{ index $docker 2 }}
+
+{{- end }}
+
+
+#  ----------------------------------------
 #  Release the project
 #  ----------------------------------------
 release:
@@ -133,3 +159,6 @@ help_project:
 help_check:
 	@echo "  make test        Run project tests"
 	@echo "  make lint        Run static code analysis"
+	@echo "  make docker-build Build the project container image"
+	@echo "  make compose-up  Start the compose stack when generated"
+	@echo "  make container-check Validate enabled container outputs"

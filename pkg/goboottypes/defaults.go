@@ -98,6 +98,8 @@ const (
 	ScriptFileLint = "lint.sh"
 	// ScriptFileTest is the default name for the "test" script file in the "script" dir.
 	ScriptFileTest = "test.sh"
+	// ScriptFileDocker is the default name for the "docker" script file in the "script" dir.
+	ScriptFileDocker = "docker.sh"
 )
 
 // CI job filenames.
@@ -110,6 +112,8 @@ const (
 	CIFileTest = "test.yml"
 	// CIFileBuild is the default name for the build CI job file.
 	CIFileBuild = "build.yml"
+	// CIFileContainer is the default name for the container CI job file.
+	CIFileContainer = "container.yml"
 )
 
 // Template source guardrails.

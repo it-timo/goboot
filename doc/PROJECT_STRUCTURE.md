@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.1.1)
+# 📁 Project Structure — `goboot` (v0.2.0)
 
-This document reflects the current repository structure for `goboot` at `v0.1.1`.
+This document reflects the current repository structure for `goboot` at `v0.2.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -16,6 +16,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `pkg/baselocal/` — Local development scripts service
 - `pkg/basetest/` — Testing scaffold service (Ginkgo/Gomega suites and helpers)
 - `pkg/baseci/` — CI scaffolding service (GitLab/GitHub generation with policy modes)
+- `pkg/basedocker/` — CLI containerization service (Dockerfile, compose, dockerignore)
 - `pkg/config/` — Config types and loading logic
 - `pkg/goboot/` — Core execution engine
 - `pkg/goboottypes/` — Shared constants and interfaces (service IDs, linter definitions, etc.)
@@ -30,6 +31,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `base_test.yml` — Test scaffold config
 - `base_logger.yml` — Logger scaffold settings config
 - `base_ci.yml` — CI scaffold config
+- `base_docker.yml` — Docker scaffold config
 
 ### `/templates/`
 
@@ -38,6 +40,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `local_base/` — Local helper scripts/templates
 - `test_base/` — Testing templates (suite bootstrap, utils, sample specs)
 - `ci_base/` — CI templates (GitLab and GitHub providers)
+- `docker_base/` — Dockerfile, compose, and dockerignore templates
 
 ### `/doc/adr/`
 
@@ -51,6 +54,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 ### `/.github/`
 
 - GitHub workflow files and optional sponsor metadata
+- Container workflow for building and smoke-testing the `goboot` image
 
 ### `/scripts/`
 
@@ -71,6 +75,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `doc/TESTING.md` — Testing philosophy, commands, and coverage notes
 - `LICENSE`, `NOTICE` — Legal OSS declarations
 - `.editorconfig`, `.gitignore`, `.gitattributes` — Development consistency
+- `Dockerfile`, `.dockerignore` — Container image definition for the `goboot` CLI
 - `.nvmrc` — Tooling hints
 - `go.mod`, `go.sum` — Go module metadata
 - **`Makefile` — Common developer tasks**
@@ -108,4 +113,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.1.1 — matches real files in the repository._
+_Last updated: v0.2.0 — matches real files in the repository._

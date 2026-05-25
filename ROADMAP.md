@@ -84,20 +84,18 @@ Current release.
 
 ## In Progress
 
-No active milestone is marked in progress in this tree.
-
-## Planned Milestones
-
 ### v0.2.0 — Containerization
 
 **Focus:** deployment-ready outputs
 
 - Dockerfile templates (multi-stage)
-- docker-compose for multi-service setups
-- Container-based integration testing
+- docker-compose for CLI-container execution
+- Container build and compose validation
 - Local dev parity with CI
 
 ---
+
+## Planned Milestones
 
 ### v0.2.1 — Release Automation
 

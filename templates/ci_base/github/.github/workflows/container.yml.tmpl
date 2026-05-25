@@ -1,0 +1,47 @@
+name: Container
+
+{{- $branches := .AutoBranches }}
+on:
+  push:
+    branches:
+{{- if $branches }}
+{{- range $branch := $branches }}
+      - "{{ $branch }}"
+{{- end }}
+{{- else }}
+      - "main"
+      - "master"
+{{- end }}
+  pull_request:
+    branches:
+{{- if $branches }}
+{{- range $branch := $branches }}
+      - "{{ $branch }}"
+{{- end }}
+{{- else }}
+      - "main"
+      - "master"
+{{- end }}
+
+jobs:
+  container:
+    name: Container
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        # Used commit SHA for actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Build container image
+        run: |
+          set -euo pipefail
+{{- $cmds := index .FileScripts "container.yml" }}
+{{- if $cmds }}
+{{- range $cmd := $cmds }}
+{{ indent 10 (oneLine $cmd) }}
+{{- end }}
+{{- else }}
+          echo "No container commands registered."
+{{- end }}
