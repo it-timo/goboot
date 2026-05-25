@@ -64,13 +64,13 @@ tasks:
 {{ indent 10 (index $docker 0) }}
 
   compose-up:
-    desc: Start the compose stack
+    desc: Start the compose stack when generated
     cmds:
       - |
 {{ indent 10 (index $docker 1) }}
 
   container-check:
-    desc: Validate compose and image build
+    desc: Validate enabled container outputs
     cmds:
       - |
 {{ indent 10 (replace (index $docker 2) " && " " &&\n") }}

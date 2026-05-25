@@ -102,7 +102,9 @@ With `base_local` enabled, generated projects also receive:
 - `scripts/docker.sh`
 
 With `base_ci` enabled, generated CI receives a container job that validates the
-compose file and builds the image.
+enabled container outputs. Compose validation only runs when `compose` is listed
+in `base_docker.fileList`; image build and CLI smoke only run when `dockerfile`
+is listed.
 
 ## Validation Scope
 
@@ -112,8 +114,7 @@ Current validation checks that:
 - generated Docker files are present when `base_docker` is enabled.
 - local lint/test workflows include the generated Docker helper script.
 - generated `make container-check` and `task container-check` workflows validate
-  compose config, image builds, and the CLI help smoke run during the
-  intro-project verification flow.
+  the enabled container outputs during the intro-project verification flow.
 - GitLab and GitHub provider CI can render container build jobs, and the CI
   canary executes provider container jobs when those workflows exist. GitLab
   container validation uses `gitlab-ci-local --privileged`, and GitHub

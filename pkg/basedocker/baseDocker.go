@@ -17,6 +17,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	dockerfileFileEntry = "dockerfile"
+	composeFileEntry    = "compose"
+)
+
 // BaseDocker renders Dockerfile, compose, and dockerignore templates.
 type BaseDocker struct {
 	cfg       *config.BaseDockerConfig
@@ -133,12 +138,12 @@ func (b *BaseDocker) Run() error {
 func (b *BaseDocker) copyFiles() error {
 	for _, entry := range b.cfg.FileList {
 		switch strings.TrimSpace(entry) {
-		case "dockerfile":
+		case dockerfileFileEntry:
 			err := b.copyFile("Dockerfile")
 			if err != nil {
 				return fmt.Errorf("failed to copy Dockerfile: %w", err)
 			}
-		case "compose":
+		case composeFileEntry:
 			err := b.copyFile("docker-compose.yml")
 			if err != nil {
 				return fmt.Errorf("failed to copy docker-compose.yml: %w", err)
@@ -181,12 +186,12 @@ func (b *BaseDocker) copyFile(fileName string) error {
 }
 
 func (b *BaseDocker) registerScripts() error {
-	containerCheck := "docker compose config && " +
-		"docker build -t " + b.cfg.ImageName + " . && " +
-		"docker run --rm " + b.cfg.ImageName + " -h"
+	hasDockerfile := b.hasEnabledFile(dockerfileFileEntry)
+	hasCompose := b.hasEnabledFile(composeFileEntry)
+	containerCheck := b.containerCheckCommand(hasDockerfile, hasCompose)
 	cmds := []string{
-		"docker build -t " + b.cfg.ImageName + " .",
-		"docker compose up --build",
+		b.dockerBuildCommand(hasDockerfile),
+		b.composeUpCommand(hasCompose),
 		containerCheck,
 	}
 
@@ -204,11 +209,10 @@ func (b *BaseDocker) registerScripts() error {
 }
 
 func (b *BaseDocker) registerCIJobs() error {
-	cmds := []string{
-		"docker compose config",
-		"docker build -t " + b.cfg.ImageName + " .",
-		"docker run --rm " + b.cfg.ImageName + " -h",
-	}
+	cmds := b.containerCheckCommands(
+		b.hasEnabledFile(dockerfileFileEntry),
+		b.hasEnabledFile(composeFileEntry),
+	)
 
 	err := b.ci.RegisterLines(goboottypes.ServiceNameBaseDocker, cmds)
 	if err != nil {
@@ -221,4 +225,57 @@ func (b *BaseDocker) registerCIJobs() error {
 	}
 
 	return nil
+}
+
+func (b *BaseDocker) hasEnabledFile(entry string) bool {
+	for _, file := range b.cfg.FileList {
+		if strings.TrimSpace(file) == entry {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (b *BaseDocker) dockerBuildCommand(enabled bool) string {
+	if !enabled {
+		return "echo \"No Dockerfile output enabled.\""
+	}
+
+	return "docker build -t " + b.cfg.ImageName + " ."
+}
+
+func (b *BaseDocker) composeUpCommand(enabled bool) string {
+	if !enabled {
+		return "echo \"No compose output enabled.\""
+	}
+
+	return "docker compose up --build"
+}
+
+func (b *BaseDocker) containerCheckCommand(hasDockerfile, hasCompose bool) string {
+	cmds := b.containerCheckCommands(hasDockerfile, hasCompose)
+	if len(cmds) == 0 {
+		return "echo \"No container checks registered.\""
+	}
+
+	return strings.Join(cmds, " && ")
+}
+
+func (b *BaseDocker) containerCheckCommands(hasDockerfile, hasCompose bool) []string {
+	var cmds []string
+
+	if hasCompose {
+		cmds = append(cmds, "docker compose config")
+	}
+
+	if hasDockerfile {
+		cmds = append(
+			cmds,
+			"docker build -t "+b.cfg.ImageName+" .",
+			"docker run --rm "+b.cfg.ImageName+" -h",
+		)
+	}
+
+	return cmds
 }

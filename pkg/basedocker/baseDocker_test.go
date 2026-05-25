@@ -16,6 +16,8 @@ const (
 	dockerFileEntry       = "dockerfile"
 	composeFileEntry      = "compose"
 	dockerignoreFileEntry = "dockerignore"
+	expectedBuildCommand  = "docker build -t introproject:local ."
+	expectedComposeConfig = "docker compose config"
 )
 
 type recordingRegistrar struct {
@@ -164,14 +166,65 @@ var _ = Describe("BaseDocker Service", func() {
 			Expect(baseDocker.Run()).To(Succeed())
 
 			expectedScriptLines := []string{
-				"docker build -t introproject:local .",
+				expectedBuildCommand,
 				"docker compose up --build",
-				"docker compose config && docker build -t introproject:local . && docker run --rm introproject:local -h",
+				expectedComposeConfig + " && " + expectedBuildCommand + " && docker run --rm introproject:local -h",
 			}
 			expectedCILines := []string{
-				"docker compose config",
-				"docker build -t introproject:local .",
+				expectedComposeConfig,
+				expectedBuildCommand,
 				"docker run --rm introproject:local -h",
+			}
+
+			Expect(scripts.lines).To(HaveKeyWithValue(goboottypes.ServiceNameBaseDocker, expectedScriptLines))
+			Expect(scripts.files).To(HaveKeyWithValue(goboottypes.ScriptFileDocker, expectedScriptLines))
+			Expect(ciRegistrar.lines).To(HaveKeyWithValue(goboottypes.ServiceNameBaseDocker, expectedCILines))
+			Expect(ciRegistrar.files).To(HaveKeyWithValue(goboottypes.CIFileContainer, expectedCILines))
+		})
+
+		It("omits compose commands when compose output is disabled", func() {
+			validConfig.FileList = []string{dockerFileEntry}
+			scripts := newRecordingRegistrar()
+			ciRegistrar := newRecordingRegistrar()
+
+			baseDocker.SetScriptReceiver(scripts)
+			baseDocker.SetCIReceiver(ciRegistrar)
+
+			Expect(baseDocker.Run()).To(Succeed())
+
+			expectedScriptLines := []string{
+				expectedBuildCommand,
+				"echo \"No compose output enabled.\"",
+				expectedBuildCommand + " && docker run --rm introproject:local -h",
+			}
+			expectedCILines := []string{
+				expectedBuildCommand,
+				"docker run --rm introproject:local -h",
+			}
+
+			Expect(scripts.lines).To(HaveKeyWithValue(goboottypes.ServiceNameBaseDocker, expectedScriptLines))
+			Expect(scripts.files).To(HaveKeyWithValue(goboottypes.ScriptFileDocker, expectedScriptLines))
+			Expect(ciRegistrar.lines).To(HaveKeyWithValue(goboottypes.ServiceNameBaseDocker, expectedCILines))
+			Expect(ciRegistrar.files).To(HaveKeyWithValue(goboottypes.CIFileContainer, expectedCILines))
+		})
+
+		It("omits Docker build commands when Dockerfile output is disabled", func() {
+			validConfig.FileList = []string{composeFileEntry}
+			scripts := newRecordingRegistrar()
+			ciRegistrar := newRecordingRegistrar()
+
+			baseDocker.SetScriptReceiver(scripts)
+			baseDocker.SetCIReceiver(ciRegistrar)
+
+			Expect(baseDocker.Run()).To(Succeed())
+
+			expectedScriptLines := []string{
+				"echo \"No Dockerfile output enabled.\"",
+				"docker compose up --build",
+				expectedComposeConfig,
+			}
+			expectedCILines := []string{
+				expectedComposeConfig,
 			}
 
 			Expect(scripts.lines).To(HaveKeyWithValue(goboottypes.ServiceNameBaseDocker, expectedScriptLines))
