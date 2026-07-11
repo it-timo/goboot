@@ -19,4 +19,6 @@ const (
 	ServiceNameBaseLogger = "base_logger"
 	// ServiceNameBaseDocker identifies the containerization generator.
 	ServiceNameBaseDocker = "base_docker"
+	// ServiceNameBaseRelease identifies the release automation generator.
+	ServiceNameBaseRelease = "base_release"
 )

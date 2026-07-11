@@ -22,17 +22,16 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.2.0` is the active containerization milestone.
-It builds on the `v0.1.x` CI and logging foundation with Dockerfile,
-docker-compose, local Docker helper commands, and provider CI container jobs for
-generated CLI-style Go projects, plus a container image path for the `goboot`
-generator CLI itself.
+`v0.2.1` is the active release automation milestone. It adds tag-driven
+GoReleaser configuration, provider release jobs, changelog generation,
+checksums, and cross-platform binary archives for generated projects and the
+`goboot` CLI itself.
 
 ### Core Capabilities
 
 - **Modular Service Architecture**: Logic is split into isolated services
 (`base_project`, `base_lint`, `base_test`, `base_logger`, `base_docker`,
-`base_local`, `base_ci`) with strict contracts.
+`base_release`, `base_local`, `base_ci`) with strict contracts.
 - **Containerized Lint Tooling**: Lint jobs run via Docker by default, while CI simulation uses host tools (`act`, `gitlab-ci-local`).
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
@@ -44,6 +43,8 @@ Dockerfile, compose file, `.dockerignore`, local Docker commands, and CI image
 build validation through `base_docker`.
 - **Containerized Generator**: The `goboot` CLI itself can be built as a Docker
 image for mounted-workspace generation runs.
+- **Tag-Driven Releases**: GoReleaser produces Linux, macOS, and Windows binary
+  archives and checksums from explicit semantic-version tags.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -117,6 +118,7 @@ This repository uses:
 - [doc/WORKFLOW.md](./doc/WORKFLOW.md) to define long-term contribution and CI logic
 - [doc/ci.md](./doc/ci.md) for CI policy modes and provider-specific generated CI behavior
 - [doc/containerization.md](./doc/containerization.md) for generated Docker behavior
+- [doc/releasing.md](./doc/releasing.md) for tag-driven release behavior
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

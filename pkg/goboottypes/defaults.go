@@ -114,6 +114,8 @@ const (
 	CIFileBuild = "build.yml"
 	// CIFileContainer is the default name for the container CI job file.
 	CIFileContainer = "container.yml"
+	// CIFileRelease is the default name for the release CI job file.
+	CIFileRelease = "release.yml"
 )
 
 // Template source guardrails.

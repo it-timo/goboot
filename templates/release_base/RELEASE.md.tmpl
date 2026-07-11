@@ -1,0 +1,13 @@
+# Releasing {{.ProjectName}}
+
+Releases are immutable and tag-driven. Ensure CI is green, then create and push
+an annotated semantic-version tag:
+
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+The provider pipeline runs GoReleaser, builds Linux/macOS/Windows archives,
+creates checksums, derives release notes from commits, and publishes the release.
+Test locally without publishing with `goreleaser release --snapshot --clean`.
