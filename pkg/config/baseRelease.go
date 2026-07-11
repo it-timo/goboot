@@ -11,6 +11,11 @@ import (
 
 var releaseNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
 
+const (
+	releaseTarGzFormat = "tar.gz"
+	releaseZipFormat   = "zip"
+)
+
 // BaseReleaseConfig contains inputs for GoReleaser and provider release automation.
 type BaseReleaseConfig struct {
 	// SourcePath points to release templates.
@@ -45,25 +50,51 @@ func (br *BaseReleaseConfig) ReadConfig(confPath string, _ string, gitProvider s
 
 // Validate checks release inputs and applies deterministic defaults.
 func (br *BaseReleaseConfig) Validate() error {
-	if strings.TrimSpace(br.SourcePath) == "" || strings.TrimSpace(br.ProjectName) == "" || br.GitProvider == "" {
-		return errors.New("missing required config fields: sourcePath, projectName, or gitProvider")
-	}
-	err := validateProjectName(br.ProjectName)
+	err := br.validateRequiredFields()
 	if err != nil {
 		return err
 	}
 
+	err = validateProjectName(br.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	err = br.validateGitProvider()
+	if err != nil {
+		return err
+	}
+
+	br.fillDefaults()
+
+	err = br.validateBuildSettings()
+	if err != nil {
+		return err
+	}
+
+	return br.validateFormats()
+}
+
+func (br *BaseReleaseConfig) validateRequiredFields() error {
+	if strings.TrimSpace(br.SourcePath) == "" || strings.TrimSpace(br.ProjectName) == "" || br.GitProvider == "" {
+		return errors.New("missing required config fields: sourcePath, projectName, or gitProvider")
+	}
+
+	return nil
+}
+
+func (br *BaseReleaseConfig) validateGitProvider() error {
 	if br.GitProvider != goboottypes.GitProviderGitHub && br.GitProvider != goboottypes.GitProviderGitLab {
 		return fmt.Errorf("invalid config: gitProvider %q is not supported", br.GitProvider)
 	}
 
+	return nil
+}
+
+func (br *BaseReleaseConfig) fillDefaults() {
 	br.BinaryName = strings.TrimSpace(br.BinaryName)
 	if br.BinaryName == "" {
 		br.BinaryName = strings.ToLower(br.ProjectName)
-	}
-
-	if !releaseNamePattern.MatchString(br.BinaryName) {
-		return fmt.Errorf("invalid config: binaryName %q is not supported", br.BinaryName)
 	}
 
 	br.MainPackage = strings.TrimSpace(br.MainPackage)
@@ -71,18 +102,29 @@ func (br *BaseReleaseConfig) Validate() error {
 		br.MainPackage = "./cmd/" + strings.ToLower(br.ProjectName)
 	}
 
+	if len(br.Formats) == 0 {
+		br.Formats = []string{releaseTarGzFormat, releaseZipFormat}
+	}
+}
+
+func (br *BaseReleaseConfig) validateBuildSettings() error {
+	if !releaseNamePattern.MatchString(br.BinaryName) {
+		return fmt.Errorf("invalid config: binaryName %q is not supported", br.BinaryName)
+	}
+
 	if strings.Contains(br.MainPackage, "..") || !dockerMainPackagePattern.MatchString(br.MainPackage) {
 		return fmt.Errorf("invalid config: mainPackage %q is not supported", br.MainPackage)
 	}
 
-	if len(br.Formats) == 0 {
-		br.Formats = []string{"tar.gz", "zip"}
-	}
+	return nil
+}
 
+func (br *BaseReleaseConfig) validateFormats() error {
 	seen := map[string]bool{}
+
 	for _, format := range br.Formats {
 		format = strings.TrimSpace(format)
-		if format != "tar.gz" && format != "zip" {
+		if format != releaseTarGzFormat && format != releaseZipFormat {
 			return fmt.Errorf("invalid config: format %q is not supported", format)
 		}
 

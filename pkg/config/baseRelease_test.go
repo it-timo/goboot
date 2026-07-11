@@ -8,6 +8,8 @@ import (
 	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
+const releaseZipFormat = "zip"
+
 var _ = Describe("BaseReleaseConfig", func() {
 	var baseRelease *config.BaseReleaseConfig
 
@@ -28,14 +30,14 @@ var _ = Describe("BaseReleaseConfig", func() {
 			Expect(baseRelease.Validate()).To(Succeed())
 			Expect(baseRelease.BinaryName).To(Equal("testproject"))
 			Expect(baseRelease.MainPackage).To(Equal("./cmd/testproject"))
-			Expect(baseRelease.Formats).To(Equal([]string{"tar.gz", "zip"}))
+			Expect(baseRelease.Formats).To(Equal([]string{"tar.gz", releaseZipFormat}))
 		})
 
 		It("accepts GitLab and explicit release settings", func() {
 			baseRelease.GitProvider = goboottypes.GitProviderGitLab
 			baseRelease.BinaryName = "custom-cli"
 			baseRelease.MainPackage = "./cmd/custom"
-			baseRelease.Formats = []string{"zip"}
+			baseRelease.Formats = []string{releaseZipFormat}
 			Expect(baseRelease.Validate()).To(Succeed())
 		})
 	})
@@ -52,7 +54,7 @@ var _ = Describe("BaseReleaseConfig", func() {
 		})
 
 		It("rejects unsupported or duplicate formats", func() {
-			baseRelease.Formats = []string{"zip", "zip"}
+			baseRelease.Formats = []string{releaseZipFormat, releaseZipFormat}
 			Expect(baseRelease.Validate()).NotTo(Succeed())
 			baseRelease.Formats = []string{"deb"}
 			Expect(baseRelease.Validate()).NotTo(Succeed())
