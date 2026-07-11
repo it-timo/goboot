@@ -132,7 +132,8 @@ func (gb *GoBoot) validateBase() error {
 			svc.ID == goboottypes.ServiceNameBaseTest ||
 			svc.ID == goboottypes.ServiceNameBaseCI ||
 			svc.ID == goboottypes.ServiceNameBaseLogger ||
-			svc.ID == goboottypes.ServiceNameBaseDocker
+			svc.ID == goboottypes.ServiceNameBaseDocker ||
+			svc.ID == goboottypes.ServiceNameBaseRelease
 
 		if !importPathMissing && !isExempt {
 			if strings.TrimSpace(gb.RepoURL) == "" {
@@ -178,6 +179,8 @@ func createServiceConfig(id, projectName string) ServiceConfig {
 		return newBaseLoggerConfig(projectName)
 	case goboottypes.ServiceNameBaseDocker:
 		return newBaseDockerConfig(projectName)
+	case goboottypes.ServiceNameBaseRelease:
+		return newBaseReleaseConfig(projectName)
 	// Extend with more cases for additional service types.
 	default:
 		return nil

@@ -1,0 +1,22 @@
+version: 2
+project_name: {{.ProjectName}}
+builds:
+  - id: {{.BinaryName}}
+    main: {{.MainPackage}}
+    binary: {{.BinaryName}}
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+archives:
+  - formats: [{{range $i, $v := .Formats}}{{if $i}}, {{end}}{{$v}}{{end}}]
+    name_template: "{{`{{ .ProjectName }}`}}_{{`{{ .Version }}`}}_{{`{{ .Os }}`}}_{{`{{ .Arch }}`}}"
+checksum:
+  name_template: checksums.txt
+changelog:
+  use: git
+  sort: asc
+  filters:
+    exclude: ['^docs:', '^test:', '^chore:']
+release:
+  draft: false
+  prerelease: auto

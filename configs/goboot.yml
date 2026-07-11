@@ -38,6 +38,9 @@ services:
   - id: "base_docker"
     confPath: "./configs/base_docker.yml"
     enabled: true
+  - id: "base_release"
+    confPath: "./configs/base_release.yml"
+    enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"
     enabled: true

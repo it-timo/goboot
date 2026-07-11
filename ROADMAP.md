@@ -82,8 +82,6 @@ Current release.
 
 ---
 
-## In Progress
-
 ### v0.2.0 — Containerization
 
 **Focus:** deployment-ready outputs
@@ -95,15 +93,19 @@ Current release.
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.2.1 — Release Automation
 
-- GoReleaser integration
-- Automated versioning and changelogs
-- Binary distribution
+- GoReleaser v2 integration for goboot and generated projects
+- Explicit semantic versioning through immutable `v*` Git tags
+- Automated changelogs, archives, and checksum manifests
+- GitHub and GitLab release jobs generated through `base_ci`
+- Linux, macOS, and Windows binary distribution for AMD64 and ARM64
 
 ---
+
+## Planned Milestones
 
 ### v0.3.0 — Template Profiles
 

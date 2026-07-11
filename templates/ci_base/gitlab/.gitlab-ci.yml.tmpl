@@ -10,6 +10,9 @@ stages:
 {{- else if index .FileScripts "container.yml" }}
   - build
 {{- end }}
+{{- if index .FileScripts "release.yml" }}
+  - release
+{{- end }}
 
 {{- if .EnabledJobFiles }}
 include:
