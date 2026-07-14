@@ -25,6 +25,8 @@ const (
 	DefaultParallelism = 1
 	// MaxParallelism bounds concurrent service work to avoid resource exhaustion.
 	MaxParallelism = 32
+	// DefaultRegenerationPolicy protects user-modified files during repeated runs.
+	DefaultRegenerationPolicy = "managed"
 )
 
 // GoBoot holds root config values and the config manager for a scaffold run.
@@ -47,6 +49,9 @@ type GoBoot struct {
 	// Parallelism bounds concurrent execution of independent services.
 	Parallelism int `yaml:"parallelism"`
 
+	// RegenerationPolicy controls collisions with files in an existing project.
+	RegenerationPolicy string `yaml:"regenerationPolicy"`
+
 	// TargetPath is the directory that receives generated output.
 	TargetPath string `yaml:"targetPath"`
 
@@ -62,10 +67,11 @@ type GoBoot struct {
 // NewGoBoot returns a GoBoot with an empty config manager.
 func NewGoBoot(confPath string) *GoBoot {
 	return &GoBoot{
-		configPath:  confPath,
-		Parallelism: DefaultParallelism,
-		ConfManager: NewConfigManager(),
-		logger:      zerolog.Nop(),
+		configPath:         confPath,
+		Parallelism:        DefaultParallelism,
+		RegenerationPolicy: DefaultRegenerationPolicy,
+		ConfManager:        NewConfigManager(),
+		logger:             zerolog.Nop(),
 	}
 }
 
@@ -140,12 +146,28 @@ func (gb *GoBoot) validateBase() error {
 		return err
 	}
 
+	err = gb.validateRegenerationPolicy()
+	if err != nil {
+		return err
+	}
+
 	err = validateProjectName(gb.ProjectName)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (gb *GoBoot) validateRegenerationPolicy() error {
+	gb.RegenerationPolicy = strings.ToLower(strings.TrimSpace(gb.RegenerationPolicy))
+
+	switch gb.RegenerationPolicy {
+	case "managed", "replace", "preserve":
+		return nil
+	default:
+		return fmt.Errorf("unsupported regenerationPolicy: %q", gb.RegenerationPolicy)
+	}
 }
 
 // validateRequiredFields validates root fields and enabled service paths.

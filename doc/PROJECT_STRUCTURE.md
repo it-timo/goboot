@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.6.0)
+# 📁 Project Structure — `goboot` (v0.7.0)
 
-This document reflects the current repository structure for `goboot` at `v0.6.0`.
+This document reflects the current repository structure for `goboot` at `v0.7.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -24,6 +24,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `pkg/goboot/` — Core execution engine
 - `pkg/goboottypes/` — Shared constants and interfaces (service IDs, linter definitions, etc.)
 - `pkg/gobootutils/` — Path/FS safety, template helpers, secure root handling
+- `pkg/regeneration/` — Ownership manifests, change planning, and transactional apply
 
 ### `/configs/`
 
@@ -126,4 +127,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.6.0 — matches real files in the repository._
+_Last updated: v0.7.0 — matches real files in the repository._

@@ -23,8 +23,9 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.6.0` is the active performance and scale milestone. It adds measured
-generation baselines, repeatable profiling, and bounded parallel service execution.
+`v0.7.0` is the active regeneration-safety milestone. It adds explicit file
+ownership, dry-run plans, user-edit conflict detection, and rollback-capable
+project transactions.
 
 ### Core Capabilities
 
@@ -54,6 +55,8 @@ image for mounted-workspace generation runs.
   license checks, emits CycloneDX SBOM artifacts, and adds CodeQL on GitHub.
 - **Measured Scale**: Template, config, and service benchmarks track generator
   costs, while opt-in bounded parallelism accelerates independent services.
+- **Safe Regeneration**: A versioned ownership manifest, explicit collision
+  policies, isolated staging, and transactional apply protect user-modified files.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -134,6 +137,8 @@ This repository uses:
   source, dependency, license, and SBOM controls
 - [doc/performance.md](./doc/performance.md) for parallel execution, benchmarks,
   and profiling
+- [doc/regeneration.md](./doc/regeneration.md) for ownership, dry runs, conflict
+  policies, and transactional updates
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

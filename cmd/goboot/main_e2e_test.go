@@ -580,8 +580,8 @@ exit 0
 
 		err = run([]string{argConfig, configFile})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("service registration failed"))
-		Expect(err.Error()).To(ContainSubstring("failed to create target directory"))
+		Expect(err.Error()).To(ContainSubstring("failed to apply generation transaction"))
+		Expect(err.Error()).To(ContainSubstring("failed to create target parent"))
 	})
 
 	It("fails when an enabled lint template file is missing", func() {

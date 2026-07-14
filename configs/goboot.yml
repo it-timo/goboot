@@ -25,6 +25,10 @@ profile: "standard"
 # Use 1 for serial execution; supported range is 1-32.
 parallelism: 4
 
+# Existing-project collision policy: managed, replace, or preserve.
+# managed updates unchanged goboot-owned files and stops on user modifications.
+regenerationPolicy: "managed"
+
 # Enabled services for this run.
 # Each entry needs: `id`, `confPath`, `enabled`.
 # Unknown IDs fail fast; disabled services are skipped.

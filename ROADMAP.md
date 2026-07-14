@@ -82,8 +82,6 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ### v0.2.0 — Containerization
 
-Current release.
-
 **Focus:** deployment-ready outputs
 
 - Dockerfile templates (multi-stage)
@@ -131,15 +129,49 @@ Current release.
 
 ---
 
-## In Progress
-
-### v0.6.0 — Performance & Scale
+### v0.6.0 — Performance & Scale (Released)
 
 - Template rendering and atomic-file benchmarks
 - 500-service config parsing benchmark
 - Large-project CPU and memory profiling workflow
 - Bounded parallel service execution with deterministic failure semantics
 - Thread-safe CI and local registries
+
+---
+
+## In Progress
+
+### v0.7.0 — Regeneration Safety
+
+- Generated ownership manifest with content and mode digests
+- Complete dry-run change plans
+- Managed, replace, and preserve policies
+- User-modification and stale-file conflict detection
+- Isolated staging and rollback-capable project transactions
+
+---
+
+## Planned Milestones
+
+### v0.8.0 — Stable CLI & Configuration
+
+- Freeze the v1 CLI and YAML schema
+- Configuration validation without generation
+- Published schemas and editor completion
+- Deprecation and migration policy
+- Stable exit codes and machine-readable output
+- Linux, macOS, and Windows compatibility matrix
+
+---
+
+### v0.9.0 — Release Candidate Hardening
+
+- Golden-output regression suite
+- Signed binaries, provenance, checksums, and release SBOM
+- Installation and upgrade testing
+- Documented performance limits
+- Threat-model and documentation audit
+- Real-repository dogfooding and v1 release candidates
 
 ---
 

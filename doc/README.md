@@ -14,6 +14,8 @@ Use this folder as the main documentation hub after `README.md`.
   dependency, license, and SBOM controls.
 - [`performance.md`](./performance.md): bounded service execution, benchmarks,
   and profiling.
+- [`regeneration.md`](./regeneration.md): generated ownership, dry-run plans,
+  collision policies, and transactional updates.
 
 ## Architecture and Policies
 

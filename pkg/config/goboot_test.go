@@ -99,6 +99,46 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 		)
 	})
 
+	Describe("regeneration policy", func() {
+		writePolicyConfig := func(value string) {
+			yamlContent := "projectName: \"RegenerationProject\"\n" +
+				"targetPath: \"/tmp/regeneration-project\"\n" +
+				value +
+				"services: []\n"
+
+			Expect(os.WriteFile(configPath, []byte(yamlContent), 0o644)).To(Succeed())
+		}
+
+		It("defaults to managed regeneration", func() {
+			writePolicyConfig("")
+
+			goBoot = config.NewGoBoot(configPath)
+			Expect(goBoot.Init()).To(Succeed())
+			Expect(goBoot.RegenerationPolicy).To(Equal(config.DefaultRegenerationPolicy))
+		})
+
+		DescribeTable("accepts supported policies",
+			func(policy string) {
+				writePolicyConfig("regenerationPolicy: " + policy + "\n")
+
+				goBoot = config.NewGoBoot(configPath)
+				Expect(goBoot.Init()).To(Succeed())
+				Expect(goBoot.RegenerationPolicy).To(Equal(policy))
+			},
+			Entry("managed", "managed"),
+			Entry("replace", "replace"),
+			Entry("preserve", "preserve"),
+		)
+
+		It("rejects unsupported policies", func() {
+			writePolicyConfig("regenerationPolicy: merge\n")
+
+			goBoot = config.NewGoBoot(configPath)
+			err := goBoot.Init()
+			Expect(err).To(MatchError(ContainSubstring("unsupported regenerationPolicy")))
+		})
+	})
+
 	Describe("Init", func() {
 		Context("with valid configuration", func() {
 			BeforeEach(func() {

@@ -3,6 +3,7 @@ repoUrl: ${REPO_URL}
 targetPath: ${TARGET_DIR}
 gitProvider: ${GIT_PROVIDER}
 parallelism: 4
+regenerationPolicy: managed
 services:
   - id: base_project
     confPath: ${BASE_PROJECT_CFG}

@@ -7,6 +7,29 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.7.0 — Regeneration Safety
+
+Added:
+
+- `.goboot-manifest.yml` ownership records with generator inputs, file SHA-256
+  digests, and permission modes.
+- `managed`, `replace`, and `preserve` regeneration policies.
+- `--dry-run` change plans with create, update, delete, preserve, conflict, and
+  unchanged actions.
+- Isolated generation staging and rollback-capable project transactions.
+- User-edit, stale-file, path-type, malformed-manifest, symbolic-link, and
+  special-file safety checks.
+- Safe regeneration guide and ADR-041.
+
+Changed:
+
+- The CLI no longer renders directly into the configured target. It builds a
+  complete staged tree and commits a validated candidate.
+- Root configs default to managed regeneration, which refuses collisions without
+  unchanged ownership evidence.
+- The roadmap now defines v0.8 CLI/config stability and v0.9 release-candidate
+  hardening before v1.0.
+
 ### v0.6.0 — Performance & Scale
 
 Added:

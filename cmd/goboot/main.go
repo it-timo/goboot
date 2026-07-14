@@ -12,10 +12,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboot"
+	"github.com/it-timo/goboot/pkg/regeneration"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -23,12 +25,15 @@ import (
 var (
 	exitFunc               = os.Exit
 	outputWriter io.Writer = os.Stdout
+	version                = "dev"
 )
 
 type cliOptions struct {
-	configPath    string
-	logLevel      string
-	skipGoModTidy bool
+	configPath         string
+	logLevel           string
+	regenerationPolicy string
+	dryRun             bool
+	skipGoModTidy      bool
 }
 
 func writeOutputLine(msg string) {
@@ -47,6 +52,13 @@ func parseCLIOptions(args []string) (cliOptions, error) {
 
 	flagSet.StringVar(&opts.configPath, "config", opts.configPath, "Path to the goboot config file")
 	flagSet.StringVar(&opts.logLevel, "log-level", opts.logLevel, "Log level: debug|info|warn|error")
+	flagSet.StringVar(
+		&opts.regenerationPolicy,
+		"regeneration-policy",
+		"",
+		"Override regeneration policy: managed|replace|preserve",
+	)
+	flagSet.BoolVar(&opts.dryRun, "dry-run", false, "Plan generation without changing the target project")
 	flagSet.BoolVar(&opts.skipGoModTidy, "skip-go-mod-tidy", false, "Skip running go mod tidy after generation")
 
 	err := flagSet.Parse(args)
@@ -87,7 +99,34 @@ func run(args []string) error {
 		return fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	// Step 2: Create a new goboot application instance.
+	policyRaw := cfg.RegenerationPolicy
+	if opts.regenerationPolicy != "" {
+		policyRaw = opts.regenerationPolicy
+	}
+
+	policy, err := regeneration.ParsePolicy(policyRaw)
+	if err != nil {
+		return fmt.Errorf("invalid regeneration policy: %w", err)
+	}
+
+	targetPath := cfg.TargetPath
+	stagingRoot, err := os.MkdirTemp("", "goboot-generation-*")
+	if err != nil {
+		return fmt.Errorf("failed to create generation staging directory: %w", err)
+	}
+
+	defer func() {
+		if removeErr := os.RemoveAll(stagingRoot); removeErr != nil {
+			logger.Error().Err(removeErr).Msg("failed to remove generation staging directory")
+		}
+	}()
+
+	cfg.TargetPath = stagingRoot
+	defer func() {
+		cfg.TargetPath = targetPath
+	}()
+
+	// Step 2: Create a new goboot application instance for the isolated staging tree.
 	app := goboot.NewGoBootWithLogger(cfg, logger.With().Str("component", "orchestrator").Logger())
 
 	// Step 3: Register all declared and enabled services.
@@ -102,21 +141,62 @@ func run(args []string) error {
 		return fmt.Errorf("service execution failed: %w", err)
 	}
 
+	err = os.MkdirAll(filepath.Join(stagingRoot, cfg.ProjectName), 0o755)
+	if err != nil {
+		return fmt.Errorf("failed to ensure staged project root: %w", err)
+	}
+
 	// Step 5: Run go mod tidy if the go.mod file exists and the user did not opt out.
 	err = app.RunGoModTidy(!opts.skipGoModTidy)
 	if err != nil {
 		return fmt.Errorf("failed to run go mod tidy: %w", err)
 	}
 
+	// Step 6: Compare staged output with the target and commit it transactionally.
+	plan, err := regeneration.Apply(regeneration.Request{
+		StagedProject:    filepath.Join(stagingRoot, cfg.ProjectName),
+		TargetProject:    filepath.Join(targetPath, cfg.ProjectName),
+		GeneratorVersion: version,
+		Profile:          cfg.Profile,
+		Services:         enabledServiceIDs(cfg.Services),
+		Policy:           policy,
+		DryRun:           opts.dryRun,
+	})
+	if opts.dryRun || err != nil {
+		writeOutputLine(plan.String())
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to apply generation transaction: %w", err)
+	}
+
+	if opts.dryRun {
+		writeOutputLine("goboot dry run completed without changing the target project.")
+
+		return nil
+	}
+
 	logger.Info().
 		Str("config_path", opts.configPath).
-		Str("target_path", cfg.TargetPath).
+		Str("target_path", targetPath).
 		Str("project_name", cfg.ProjectName).
 		Int64("duration_ms", time.Since(runStart).Milliseconds()).
 		Msg("goboot execution completed successfully")
 	writeOutputLine("goboot execution completed successfully.")
 
 	return nil
+}
+
+func enabledServiceIDs(services []config.ServiceConfigMeta) []string {
+	serviceIDs := make([]string, 0, len(services))
+
+	for _, service := range services {
+		if service.IsEnabled() {
+			serviceIDs = append(serviceIDs, service.ID)
+		}
+	}
+
+	return serviceIDs
 }
 
 func main() {

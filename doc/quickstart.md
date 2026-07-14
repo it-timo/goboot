@@ -34,6 +34,7 @@ Set in `configs/goboot.yml`:
 - `targetPath: "/tmp/goboot-demo"`
 - `profile: "standard"`
 - `parallelism: 4` for bounded concurrent service generation, or `1` for serial execution
+- `regenerationPolicy: "managed"` to protect existing user-modified files
 
 ## 3. Run goboot
 
@@ -79,15 +80,26 @@ execution.
 
 ## 5. Iterate safely
 
-Change one config at a time, regenerate, and diff output.
+Preview changes before regenerating:
+
+```bash
+go run ./cmd/goboot --config ./configs/goboot.yml --dry-run
+```
+
+Change one config at a time, preview, regenerate, and diff output.
 
 Suggested loop:
 
 1. edit one config field
-2. run `go run ./cmd/goboot --config ...`
-3. inspect generated files
-4. run generated project checks (`make lint`, `make test`, and
+2. run with `--dry-run` and resolve any conflicts
+3. run `go run ./cmd/goboot --config ...`
+4. inspect generated files and `.goboot-manifest.yml`
+5. run generated project checks (`make lint`, `make test`, and
     `make container-check` when Docker is enabled)
+
+Commit `.goboot-manifest.yml`; it records which exact file versions goboot may
+safely update on the next managed run. See [`regeneration.md`](./regeneration.md)
+before using the destructive `replace` policy.
 
 ## Notes
 
