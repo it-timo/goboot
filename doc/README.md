@@ -8,6 +8,7 @@ Use this folder as the main documentation hub after `README.md`.
 - [`examples.md`](./examples.md): concrete input config to output scenarios.
 - [`containerization.md`](./containerization.md): Dockerfile, compose, and container CI behavior.
 - [`releasing.md`](./releasing.md): tag-driven binary release automation.
+- [`profiles.md`](./profiles.md): named lint, test, and documentation baselines.
 
 ## Architecture and Policies
 

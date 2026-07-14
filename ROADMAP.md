@@ -69,8 +69,6 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ### v0.1.1 — Structured Logging & Release Hardening (Released)
 
-Current release.
-
 **Focus:** observability without noise
 
 - Replace `fmt` usage with structured logging
@@ -84,6 +82,8 @@ Current release.
 
 ### v0.2.0 — Containerization
 
+Current release.
+
 **Focus:** deployment-ready outputs
 
 - Dockerfile templates (multi-stage)
@@ -92,8 +92,6 @@ Current release.
 - Local dev parity with CI
 
 ---
-
-## In Progress
 
 ### v0.2.1 — Release Automation
 
@@ -105,7 +103,7 @@ Current release.
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.3.0 — Template Profiles
 
@@ -116,6 +114,8 @@ Current release.
 - Profile-aware documentation
 
 ---
+
+## Planned Milestones
 
 ### v0.4.0 — Governance & Contribution
 

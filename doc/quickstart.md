@@ -20,6 +20,7 @@ Start from:
 - `configs/base_test.yml`
 - `configs/base_logger.yml`
 - `configs/base_docker.yml`
+- `configs/base_release.yml`
 - `configs/base_local.yml`
 - `configs/base_ci.yml`
 
@@ -29,6 +30,7 @@ Set in `configs/goboot.yml`:
 - `repoUrl: "https://github.com/projects"`
 - `gitProvider: "gitlab"`
 - `targetPath: "/tmp/goboot-demo"`
+- `profile: "standard"`
 
 ## 3. Run goboot
 
@@ -42,6 +44,7 @@ If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expec
 
 - `/tmp/goboot-demo/IntroProject/go.mod`
 - `/tmp/goboot-demo/IntroProject/README.md`
+- `/tmp/goboot-demo/IntroProject/PROFILE.md`
 - `/tmp/goboot-demo/IntroProject/Makefile` (when `base_local` enabled)
 - `/tmp/goboot-demo/IntroProject/scripts/lint.sh` (when `base_local` + lint registration enabled)
 - `/tmp/goboot-demo/IntroProject/.golangci.yml` (when `base_lint` enabled)

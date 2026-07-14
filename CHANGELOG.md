@@ -7,6 +7,23 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.3.0 — Template Profiles
+
+Added:
+
+- Validated root `profile` selection with `minimal`, `standard`, `enterprise`,
+  and `oss` values.
+- Profile-specific Go lint baselines and cyclomatic-complexity thresholds.
+- Profile-default test styles and commands with explicit service overrides.
+- Generated `PROFILE.md` documenting the selected baseline.
+- Profile guide and ADR-037.
+
+Changed:
+
+- Omitted profiles default to `standard` for backward compatibility.
+- Generated project README and structure documentation identify the active
+  profile.
+
 ### v0.2.1 — Release Automation
 
 Added:

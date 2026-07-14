@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.2.1)
+# 📁 Project Structure — `goboot` (v0.3.0)
 
-This document reflects the current repository structure for `goboot` at `v0.2.1`.
+This document reflects the current repository structure for `goboot` at `v0.3.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -118,4 +118,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.2.1 — matches real files in the repository._
+_Last updated: v0.3.0 — matches real files in the repository._

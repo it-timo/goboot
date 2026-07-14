@@ -95,11 +95,11 @@ var _ = Describe("BaseTestConfig", func() {
 				Expect(err.Error()).To(ContainSubstring("repoImportPath"))
 			})
 
-			It("errors when useStyle is missing", func() {
+			It("defaults useStyle when it is missing", func() {
 				baseTest.UseStyle = ""
 				err := baseTest.Validate()
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("useStyle"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(baseTest.UseStyle).To(Equal(goboottypes.TestStyleGinkgo))
 			})
 
 			It("errors when multiple fields are missing", func() {
@@ -110,7 +110,6 @@ var _ = Describe("BaseTestConfig", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("sourcePath"))
 				Expect(err.Error()).To(ContainSubstring("projectName"))
-				Expect(err.Error()).To(ContainSubstring("useStyle"))
 			})
 		})
 
@@ -136,11 +135,11 @@ var _ = Describe("BaseTestConfig", func() {
 				Expect(err.Error()).To(ContainSubstring("repoImportPath"))
 			})
 
-			It("treats whitespace-only useStyle as missing", func() {
+			It("defaults whitespace-only useStyle", func() {
 				baseTest.UseStyle = "  \t  "
 				err := baseTest.Validate()
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("useStyle"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(baseTest.UseStyle).To(Equal(goboottypes.TestStyleGinkgo))
 			})
 		})
 
@@ -154,10 +153,11 @@ var _ = Describe("BaseTestConfig", func() {
 				Expect(err.Error()).To(ContainSubstring(goboottypes.TestStyleGo))
 			})
 
-			It("errors for empty string after trimming", func() {
+			It("defaults empty string after trimming", func() {
 				baseTest.UseStyle = blankValue
 				err := baseTest.Validate()
-				Expect(err).To(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(baseTest.UseStyle).To(Equal(goboottypes.TestStyleGinkgo))
 			})
 
 			It("errors for case-sensitive mismatch", func() {

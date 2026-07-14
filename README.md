@@ -22,10 +22,9 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.2.1` is the active release automation milestone. It adds tag-driven
-GoReleaser configuration, provider release jobs, changelog generation,
-checksums, and cross-platform binary archives for generated projects and the
-`goboot` CLI itself.
+`v0.3.0` is the active template-profile milestone. It adds explicit `minimal`,
+`standard`, `enterprise`, and `oss` baselines for generated lint, test, and
+documentation output while keeping service composition explicit.
 
 ### Core Capabilities
 
@@ -45,6 +44,8 @@ build validation through `base_docker`.
 image for mounted-workspace generation runs.
 - **Tag-Driven Releases**: GoReleaser produces Linux, macOS, and Windows binary
   archives and checksums from explicit semantic-version tags.
+- **Explicit Profiles**: Named project baselines adjust owned lint/test defaults
+  without silently enabling services or overriding explicit service values.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -119,6 +120,7 @@ This repository uses:
 - [doc/ci.md](./doc/ci.md) for CI policy modes and provider-specific generated CI behavior
 - [doc/containerization.md](./doc/containerization.md) for generated Docker behavior
 - [doc/releasing.md](./doc/releasing.md) for tag-driven release behavior
+- [doc/profiles.md](./doc/profiles.md) for template profile behavior
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

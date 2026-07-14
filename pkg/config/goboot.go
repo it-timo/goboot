@@ -34,6 +34,9 @@ type GoBoot struct {
 	// GitProvider selects provider-specific behavior.
 	GitProvider string `yaml:"gitProvider"`
 
+	// Profile selects the generated lint, test, and documentation baseline.
+	Profile string `yaml:"profile"`
+
 	// TargetPath is the directory that receives generated output.
 	TargetPath string `yaml:"targetPath"`
 
@@ -87,6 +90,10 @@ func (gb *GoBoot) Init() error {
 		err = cfg.ReadConfig(svc.ConfPath, gb.RepoURL, gb.GitProvider)
 		if err != nil {
 			return fmt.Errorf("failed to read config for %q: %w", svc.ID, err)
+		}
+
+		if receiver, ok := cfg.(goboottypes.ProfileReceiver); ok {
+			receiver.SetProfile(gb.Profile)
 		}
 
 		err = gb.ConfManager.Register(cfg)
@@ -152,6 +159,19 @@ func (gb *GoBoot) validateBase() error {
 
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
+	}
+
+	gb.Profile = strings.ToLower(strings.TrimSpace(gb.Profile))
+	if gb.Profile == "" {
+		gb.Profile = goboottypes.ProfileStandard
+	}
+
+	switch gb.Profile {
+	case goboottypes.ProfileMinimal, goboottypes.ProfileStandard,
+		goboottypes.ProfileEnterprise, goboottypes.ProfileOSS:
+		// Supported profile.
+	default:
+		return fmt.Errorf("unsupported profile: %q", gb.Profile)
 	}
 
 	err := validateProjectName(gb.ProjectName)
