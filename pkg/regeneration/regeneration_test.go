@@ -82,6 +82,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("produces a dry-run plan without creating the target", func() {
 		writeFile(stagedProject, "README.md", "planned\n", 0o644)
+
 		request.DryRun = true
 
 		plan, err := regeneration.Apply(request)
@@ -102,6 +103,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("updates an unchanged file owned by the previous manifest", func() {
 		writeFile(stagedProject, "README.md", "first\n", 0o644)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -115,6 +117,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("rejects user modifications under the managed policy", func() {
 		writeFile(stagedProject, "README.md", "first\n", 0o644)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -129,6 +132,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("detects user changes to an owned file mode", func() {
 		writeFile(stagedProject, "scripts/check.sh", "#!/bin/sh\n", 0o755)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -140,6 +144,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("overwrites modified files only under the replace policy", func() {
 		writeFile(stagedProject, "README.md", "first\n", 0o644)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -156,6 +161,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("preserves collisions and relinquishes their ownership", func() {
 		writeFile(stagedProject, "README.md", "first\n", 0o644)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -174,6 +180,7 @@ var _ = Describe("Regeneration transactions", func() {
 	It("deletes unchanged stale generated files", func() {
 		writeFile(stagedProject, "keep.txt", "keep\n", 0o644)
 		writeFile(stagedProject, "stale.txt", "stale\n", 0o644)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.Remove(filepath.Join(stagedProject, "stale.txt"))).To(Succeed())
