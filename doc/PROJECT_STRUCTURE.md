@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.2.0)
+# 📁 Project Structure — `goboot` (v0.9.0)
 
-This document reflects the current repository structure for `goboot` at `v0.2.0`.
+This document reflects the current repository structure for `goboot` at `v0.9.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -17,10 +17,14 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `pkg/basetest/` — Testing scaffold service (Ginkgo/Gomega suites and helpers)
 - `pkg/baseci/` — CI scaffolding service (GitLab/GitHub generation with policy modes)
 - `pkg/basedocker/` — CLI containerization service (Dockerfile, compose, dockerignore)
+- `pkg/baserelease/` — GoReleaser and provider release automation service
+- `pkg/basegovernance/` — Ownership, contribution, and security-policy service
+- `pkg/basesupplychain/` — Dependency policy, vulnerability, and SBOM service
 - `pkg/config/` — Config types and loading logic
 - `pkg/goboot/` — Core execution engine
 - `pkg/goboottypes/` — Shared constants and interfaces (service IDs, linter definitions, etc.)
 - `pkg/gobootutils/` — Path/FS safety, template helpers, secure root handling
+- `pkg/regeneration/` — Ownership manifests, change planning, and transactional apply
 
 ### `/configs/`
 
@@ -32,6 +36,14 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `base_logger.yml` — Logger scaffold settings config
 - `base_ci.yml` — CI scaffold config
 - `base_docker.yml` — Docker scaffold config
+- `base_release.yml` — Release automation config
+- `base_governance.yml` — Maintainer ownership and contribution-policy config
+- `base_supplychain.yml` — Supply-chain scanner versions and license policy
+
+### `/schemas/`
+
+- `goboot.schema.json` — Root YAML contract
+- `base_*.schema.json` — Built-in service YAML contracts and editor completion
 
 ### `/templates/`
 
@@ -41,6 +53,9 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `test_base/` — Testing templates (suite bootstrap, utils, sample specs)
 - `ci_base/` — CI templates (GitLab and GitHub providers)
 - `docker_base/` — Dockerfile, compose, and dockerignore templates
+- `release_base/` — GoReleaser and release guide templates
+- `governance_base/` — Common and provider-native governance templates
+- `supplychain_base/` — Generated supply-chain policy documentation
 
 ### `/doc/adr/`
 
@@ -53,17 +68,31 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 
 ### `/.github/`
 
-- GitHub workflow files and optional sponsor metadata
+- GitHub workflow, issue, pull request, and sponsor metadata
 - Container workflow for building and smoke-testing the `goboot` image
+- Release workflow for tag-driven binary distribution
+- Security workflow for CodeQL, dependency policy, and SBOM generation
+- Performance workflow for pull-request benchmark evidence
+- Linux, macOS, and Windows compatibility workflow
+- Release-candidate installation, upgrade, dogfood, archive, and SBOM workflow
 
 ### `/scripts/`
 
+- `verify_dogfood.sh` — repeat generation from the real committed configuration
+- `verify_install_upgrade.sh` — baseline binary replacement acceptance
+- `verify_release_artifacts.sh` — checksum, SBOM, extraction, and binary smoke gate
+- `verify_docs.sh` — release-candidate documentation coverage audit
 - Developer and verification scripts (`lint.sh`, `test.sh`, `verify_introproject.sh`,
   `verify_ci_canary.sh`)
+
+### `/testdata/golden/`
+
+- `base_project.paths` — reviewed generated-output shape contract
 
 ### Tests
 
 - BDD test suites (Ginkgo/Gomega) co-located with packages, covering services, utilities, and secure FS handling
+- Co-located Go benchmarks for templates, config parsing, and service execution
 - Testing guide at [`doc/TESTING.md`](./TESTING.md)
 
 ### Top-Level Files
@@ -73,9 +102,11 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `doc/VERSIONING.md` — Semantic version strategy
 - `doc/WORKFLOW.md` — Project lifecycle & contributor expectations
 - `doc/TESTING.md` — Testing philosophy, commands, and coverage notes
+- `CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS` — Repository governance contracts
 - `LICENSE`, `NOTICE` — Legal OSS declarations
 - `.editorconfig`, `.gitignore`, `.gitattributes` — Development consistency
 - `Dockerfile`, `.dockerignore` — Container image definition for the `goboot` CLI
+- `.goreleaser.yml` — Cross-platform binary release definition
 - `.nvmrc` — Tooling hints
 - `go.mod`, `go.sum` — Go module metadata
 - **`Makefile` — Common developer tasks**
@@ -95,8 +126,6 @@ These directories are **not yet introduced** but are part of the intended long-t
 See [`ROADMAP.md`](../ROADMAP.md) for targeted milestones.
 
 - `test/` — Additional integration/e2e harnesses
-- `benchmarks/` — Performance regression tracking
-- Contribution templates
 
 ---
 
@@ -113,4 +142,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.2.0 — matches real files in the repository._
+_Last updated: v0.9.0 — matches real files in the repository._

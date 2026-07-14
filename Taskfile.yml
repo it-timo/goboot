@@ -62,6 +62,7 @@ tasks:
       - task: test
       - task: verify:intro
       - task: verify:ci-canary
+      - task: verify:dogfood
 
   build:
     desc: Build the Go binary
@@ -77,11 +78,12 @@ tasks:
     cmds:
       - task: docker:build
       - |
-          docker run --rm --entrypoint sh "{{.GOBOOT_IMAGE}}" -c '
-            status=0
-            goboot -h >/tmp/goboot-help 2>&1 || status=$?
-            { test "$status" -eq 0 || test "$status" -eq 1; } && test -s /tmp/goboot-help
-          '
+          docker run --rm --entrypoint sh "{{.GOBOOT_IMAGE}}" -c \
+            'goboot -h >/tmp/goboot-help 2>&1 && test -s /tmp/goboot-help'
+
+  goreleaser:check:
+    desc: Validate the GoReleaser configuration
+    cmd: '{{.DOCKER_RUN_CMD}} goreleaser/goreleaser:{{.GORELEASER_VERSION}} check'
 
   lint:
     desc: Run linters
@@ -113,6 +115,22 @@ tasks:
       - ./scripts/check_coverage.sh "{{.TEST_COVER_FILE}}" "{{.MIN_COVERAGE}}"
       - rm -f "{{.TEST_COVER_FILE}}"
 
+  benchmark:
+    desc: Run performance benchmarks
+    cmd: go test ./... -run '^$' -bench . -benchmem -benchtime=1s
+
+  profile:generation:
+    desc: Write CPU and memory profiles for large-project template generation
+    cmds:
+      - mkdir -p profiles
+      - >-
+        go test ./pkg/gobootutils
+        -run '^$'
+        -bench '^BenchmarkLargeProjectRendering$'
+        -benchtime=1s
+        -cpuprofile=profiles/generation-cpu.out
+        -memprofile=profiles/generation-memory.out
+
   version:
     desc: Print current version
     cmd: 'echo "Current version: {{.VERSION}}"'
@@ -124,3 +142,16 @@ tasks:
   verify:ci-canary:
     desc: Run local CI simulation for both providers
     cmd: ./scripts/verify_ci_canary.sh --provider=both
+
+  verify:dogfood:
+    desc: Generate from the committed goboot configuration twice and compare output
+    deps: [build]
+    cmd: ./scripts/verify_dogfood.sh ./bin/goboot
+
+  verify:install-upgrade:
+    desc: Replace a baseline binary with the current release candidate and smoke-test it
+    cmd: ./scripts/verify_install_upgrade.sh
+
+  verify:docs:
+    desc: Audit release-candidate documentation coverage and stale status claims
+    cmd: ./scripts/verify_docs.sh

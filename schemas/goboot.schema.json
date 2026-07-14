@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/goboot.schema.json",
+  "title": "goboot root configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["projectName", "targetPath"],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+    },
+    "targetPath": { "type": "string", "minLength": 1 },
+    "repoUrl": { "type": "string" },
+    "gitProvider": { "enum": ["github", "gitlab"] },
+    "profile": { "enum": ["minimal", "standard", "enterprise", "oss"] },
+    "parallelism": { "type": "integer", "minimum": 1, "maximum": 32 },
+    "regenerationPolicy": { "enum": ["managed", "replace", "preserve"] },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "confPath", "enabled"],
+        "properties": {
+          "id": {
+            "enum": [
+              "base_project",
+              "base_lint",
+              "base_test",
+              "base_logger",
+              "base_docker",
+              "base_release",
+              "base_governance",
+              "base_supplychain",
+              "base_local",
+              "base_ci"
+            ]
+          },
+          "confPath": { "type": "string", "minLength": 1 },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

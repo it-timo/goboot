@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schemas/goboot.schema.json
 # Root config for one goboot generation run.
 # Safe to commit; no secrets.
 # Service execution order is defined in code, not in this file.
@@ -18,6 +19,17 @@ repoUrl: "https://github.com/projects"
 #  Git provider (used for provider-specific templates)
 gitProvider: "gitlab"
 
+# Template baseline: minimal, standard, enterprise, or oss.
+profile: "standard"
+
+# Maximum number of independent services that may run concurrently.
+# Use 1 for serial execution; supported range is 1-32.
+parallelism: 4
+
+# Existing-project collision policy: managed, replace, or preserve.
+# managed updates unchanged goboot-owned files and stops on user modifications.
+regenerationPolicy: "managed"
+
 # Enabled services for this run.
 # Each entry needs: `id`, `confPath`, `enabled`.
 # Unknown IDs fail fast; disabled services are skipped.
@@ -37,6 +49,15 @@ services:
     enabled: true
   - id: "base_docker"
     confPath: "./configs/base_docker.yml"
+    enabled: true
+  - id: "base_release"
+    confPath: "./configs/base_release.yml"
+    enabled: true
+  - id: "base_governance"
+    confPath: "./configs/base_governance.yml"
+    enabled: true
+  - id: "base_supplychain"
+    confPath: "./configs/base_supplychain.yml"
     enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"

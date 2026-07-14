@@ -39,13 +39,16 @@ CHECKMAKE_LINT := $(DOCKER_LINT_CMD) cytopia/checkmake:$(CHECKMAKE_VERSION) Make
 SHELLCHECK_LINT := $(DOCKER_LINT_CMD) koalaman/shellcheck:$(SHELLCHECK_VERSION) -x $(SHELL_FILES)
 SHFMT_LINT := $(DOCKER_LINT_CMD) mvdan/shfmt:$(SHFMT_VERSION) -d -i 2 -ci $(SHELL_FILES)
 EDITORCONFIG_CHECKER_LINT := $(DOCKER_LINT_CMD) --entrypoint ec mstruebing/editorconfig-checker:$(EDITORCONFIG_CHECKER_VERSION) -exclude '(\.git|\.idea|\.gitlab-ci-local|bin)'
+GORELEASER_CHECK := $(DOCKER_LINT_CMD) goreleaser/goreleaser:$(GORELEASER_VERSION) check
 GOBOOT_IMAGE := goboot:$(VERSION)
 COVER_FILE := coverage.txt
 MIN_COVERAGE := 80
 TEST_PKGS := $$(go list ./... | grep -v '/test/noauto' | grep -v '/templates')
+BENCH_TIME ?= 1s
+PROFILE_DIR ?= profiles
 
 # .PHONY declares non-file targets to always run when invoked
-.PHONY: all build docker_build docker_smoke clean test lint release release_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
+.PHONY: all build docker_build docker_smoke clean test benchmark profile_generation lint release release_check goreleaser_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary verify_dogfood verify_install_upgrade verify_docs
 
 #  ----------------------------------------
 #  Default target (runs when `make` is called with no args)
@@ -65,7 +68,7 @@ docker_build:
 
 docker_smoke: docker_build
 	@echo "Running $(PROJECT) container smoke test..."
-	docker run --rm --entrypoint sh "$(GOBOOT_IMAGE)" -c 'status=0; goboot -h >/tmp/goboot-help 2>&1 || status=$$?; { test "$$status" -eq 0 || test "$$status" -eq 1; } && test -s /tmp/goboot-help'
+	docker run --rm --entrypoint sh "$(GOBOOT_IMAGE)" -c 'goboot -h >/tmp/goboot-help 2>&1 && test -s /tmp/goboot-help'
 
 #  ----------------------------------------
 #  Clean build/test artifacts
@@ -79,6 +82,15 @@ clean:
 test:
 	@echo "Running tests..."
 	./scripts/test.sh
+
+benchmark:
+	@echo "Running performance benchmarks..."
+	go test ./... -run '^$$' -bench . -benchmem -benchtime="$(BENCH_TIME)"
+
+profile_generation:
+	@echo "Profiling large-project template generation..."
+	mkdir -p "$(PROFILE_DIR)"
+	go test ./pkg/gobootutils -run '^$$' -bench '^BenchmarkLargeProjectRendering$$' -benchtime="$(BENCH_TIME)" -cpuprofile="$(PROFILE_DIR)/generation-cpu.out" -memprofile="$(PROFILE_DIR)/generation-memory.out"
 
 #  ----------------------------------------
 #  Run linters
@@ -125,10 +137,26 @@ verify_ci_canary:
 	@echo "Running canary CI verification flow..."
 	./scripts/verify_ci_canary.sh --provider=both
 
+verify_dogfood: build
+	@echo "Running goboot dogfood generation twice..."
+	./scripts/verify_dogfood.sh ./bin/goboot
+
+verify_install_upgrade:
+	@echo "Testing baseline-to-candidate binary replacement..."
+	./scripts/verify_install_upgrade.sh
+
+verify_docs:
+	@echo "Auditing release-candidate documentation..."
+	./scripts/verify_docs.sh
+
 #  ----------------------------------------
 #  Release the project
 #  ----------------------------------------
-release_check: all docker_smoke
+goreleaser_check:
+	@echo "Validating GoReleaser configuration..."
+	$(GORELEASER_CHECK)
+
+release_check: all docker_smoke goreleaser_check verify_dogfood verify_install_upgrade verify_docs
 
 release: release_check
 	@echo "Release checks passed for $(PROJECT) version: $(VERSION)"
@@ -157,9 +185,15 @@ help_project:
 	@echo "  make docker_build       Build the goboot container image"
 	@echo "  make docker_smoke       Build and smoke-test the goboot container image"
 	@echo "  make release            Run the full local release check sequence"
+	@echo "  make goreleaser_check   Validate the GoReleaser configuration"
+	@echo "  make verify_dogfood     Generate from committed configs twice and compare output"
+	@echo "  make verify_install_upgrade Test replacement of a baseline binary"
+	@echo "  make verify_docs        Audit release-candidate documentation coverage"
 
 help_check:
 	@echo "  make test               Run project tests"
+	@echo "  make benchmark          Run performance benchmarks (BENCH_TIME=1s)"
+	@echo "  make profile_generation Write CPU and memory profiles to profiles/"
 	@echo "  make lint               Run static code analysis"
 
 help_lint:

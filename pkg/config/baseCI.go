@@ -197,7 +197,8 @@ func (bc *BaseCIConfig) validateJobs() error {
 		job.File = strings.ToLower(strings.TrimSpace(name)) + goboottypes.CIFileSuffix
 
 		switch job.File {
-		case goboottypes.CIFileLint, goboottypes.CIFileTest, goboottypes.CIFileBuild:
+		case goboottypes.CIFileLint, goboottypes.CIFileTest, goboottypes.CIFileBuild,
+			goboottypes.CIFileRelease:
 			// Valid predefined job file.
 		default:
 			return fmt.Errorf("invalid config: job %q has invalid job name", name)

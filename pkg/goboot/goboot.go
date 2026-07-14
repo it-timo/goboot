@@ -13,10 +13,13 @@ import (
 
 	"github.com/it-timo/goboot/pkg/baseci"
 	"github.com/it-timo/goboot/pkg/basedocker"
+	"github.com/it-timo/goboot/pkg/basegovernance"
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
 	"github.com/it-timo/goboot/pkg/baselogger"
 	"github.com/it-timo/goboot/pkg/baseproject"
+	"github.com/it-timo/goboot/pkg/baserelease"
+	"github.com/it-timo/goboot/pkg/basesupplychain"
 	"github.com/it-timo/goboot/pkg/basetest"
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
@@ -40,9 +43,13 @@ func NewGoBoot(config *config.GoBoot) *GoBoot {
 // NewGoBootWithLogger returns a GoBoot wired to the provided config and logger.
 func NewGoBootWithLogger(config *config.GoBoot, logger zerolog.Logger) *GoBoot {
 	return &GoBoot{
-		cfg:        config,
-		log:        logger,
-		ServiceMgr: newServiceManager(config.ConfManager, logger.With().Str("subcomponent", "service_manager").Logger()),
+		cfg: config,
+		log: logger,
+		ServiceMgr: newServiceManager(
+			config.ConfManager,
+			logger.With().Str("subcomponent", "service_manager").Logger(),
+			config.Parallelism,
+		),
 	}
 }
 
@@ -154,7 +161,7 @@ func (gb *GoBoot) registerPreServices() error {
 
 // registerMainServices registers all non-pre services.
 //
-//nolint:cyclop // Flat switch is preferred for explicit control and traceability.
+//nolint:cyclop,funlen // Flat switch is preferred for explicit control and traceability.
 func (gb *GoBoot) registerMainServices() error {
 	for _, meta := range gb.cfg.Services {
 		if !meta.IsEnabled() {
@@ -192,6 +199,21 @@ func (gb *GoBoot) registerMainServices() error {
 			err := gb.ServiceMgr.register(basedocker.NewBaseDocker(gb.cfg.TargetPath))
 			if err != nil {
 				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseDocker, err)
+			}
+		case goboottypes.ServiceNameBaseRelease:
+			err := gb.ServiceMgr.register(baserelease.NewBaseRelease(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseRelease, err)
+			}
+		case goboottypes.ServiceNameBaseGovernance:
+			err := gb.ServiceMgr.register(basegovernance.NewBaseGovernance(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseGovernance, err)
+			}
+		case goboottypes.ServiceNameBaseSupplyChain:
+			err := gb.ServiceMgr.register(basesupplychain.NewBaseSupplyChain(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseSupplyChain, err)
 			}
 		// Future services can be added here.
 		default:

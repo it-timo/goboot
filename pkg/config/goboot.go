@@ -20,6 +20,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	// DefaultParallelism preserves serial service execution for existing configs.
+	DefaultParallelism = 1
+	// MaxParallelism bounds concurrent service work to avoid resource exhaustion.
+	MaxParallelism = 32
+	// DefaultRegenerationPolicy protects user-modified files during repeated runs.
+	DefaultRegenerationPolicy = "managed"
+)
+
 // GoBoot holds root config values and the config manager for a scaffold run.
 type GoBoot struct {
 	// configPath points to the main goboot YAML file.
@@ -33,6 +42,15 @@ type GoBoot struct {
 
 	// GitProvider selects provider-specific behavior.
 	GitProvider string `yaml:"gitProvider"`
+
+	// Profile selects the generated lint, test, and documentation baseline.
+	Profile string `yaml:"profile"`
+
+	// Parallelism bounds concurrent execution of independent services.
+	Parallelism int `yaml:"parallelism"`
+
+	// RegenerationPolicy controls collisions with files in an existing project.
+	RegenerationPolicy string `yaml:"regenerationPolicy"`
 
 	// TargetPath is the directory that receives generated output.
 	TargetPath string `yaml:"targetPath"`
@@ -49,9 +67,11 @@ type GoBoot struct {
 // NewGoBoot returns a GoBoot with an empty config manager.
 func NewGoBoot(confPath string) *GoBoot {
 	return &GoBoot{
-		configPath:  confPath,
-		ConfManager: NewConfigManager(),
-		logger:      zerolog.Nop(),
+		configPath:         confPath,
+		Parallelism:        DefaultParallelism,
+		RegenerationPolicy: DefaultRegenerationPolicy,
+		ConfManager:        NewConfigManager(),
+		logger:             zerolog.Nop(),
 	}
 }
 
@@ -89,6 +109,10 @@ func (gb *GoBoot) Init() error {
 			return fmt.Errorf("failed to read config for %q: %w", svc.ID, err)
 		}
 
+		if receiver, ok := cfg.(goboottypes.ProfileReceiver); ok {
+			receiver.SetProfile(gb.Profile)
+		}
+
 		err = gb.ConfManager.Register(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to register config for %q: %w", svc.ID, err)
@@ -105,10 +129,51 @@ func (gb *GoBoot) readConfig() error {
 	return readYMLConfig(gb.configPath, gb)
 }
 
-// validateBase validates required root fields and enabled service paths.
-//
-//nolint:cyclop // flat logic preferred for clarity and extensibility.
+// validateBase validates root fields and execution settings.
 func (gb *GoBoot) validateBase() error {
+	err := gb.validateRequiredFields()
+	if err != nil {
+		return err
+	}
+
+	err = gb.validateProfile()
+	if err != nil {
+		return err
+	}
+
+	err = gb.validateParallelism()
+	if err != nil {
+		return err
+	}
+
+	err = gb.validateRegenerationPolicy()
+	if err != nil {
+		return err
+	}
+
+	err = validateProjectName(gb.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (gb *GoBoot) validateRegenerationPolicy() error {
+	gb.RegenerationPolicy = strings.ToLower(strings.TrimSpace(gb.RegenerationPolicy))
+
+	switch gb.RegenerationPolicy {
+	case "managed", "replace", "preserve":
+		return nil
+	default:
+		return fmt.Errorf("unsupported regenerationPolicy: %q", gb.RegenerationPolicy)
+	}
+}
+
+// validateRequiredFields validates root fields and enabled service paths.
+//
+//nolint:cyclop // flat logic keeps the required-field report comprehensive.
+func (gb *GoBoot) validateRequiredFields() error {
 	var missing []string
 
 	if strings.TrimSpace(gb.ProjectName) == "" {
@@ -132,7 +197,9 @@ func (gb *GoBoot) validateBase() error {
 			svc.ID == goboottypes.ServiceNameBaseTest ||
 			svc.ID == goboottypes.ServiceNameBaseCI ||
 			svc.ID == goboottypes.ServiceNameBaseLogger ||
-			svc.ID == goboottypes.ServiceNameBaseDocker
+			svc.ID == goboottypes.ServiceNameBaseDocker ||
+			svc.ID == goboottypes.ServiceNameBaseRelease ||
+			svc.ID == goboottypes.ServiceNameBaseSupplyChain
 
 		if !importPathMissing && !isExempt {
 			if strings.TrimSpace(gb.RepoURL) == "" {
@@ -153,15 +220,35 @@ func (gb *GoBoot) validateBase() error {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
 	}
 
-	err := validateProjectName(gb.ProjectName)
-	if err != nil {
-		return err
+	return nil
+}
+
+func (gb *GoBoot) validateParallelism() error {
+	if gb.Parallelism < DefaultParallelism || gb.Parallelism > MaxParallelism {
+		return fmt.Errorf("parallelism must be between 1 and %d: %d", MaxParallelism, gb.Parallelism)
 	}
 
 	return nil
 }
 
+func (gb *GoBoot) validateProfile() error {
+	gb.Profile = strings.ToLower(strings.TrimSpace(gb.Profile))
+	if gb.Profile == "" {
+		gb.Profile = goboottypes.ProfileStandard
+	}
+
+	switch gb.Profile {
+	case goboottypes.ProfileMinimal, goboottypes.ProfileStandard,
+		goboottypes.ProfileEnterprise, goboottypes.ProfileOSS:
+		return nil
+	default:
+		return fmt.Errorf("unsupported profile: %q", gb.Profile)
+	}
+}
+
 // createServiceConfig maps a service ID to its concrete config implementation.
+//
+//nolint:cyclop // Flat explicit dispatch preserves auditable service construction.
 func createServiceConfig(id, projectName string) ServiceConfig {
 	switch id {
 	case goboottypes.ServiceNameBaseProject:
@@ -178,6 +265,12 @@ func createServiceConfig(id, projectName string) ServiceConfig {
 		return newBaseLoggerConfig(projectName)
 	case goboottypes.ServiceNameBaseDocker:
 		return newBaseDockerConfig(projectName)
+	case goboottypes.ServiceNameBaseRelease:
+		return newBaseReleaseConfig(projectName)
+	case goboottypes.ServiceNameBaseGovernance:
+		return newBaseGovernanceConfig(projectName)
+	case goboottypes.ServiceNameBaseSupplyChain:
+		return newBaseSupplyChainConfig(projectName)
 	// Extend with more cases for additional service types.
 	default:
 		return nil

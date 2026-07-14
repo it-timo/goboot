@@ -49,6 +49,14 @@ go tool cover -func=coverage.out
 go tool cover -html=coverage.out
 ```
 
+Performance checks and repeatable profiles are documented in
+[`performance.md`](./performance.md). The common entry points are:
+
+```bash
+make benchmark
+make profile_generation BENCH_TIME=3s
+```
+
 ### Running Specific Package Tests
 
 ```bash
@@ -82,6 +90,20 @@ Rules:
 
 - Confirm the changed generated files match the intended contract/policy changes.
 - Keep deterministic assertions focused on stable, high-signal generated files.
+- Update `testdata/golden/base_project.paths` only after reviewing every added or
+  removed output path.
+
+### Release-Candidate and Dogfood Gates
+
+`make verify_dogfood` builds goboot from the real committed configuration twice
+and compares every generated file digest. `make verify_install_upgrade` builds a
+baseline revision, replaces that installed binary with the candidate, and runs
+the stable version, help, and validation operations.
+
+The `Release Candidate` workflow also builds GoReleaser snapshots, validates
+checksums and SBOM coverage, extracts a Linux archive, and executes the installed
+binary. See [`release-candidate.md`](./release-candidate.md) for the complete
+acceptance contract.
 
 ### Generated Project Matrix
 

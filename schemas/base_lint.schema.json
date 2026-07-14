@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_lint.schema.json",
+  "title": "goboot base_lint configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "linters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cmd", "enabled"],
+        "properties": {
+          "cmd": { "type": "string" },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "allowedPackages": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../schemas/base_governance.schema.json
+# Config for the `base_governance` service.
+# Safe to commit; no secrets or private security contacts.
+
+# Template source.
+sourcePath: "./templates/governance_base"
+
+# Provider handles written to CODEOWNERS.
+maintainers:
+  - "@it-timo"
+
+# Branch targeted by contribution templates.
+defaultBranch: "main"

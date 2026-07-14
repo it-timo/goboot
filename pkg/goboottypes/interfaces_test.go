@@ -4,6 +4,7 @@ import (
 	"github.com/it-timo/goboot/pkg/baseci"
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
+	"github.com/it-timo/goboot/pkg/basesupplychain"
 	"github.com/it-timo/goboot/pkg/basetest"
 	"github.com/it-timo/goboot/pkg/goboottypes"
 )
@@ -18,4 +19,5 @@ var (
 
 	_ goboottypes.CIReceiver = (*baselint.BaseLint)(nil)
 	_ goboottypes.CIReceiver = (*basetest.BaseTest)(nil)
+	_ goboottypes.CIReceiver = (*basesupplychain.BaseSupplyChain)(nil)
 )

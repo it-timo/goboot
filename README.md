@@ -7,6 +7,7 @@ A modular, versioned scaffold for reproducible Go project generation.
 [![Test](https://github.com/it-timo/goboot/actions/workflows/test.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
 [![Lint](https://github.com/it-timo/goboot/actions/workflows/lint.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/lint.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/it-timo/goboot/main/badges/coverage.json)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
+[![Security](https://github.com/it-timo/goboot/actions/workflows/security.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/security.yml)
 
 ---
 
@@ -22,17 +23,16 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.2.0` is the active containerization milestone.
-It builds on the `v0.1.x` CI and logging foundation with Dockerfile,
-docker-compose, local Docker helper commands, and provider CI container jobs for
-generated CLI-style Go projects, plus a container image path for the `goboot`
-generator CLI itself.
+`v0.9.0` is the active release-candidate milestone. It freezes generated output
+evidence, dogfoods the real repository configuration, verifies installation and
+upgrades, and publishes signed, attested release artifacts with SBOMs.
 
 ### Core Capabilities
 
 - **Modular Service Architecture**: Logic is split into isolated services
 (`base_project`, `base_lint`, `base_test`, `base_logger`, `base_docker`,
-`base_local`, `base_ci`) with strict contracts.
+`base_release`, `base_governance`, `base_supplychain`, `base_local`, `base_ci`)
+with strict contracts.
 - **Containerized Lint Tooling**: Lint jobs run via Docker by default, while CI simulation uses host tools (`act`, `gitlab-ci-local`).
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
@@ -44,6 +44,23 @@ Dockerfile, compose file, `.dockerignore`, local Docker commands, and CI image
 build validation through `base_docker`.
 - **Containerized Generator**: The `goboot` CLI itself can be built as a Docker
 image for mounted-workspace generation runs.
+- **Tag-Driven Releases**: GoReleaser produces Linux, macOS, and Windows binary
+  archives and checksums from explicit semantic-version tags.
+- **Explicit Profiles**: Named project baselines adjust owned lint/test defaults
+  without silently enabling services or overriding explicit service values.
+- **Repository Governance**: Generated GitHub and GitLab projects receive
+  profile-aware issue/change templates, CODEOWNERS, contribution guidance, and
+  a private-first security policy.
+- **Supply-Chain Security**: Generated CI enforces pinned vulnerability and
+  license checks, emits CycloneDX SBOM artifacts, and adds CodeQL on GitHub.
+- **Measured Scale**: Template, config, and service benchmarks track generator
+  costs, while opt-in bounded parallelism accelerates independent services.
+- **Safe Regeneration**: A versioned ownership manifest, explicit collision
+  policies, isolated staging, and transactional apply protect user-modified files.
+- **Stable Automation Contract**: Validation-only execution, machine-readable
+  results, documented exit codes, and published YAML schemas support CI and editors.
+- **Release-Candidate Evidence**: Golden output, repeat-generation dogfooding,
+  upgrade checks, signed checksums and binaries, provenance, and release SBOMs.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -64,7 +81,7 @@ You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 
 ### Requirements
 
-- [Go 1.26.3+](https://go.dev/doc/install)
+- [Go 1.26.5+](https://go.dev/doc/install)
 - [Make](https://www.gnu.org/software/make/) for `make` targets
 - [Task](https://taskfile.dev) for `task` targets and full `verify_intro`
 - [Docker](https://www.docker.com/) for containerized lint tooling
@@ -117,6 +134,21 @@ This repository uses:
 - [doc/WORKFLOW.md](./doc/WORKFLOW.md) to define long-term contribution and CI logic
 - [doc/ci.md](./doc/ci.md) for CI policy modes and provider-specific generated CI behavior
 - [doc/containerization.md](./doc/containerization.md) for generated Docker behavior
+- [doc/releasing.md](./doc/releasing.md) for tag-driven release behavior
+- [doc/profiles.md](./doc/profiles.md) for template profile behavior
+- [doc/governance.md](./doc/governance.md) for generated contribution and security policy
+- [doc/supply-chain-security.md](./doc/supply-chain-security.md) for generated
+  source, dependency, license, and SBOM controls
+- [doc/performance.md](./doc/performance.md) for parallel execution, benchmarks,
+  and profiling
+- [doc/regeneration.md](./doc/regeneration.md) for ownership, dry runs, conflict
+  policies, and transactional updates
+- [doc/cli-config-contract.md](./doc/cli-config-contract.md) for stable flags,
+  JSON output, exit codes, schemas, and migration rules
+- [doc/release-candidate.md](./doc/release-candidate.md) for golden output,
+  installation, upgrade, dogfood, and v1 candidate gates
+- [doc/threat-model.md](./doc/threat-model.md) for security boundaries and
+  residual risks
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time
@@ -148,8 +180,8 @@ Includes attribution in [NOTICE](./NOTICE) (if applicable).
 
 ## 🚧 Status
 
-`goboot` is **pre-alpha** and intended for structural exploration and reproducible setup.
-It is not yet suitable as a production generator baseline.
+`goboot` is **pre-1.0** and undergoing release-candidate hardening. Its public
+contract is intentionally conservative, but it is not yet the stable v1 baseline.
 
 ---
 

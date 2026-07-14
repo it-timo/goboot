@@ -101,6 +101,14 @@ Accepted # or Proposed / Rejected / Superseded / Deprecated
 | [ADR-033](adr-033-ci-policy-and-provider-layout.md)    | CI Policy Modes and Provider-Scoped Template Layout           | ci, templates, config, security, provider-layout                               |
 | [ADR-034](adr-034-logger-settings-provider.md)         | Logger Settings Provider                                      | logger, scaffolding, templates, service-boundaries, ownership                  |
 | [ADR-035](adr-035-base-docker-cli-containerization.md) | CLI Containerization for `goboot` and Generated Projects      | docker, containerization, service, templates, ci, cli                          |
+| [ADR-036](adr-036-tag-driven-release-automation.md)    | Tag-Driven Release Automation                                 | release, goreleaser, ci, versioning, distribution                              |
+| [ADR-037](adr-037-explicit-template-profiles.md)       | Explicit Template Profiles                                    | profiles, config, templates, linting, testing                                  |
+| [ADR-038](adr-038-provider-aware-governance.md)        | Provider-Aware Governance as an Explicit Service              | governance, templates, security, github, gitlab                                |
+| [ADR-039](adr-039-explicit-supply-chain-security.md)   | Explicit Supply-Chain Security Service                        | security, ci, codeql, dependencies, sbom                                       |
+| [ADR-040](adr-040-bounded-parallel-generation.md)      | Bounded Parallel Generation with Measured Baselines           | performance, concurrency, benchmarks, determinism                              |
+| [ADR-041](adr-041-manifest-based-regeneration.md)      | Manifest-Based Transactional Regeneration                     | regeneration, ownership, filesystem, transactions, cli                         |
+| [ADR-042](adr-042-stable-cli-config-contract.md)       | Stable CLI and Configuration Contract                         | cli, config, schemas, compatibility, versioning                                |
+| [ADR-043](adr-043-release-candidate-gates.md)          | Executable Release-Candidate Gates                            | release, golden, dogfood, provenance, security                                 |
 
 ---
 

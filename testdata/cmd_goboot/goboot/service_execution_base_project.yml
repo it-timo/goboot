@@ -1,5 +1,5 @@
 sourcePath: ${SOURCE_DIR}
-usedGoVersion: "1.26.3"
+usedGoVersion: "1.26.5"
 usedNodeVersion: "20.0.0"
 releaseCurrentWindow: Q1 2025
 releaseUpcomingWindow: Q2 2025

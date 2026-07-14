@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schemas/base_ci.schema.json
 # Config for the `base_ci` service.
 # Safe to commit; no secrets.
 # This service aggregates commands registered by other services.
@@ -12,7 +13,7 @@ sourcePath: "./templates/ci_base"
 
 #  List of Go versions to use for CI. Used in build and test jobs.
 goVersions:
-  - "1.26.3"
+  - "1.26.5"
 
 #  CI image policy:
 #    - balanced (default): readable tags in generated jobs.

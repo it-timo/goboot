@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_local.schema.json",
+  "title": "goboot base_local configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "fileList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["make", "task", "script", "commit"] }
+    }
+  }
+}

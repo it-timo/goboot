@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
@@ -24,6 +25,7 @@ type BaseCI struct {
 	targetDir string               // Destination path for rendered files.
 	root      *os.Root             // Secure a root handle for safe file writes.
 	log       zerolog.Logger
+	registry  sync.Mutex
 	ciRegistry
 	staticFiles []string
 }
@@ -147,22 +149,28 @@ func (b *BaseCI) Run() error {
 
 // RegisterLines stores service-level CI commands.
 func (b *BaseCI) RegisterLines(name string, lines []string) error {
+	b.registry.Lock()
+	defer b.registry.Unlock()
+
 	if _, exist := b.JobScripts[name]; exist {
 		return fmt.Errorf("service %q already registered in ci", name)
 	}
 
-	b.JobScripts[name] = lines
+	b.JobScripts[name] = append([]string(nil), lines...)
 
 	return nil
 }
 
 // RegisterFile stores commands for a specific CI job file.
 func (b *BaseCI) RegisterFile(name string, lines []string) error {
+	b.registry.Lock()
+	defer b.registry.Unlock()
+
 	if _, exist := b.FileScripts[name]; exist {
 		return fmt.Errorf("file %q already registered in ci", name)
 	}
 
-	b.FileScripts[name] = lines
+	b.FileScripts[name] = append([]string(nil), lines...)
 	b.FileAllowFailure[name] = false
 
 	return nil

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/it-timo/goboot/pkg/config"
@@ -112,7 +113,8 @@ func (b *BaseLint) Run() error {
 //
 //nolint:cyclop // Flat switch is preferred for explicit control and traceability.
 func (b *BaseLint) copyFiles() error {
-	for name, info := range b.cfg.Linters {
+	for _, name := range b.linterNames() {
+		info := b.cfg.Linters[name]
 		if !info.Enabled {
 			continue
 		}
@@ -215,7 +217,8 @@ func (b *BaseLint) copyFile(fileName string) error {
 func (b *BaseLint) gatherCommands() []string {
 	cmds := make([]string, 0, len(b.cfg.Linters))
 
-	for name, entry := range b.cfg.Linters {
+	for _, name := range b.linterNames() {
+		entry := b.cfg.Linters[name]
 		if !entry.Enabled {
 			continue
 		}
@@ -235,6 +238,19 @@ func (b *BaseLint) gatherCommands() []string {
 	}
 
 	return cmds
+}
+
+// linterNames returns configured linter names in a stable order so generated
+// aggregate files do not depend on Go's randomized map iteration.
+func (b *BaseLint) linterNames() []string {
+	names := make([]string, 0, len(b.cfg.Linters))
+	for name := range b.cfg.Linters {
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+
+	return names
 }
 
 // registerScripts registers enabled lint commands with the local script registrar.
