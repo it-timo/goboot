@@ -18,6 +18,7 @@ As `goboot` evolves, this workflow will expand (see [`ROADMAP.md`](../ROADMAP.md
 | Tooling       | `Makefile`, `Taskfile.yml`, and `scripts/` for common tasks                                                        |
 | Linting       | Dockerized `golangci-lint`, `yamllint`, `checkmake`, `markdownlint`, `shellcheck`, `shfmt`, `editorconfig-checker` |
 | Testing       | BDD-style suites with Ginkgo/Gomega via `make test` (race + coverage)                                              |
+| Profiles      | Explicit `minimal`, `standard`, `enterprise`, or `oss` scaffold baseline                                          |
 | Philosophy    | No runtime magic, minimal indirection, deterministic scaffolding                                                   |
 
 ---
@@ -48,11 +49,13 @@ chore: Prepare v0.0.1 release tag
 
 ---
 
-## 📦 Releases (Manual for Now)
+## 📦 Releases
 
 1. Complete and test the milestone
-2. Update `.version`, `ROADMAP.md`, and release-facing docs
-3. Create annotated tag:
+2. Run `make release_check`
+3. Update `.version`, `ROADMAP.md`, and release-facing docs
+4. Create and push an annotated semantic-version tag; provider CI runs
+   GoReleaser and publishes the binary release:
 
   ```bash
   git tag v0.1.1 -m "Release v0.1.1 — Adds structured logging and release hardening"
@@ -68,6 +71,8 @@ This project uses:
 - [`ROADMAP.md`](../ROADMAP.md) — Development layers and milestones
 - [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) — Directory design rationale
 - [`ci.md`](./ci.md) — CI policy modes and generated CI expectations
+- [`profiles.md`](./profiles.md) — Template profile behavior and precedence
+- [`releasing.md`](./releasing.md) — Tag-driven release automation
 - [`adr/`](./adr) — Architecture decisions (ADRs)
 
 ---
