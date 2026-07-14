@@ -8,13 +8,15 @@ import (
 	"github.com/it-timo/goboot/pkg/goboottypes"
 )
 
+const governanceMaintainerTest = "@maintainer"
+
 var _ = Describe("BaseGovernanceConfig", func() {
 	var governanceConfig *config.BaseGovernanceConfig
 
 	BeforeEach(func() {
 		governanceConfig = &config.BaseGovernanceConfig{
 			SourcePath:  "./templates/governance_base",
-			Maintainers: []string{"@maintainer", "@example/team"},
+			Maintainers: []string{governanceMaintainerTest, "@example/team"},
 			ProjectName: testProjectName,
 			ProjectURL:  "https://github.com/example/testproject",
 			GitProvider: goboottypes.GitProviderGitHub,
@@ -44,7 +46,7 @@ var _ = Describe("BaseGovernanceConfig", func() {
 		governanceConfig.Maintainers = []string{"maintainer"}
 		Expect(governanceConfig.Validate()).NotTo(Succeed())
 
-		governanceConfig.Maintainers = []string{"@maintainer", "@maintainer"}
+		governanceConfig.Maintainers = []string{governanceMaintainerTest, governanceMaintainerTest}
 		Expect(governanceConfig.Validate()).NotTo(Succeed())
 	})
 

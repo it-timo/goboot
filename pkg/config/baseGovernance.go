@@ -56,20 +56,47 @@ func (bg *BaseGovernanceConfig) ReadConfig(confPath string, repoURL string, gitP
 
 // Validate checks governance inputs and applies deterministic defaults.
 func (bg *BaseGovernanceConfig) Validate() error {
+	err := bg.validateRequiredFields()
+	if err != nil {
+		return err
+	}
+
+	err = validateProjectName(bg.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	err = bg.validateProvider()
+	if err != nil {
+		return err
+	}
+
+	err = bg.validateDefaultBranch()
+	if err != nil {
+		return err
+	}
+
+	return bg.validateMaintainers()
+}
+
+func (bg *BaseGovernanceConfig) validateRequiredFields() error {
 	if strings.TrimSpace(bg.SourcePath) == "" || strings.TrimSpace(bg.ProjectName) == "" ||
 		bg.ProjectURL == "" || bg.GitProvider == "" || bg.Profile == "" {
 		return errors.New("missing required config fields: sourcePath, projectName, projectUrl, gitProvider, or profile")
 	}
 
-	err := validateProjectName(bg.ProjectName)
-	if err != nil {
-		return err
-	}
+	return nil
+}
 
+func (bg *BaseGovernanceConfig) validateProvider() error {
 	if bg.GitProvider != goboottypes.GitProviderGitHub && bg.GitProvider != goboottypes.GitProviderGitLab {
 		return fmt.Errorf("invalid config: gitProvider %q is not supported", bg.GitProvider)
 	}
 
+	return nil
+}
+
+func (bg *BaseGovernanceConfig) validateDefaultBranch() error {
 	bg.DefaultBranch = strings.TrimSpace(bg.DefaultBranch)
 	if bg.DefaultBranch == "" {
 		bg.DefaultBranch = "main"
@@ -80,7 +107,7 @@ func (bg *BaseGovernanceConfig) Validate() error {
 		return fmt.Errorf("invalid config: defaultBranch %q is not supported", bg.DefaultBranch)
 	}
 
-	return bg.validateMaintainers()
+	return nil
 }
 
 func (bg *BaseGovernanceConfig) validateMaintainers() error {

@@ -190,6 +190,8 @@ func (gb *GoBoot) validateProfile() error {
 }
 
 // createServiceConfig maps a service ID to its concrete config implementation.
+//
+//nolint:cyclop // Flat explicit dispatch preserves auditable service construction.
 func createServiceConfig(id, projectName string) ServiceConfig {
 	switch id {
 	case goboottypes.ServiceNameBaseProject:
