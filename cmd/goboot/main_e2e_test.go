@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -95,7 +96,7 @@ func generatedFilePaths(root string) []string {
 
 		relativePath, err := filepath.Rel(root, path)
 		if err != nil {
-			return err
+			return fmt.Errorf("resolve generated path relative to project root: %w", err)
 		}
 
 		paths = append(paths, filepath.ToSlash(relativePath))
