@@ -29,6 +29,14 @@ type BaseTestConfig struct {
 
 	// LowerProjectName is the lowercase variant of ProjectName.
 	LowerProjectName string `yaml:"-"`
+
+	// Profile selects profile-specific test defaults.
+	Profile string `yaml:"-"`
+}
+
+// SetProfile injects the validated template profile.
+func (bt *BaseTestConfig) SetProfile(profile string) {
+	bt.Profile = profile
 }
 
 // newBaseTestConfig creates a BaseTestConfig with the given project name.
@@ -67,10 +75,6 @@ func (bt *BaseTestConfig) Validate() error {
 		missing = append(missing, "repoImportPath")
 	}
 
-	if strings.TrimSpace(bt.UseStyle) == "" {
-		missing = append(missing, "useStyle")
-	}
-
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required config fields: %s", strings.Join(missing, ", "))
 	}
@@ -89,8 +93,32 @@ func (bt *BaseTestConfig) Validate() error {
 func (bt *BaseTestConfig) fillNeededInfos() {
 	bt.CapsProjectName = strings.ToUpper(bt.ProjectName)
 	bt.LowerProjectName = strings.ToLower(bt.ProjectName)
+	bt.fillProfileDefaults()
+}
 
-	if strings.TrimSpace(bt.TestCMD) == "" {
+func (bt *BaseTestConfig) fillProfileDefaults() {
+	if strings.TrimSpace(bt.UseStyle) == "" {
+		if bt.Profile == goboottypes.ProfileMinimal {
+			bt.UseStyle = goboottypes.TestStyleGo
+		} else {
+			bt.UseStyle = goboottypes.TestStyleGinkgo
+		}
+	}
+
+	if strings.TrimSpace(bt.TestCMD) != "" {
+		return
+	}
+
+	switch bt.Profile {
+	case goboottypes.ProfileMinimal:
+		bt.TestCMD = "go test ./..."
+	case goboottypes.ProfileEnterprise:
+		bt.TestCMD = "go test -race -shuffle=on -timeout=10m -coverprofile=coverage.txt ./... " +
+			"&& go tool cover -func=coverage.txt; rm -f coverage.txt"
+	case goboottypes.ProfileOSS:
+		bt.TestCMD = "go test -race -covermode=atomic -timeout=5m -coverprofile=coverage.txt ./... " +
+			"&& go tool cover -func=coverage.txt; rm -f coverage.txt"
+	default:
 		bt.TestCMD = goboottypes.DefaultGoTestCMD
 	}
 }

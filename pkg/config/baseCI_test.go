@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	goVersion1263 = "1.26.3"
+	goVersion1265 = "1.26.5"
 	mainBranch    = "main"
 )
 
@@ -26,7 +26,7 @@ var _ = Describe("BaseCIConfig", func() {
 		baseCI = &config.BaseCIConfig{
 			SourcePath:  "./templates/ci_base",
 			ProjectName: testProjectName,
-			GoVersion:   []string{goVersion1263},
+			GoVersion:   []string{goVersion1265},
 			GitProvider: goboottypes.GitProviderGitLab,
 			Jobs: map[string]*config.CIJob{
 				"build": {
@@ -116,14 +116,14 @@ var _ = Describe("BaseCIConfig", func() {
 			})
 
 			It("errors when goVersions contains blank entries", func() {
-				baseCI.GoVersion = []string{goVersion1263, blankValue}
+				baseCI.GoVersion = []string{goVersion1265, blankValue}
 				err := baseCI.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("goVersions contains empty string"))
 			})
 
 			It("errors when goVersions contains unsafe image-tag content", func() {
-				baseCI.GoVersion = []string{goVersion1263, "1.26; echo bad"}
+				baseCI.GoVersion = []string{goVersion1265, "1.26; echo bad"}
 				err := baseCI.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("goVersion"))
@@ -188,7 +188,7 @@ var _ = Describe("BaseCIConfig", func() {
 				Expect(newConfig.SourcePath).To(Equal("./templates/ci_base"))
 				Expect(newConfig.Jobs).To(HaveKey("build"))
 				Expect(newConfig.GitProvider).To(Equal(goboottypes.GitProviderGitLab))
-				Expect(newConfig.GoVersion).To(ContainElement(goVersion1263))
+				Expect(newConfig.GoVersion).To(ContainElement(goVersion1265))
 			})
 		})
 

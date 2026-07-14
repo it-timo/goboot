@@ -22,7 +22,7 @@ test-branch:
       when: manual
   parallel:
     matrix:
-      - GO_VERSION: "1.26.3"
+      - GO_VERSION: "1.26.5"
         GO_DIGEST: $GO_1_26_DIGEST
   image: golang@${GO_DIGEST}
   script:
@@ -45,7 +45,7 @@ test-auto:
     - tags
   parallel:
     matrix:
-      - GO_VERSION: "1.26.3"
+      - GO_VERSION: "1.26.5"
         GO_DIGEST: $GO_1_26_DIGEST
   image: golang@${GO_DIGEST}
   script:
@@ -67,7 +67,7 @@ test-tag:
     - branches
   parallel:
     matrix:
-      - GO_VERSION: "1.26.3"
+      - GO_VERSION: "1.26.5"
         GO_DIGEST: $GO_1_26_DIGEST
   image: golang@${GO_DIGEST}
   script:

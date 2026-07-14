@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_project.schema.json",
+  "title": "goboot base_project configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "usedGoVersion": { "type": "string", "minLength": 1 },
+    "usedNodeVersion": { "type": "string" },
+    "currentYear": { "type": "integer", "minimum": 1970 },
+    "releaseCurrentWindow": { "type": "string" },
+    "releaseUpcomingWindow": { "type": "string" },
+    "releaseLongTerm": { "type": "string" },
+    "author": { "type": "string" },
+    "gitUser": { "type": "string" }
+  }
+}

@@ -7,6 +7,141 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.8.0 — Stable CLI & Configuration
+
+Added:
+
+- `--validate` for strict root and enabled-service configuration checks without
+  rendering, dependency resolution, or target changes.
+- Stable human and single-object JSON output selected with `--output`.
+- Documented exit codes for usage, configuration, generation, and regeneration
+  conflicts.
+- `--version` output that does not require a configuration file.
+- Draft 2020-12 JSON Schemas for the root file and all built-in service configs,
+  with YAML language-server modelines in committed examples.
+- Linux, macOS, and Windows CLI build and portable-contract CI coverage.
+- CLI/config migration policy and ADR-042.
+
+Changed:
+
+- The v1 candidate CLI and YAML field names are frozen; incompatible changes now
+  require a documented deprecation and migration window.
+- v0.7 regeneration is marked released and v0.8 is the active milestone.
+
+### v0.7.0 — Regeneration Safety
+
+Added:
+
+- `.goboot-manifest.yml` ownership records with generator inputs, file SHA-256
+  digests, and permission modes.
+- `managed`, `replace`, and `preserve` regeneration policies.
+- `--dry-run` change plans with create, update, delete, preserve, conflict, and
+  unchanged actions.
+- Isolated generation staging and rollback-capable project transactions.
+- User-edit, stale-file, path-type, malformed-manifest, symbolic-link, and
+  special-file safety checks.
+- Safe regeneration guide and ADR-041.
+
+Changed:
+
+- The CLI no longer renders directly into the configured target. It builds a
+  complete staged tree and commits a validated candidate.
+- Root configs default to managed regeneration, which refuses collisions without
+  unchanged ownership evidence.
+- The roadmap now defines v0.8 CLI/config stability and v0.9 release-candidate
+  hardening before v1.0.
+
+### v0.6.0 — Performance & Scale
+
+Added:
+
+- Template execution, atomic file rendering, large-project rendering, config
+  parsing, and service orchestration benchmarks.
+- Pull-request performance workflow with retained benchmark result artifacts.
+- Local Make and Task targets for benchmark execution and CPU/memory profiles.
+- Performance guide and ADR-040.
+
+Changed:
+
+- Root configs can opt into bounded regular-service concurrency with
+  `parallelism`; omitted values preserve serial execution.
+- Regular services are scheduled in stable ID order and parallel failures are
+  selected deterministically after the batch completes.
+- Shared CI and local registries are safe for concurrent producers and copy
+  registered command slices.
+
+### v0.5.0 — Supply Chain Security
+
+Added:
+
+- `base_supplychain` service with validated, pinned scanner versions and an
+  explicit dependency-license allowlist.
+- Generated GitHub CodeQL, vulnerability, license, and CycloneDX SBOM jobs.
+- Generated GitLab vulnerability, license, and CycloneDX SBOM jobs.
+- `SUPPLY_CHAIN.md` policy output for generated repositories.
+- Supply-chain security guide and ADR-039.
+
+Changed:
+
+- The default goboot configuration enables supply-chain security generation.
+- GitLab pipelines include a security stage before release automation.
+- The root and generated-project Go baseline is 1.26.5, which includes the fix
+  for GO-2026-4970.
+- The root security workflow includes pinned advanced CodeQL automation; the
+  repository-level default setup is disabled to avoid duplicate analyses.
+
+### v0.4.0 — Governance & Contribution
+
+Added:
+
+- `base_governance` service with validated maintainer and default-branch inputs.
+- Shared `CODEOWNERS`, `CONTRIBUTING.md`, and `SECURITY.md` outputs.
+- GitHub issue forms and pull request templates.
+- GitLab issue and merge request templates.
+- Profile-aware governance baselines for minimal, standard, enterprise, and OSS projects.
+- Governance guide and ADR-038.
+
+Changed:
+
+- The default goboot configuration enables repository governance generation.
+- Contributor-facing security guidance directs vulnerability reports to private
+  provider channels instead of public issues.
+
+### v0.3.0 — Template Profiles
+
+Added:
+
+- Validated root `profile` selection with `minimal`, `standard`, `enterprise`,
+  and `oss` values.
+- Profile-specific Go lint baselines and cyclomatic-complexity thresholds.
+- Profile-default test styles and commands with explicit service overrides.
+- Generated `PROFILE.md` documenting the selected baseline.
+- Profile guide and ADR-037.
+
+Changed:
+
+- Omitted profiles default to `standard` for backward compatibility.
+- Generated project README and structure documentation identify the active
+  profile.
+
+### v0.2.1 — Release Automation
+
+Added:
+
+- `base_release` service with validated GoReleaser settings.
+- Tag-driven GitHub and GitLab release jobs for generated projects.
+- Cross-platform AMD64/ARM64 archives and checksum manifests.
+- Automated changelog generation from Git history.
+- GoReleaser configuration and release workflow for `goboot` itself.
+- Release guide and ADR-036.
+
+Changed:
+
+- `base_ci` can aggregate a release job in addition to build, test, lint, and
+  container jobs.
+- Version selection is explicitly derived from immutable semantic-version tags;
+  goboot does not guess or commit version changes.
+
 ### v0.2.0 — Containerization
 
 Added:

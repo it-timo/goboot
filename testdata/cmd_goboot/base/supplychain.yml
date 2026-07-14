@@ -1,0 +1,9 @@
+sourcePath: ${TEMPLATES_SUPPLYCHAIN_BASE}
+govulncheckVersion: v1.1.4
+goLicensesVersion: v2.0.1
+allowedLicenses:
+  - Apache-2.0
+  - BSD-2-Clause
+  - BSD-3-Clause
+  - ISC
+  - MIT

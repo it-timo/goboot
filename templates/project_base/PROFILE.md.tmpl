@@ -1,0 +1,39 @@
+# Template Profile
+
+This project was generated with the `{{.Profile}}` goboot profile.
+
+Profiles select visible lint, test, and documentation defaults. They do not
+silently enable or disable generator services, and explicit values in service
+configuration remain authoritative.
+
+{{ if eq .Profile "minimal" }}
+
+## Minimal baseline
+
+- Standard-library Go tests by default
+- Fast `go test ./...` command
+- Small correctness and security-focused Go linter set
+{{ else if eq .Profile "enterprise" }}
+
+## Enterprise baseline
+
+- Ginkgo/Gomega scaffolding by default
+- Race detection, randomized test order, coverage, and extended timeout
+- Strict cyclomatic-complexity threshold
+{{ else if eq .Profile "oss" }}
+
+## OSS baseline
+
+- Ginkgo/Gomega scaffolding by default
+- Race detection and atomic coverage mode
+- Public-project lint and documentation baseline
+{{ else }}
+
+## Standard baseline
+
+- Ginkgo/Gomega scaffolding by default
+- Race detection and coverage
+- Balanced lint complexity threshold
+{{ end }}
+
+Change the root `profile` value and regenerate to select another baseline.

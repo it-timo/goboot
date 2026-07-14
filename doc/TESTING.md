@@ -49,6 +49,14 @@ go tool cover -func=coverage.out
 go tool cover -html=coverage.out
 ```
 
+Performance checks and repeatable profiles are documented in
+[`performance.md`](./performance.md). The common entry points are:
+
+```bash
+make benchmark
+make profile_generation BENCH_TIME=3s
+```
+
 ### Running Specific Package Tests
 
 ```bash

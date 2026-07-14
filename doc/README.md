@@ -7,6 +7,17 @@ Use this folder as the main documentation hub after `README.md`.
 - [`quickstart.md`](./quickstart.md): first run from config to generated output.
 - [`examples.md`](./examples.md): concrete input config to output scenarios.
 - [`containerization.md`](./containerization.md): Dockerfile, compose, and container CI behavior.
+- [`releasing.md`](./releasing.md): tag-driven binary release automation.
+- [`profiles.md`](./profiles.md): named lint, test, and documentation baselines.
+- [`governance.md`](./governance.md): generated ownership, contribution, and security policy.
+- [`supply-chain-security.md`](./supply-chain-security.md): generated source,
+  dependency, license, and SBOM controls.
+- [`performance.md`](./performance.md): bounded service execution, benchmarks,
+  and profiling.
+- [`regeneration.md`](./regeneration.md): generated ownership, dry-run plans,
+  collision policies, and transactional updates.
+- [`cli-config-contract.md`](./cli-config-contract.md): stable CLI, JSON output,
+  exit codes, schemas, compatibility, and migrations.
 
 ## Architecture and Policies
 

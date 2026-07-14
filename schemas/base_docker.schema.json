@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_docker.schema.json",
+  "title": "goboot base_docker configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "goVersion": { "type": "string", "minLength": 1 },
+    "runtimeImage": { "type": "string", "minLength": 1 },
+    "binaryName": { "type": "string" },
+    "mainPackage": { "type": "string" },
+    "fileList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["dockerfile", "compose", "dockerignore"] }
+    },
+    "ports": { "type": "array", "items": { "type": "string" } }
+  }
+}

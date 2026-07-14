@@ -41,3 +41,9 @@ type LoggerSettingsReceiver interface {
 	// SetLoggerSettings injects logger settings from base_logger.
 	SetLoggerSettings(settings LoggerSettings)
 }
+
+// ProfileReceiver accepts the validated template profile before config validation.
+type ProfileReceiver interface {
+	// SetProfile injects the selected template profile.
+	SetProfile(profile string)
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_ci.schema.json",
+  "title": "goboot base_ci configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "goVersions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "autoBranches": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "imagePolicy": { "enum": ["balanced", "strict", "simple"] },
+    "jobs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["commands"],
+        "properties": {
+          "commands": { "type": "array", "items": { "type": "string" } },
+          "allowFailure": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

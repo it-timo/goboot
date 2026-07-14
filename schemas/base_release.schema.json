@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_release.schema.json",
+  "title": "goboot base_release configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "binaryName": { "type": "string", "minLength": 1 },
+    "mainPackage": { "type": "string", "minLength": 1 },
+    "formats": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["tar.gz", "zip"] }
+    }
+  }
+}
