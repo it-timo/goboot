@@ -1,0 +1,33 @@
+# Contributing to {{.ProjectName}}
+
+Thank you for contributing. This repository uses the `{{.Profile}}` governance
+profile and targets contributions to `{{.DefaultBranch}}`.
+
+## Before opening a change
+
+1. Search existing issues and contributions to avoid duplicate work.
+2. Open an issue for behavior changes that need design agreement.
+3. Keep changes focused and include tests for observable behavior.
+4. Run the project quality gates:
+
+   ```bash
+   make lint
+   make test
+   make build
+   ```
+
+## Commit and review expectations
+
+- Use a short, imperative commit subject.
+- Explain the motivation and user impact in the pull or merge request.
+- Link the relevant issue when one exists.
+- Update documentation when behavior, configuration, or workflows change.
+- Never commit credentials, tokens, private keys, or production data.
+
+Maintainers may request changes when a contribution does not preserve deterministic
+generation, explicit configuration, or the selected profile's quality baseline.
+
+## Security reports
+
+Do not open a public issue for a suspected vulnerability. Follow
+[SECURITY.md](./SECURITY.md) to report it privately.

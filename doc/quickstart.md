@@ -21,6 +21,7 @@ Start from:
 - `configs/base_logger.yml`
 - `configs/base_docker.yml`
 - `configs/base_release.yml`
+- `configs/base_governance.yml`
 - `configs/base_local.yml`
 - `configs/base_ci.yml`
 
@@ -53,12 +54,17 @@ If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expec
   `/tmp/goboot-demo/IntroProject/docker-compose.yml` (when `base_docker` enabled)
 - `/tmp/goboot-demo/IntroProject/.github/workflows/*.yml` or
   `/tmp/goboot-demo/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
+- `/tmp/goboot-demo/IntroProject/CODEOWNERS`, `CONTRIBUTING.md`, and
+  provider-native contribution templates (when `base_governance` enabled)
 
 `base_logger` does not overwrite project files directly. It provides validated logger
 settings to `base_project`, which owns the generated runtime code.
 
 `base_docker` packages the generated CLI-style application. It does not assume
 the project is a network service, so compose port mappings are empty by default.
+
+`base_governance` writes policy files only. Provider-side branch protection,
+approval enforcement, and private vulnerability reporting remain administrator settings.
 
 ## 5. Iterate safely
 

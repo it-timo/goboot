@@ -166,6 +166,9 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			Expect(goboottypes.ServiceNameBaseTest).To(Equal("base_test"))
 			Expect(goboottypes.ServiceNameBaseCI).To(Equal("base_ci"))
 			Expect(goboottypes.ServiceNameBaseLogger).To(Equal("base_logger"))
+			Expect(goboottypes.ServiceNameBaseDocker).To(Equal("base_docker"))
+			Expect(goboottypes.ServiceNameBaseRelease).To(Equal("base_release"))
+			Expect(goboottypes.ServiceNameBaseGovernance).To(Equal("base_governance"))
 		})
 	})
 

@@ -103,8 +103,6 @@ Current release.
 
 ---
 
-## In Progress
-
 ### v0.3.0 — Template Profiles
 
 **Focus:** controlled flexibility
@@ -115,7 +113,7 @@ Current release.
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.4.0 — Governance & Contribution
 
@@ -125,6 +123,8 @@ Current release.
 - Contribution workflows
 
 ---
+
+## Planned Milestones
 
 ### v0.5.0 — Supply Chain Security
 

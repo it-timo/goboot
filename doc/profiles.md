@@ -1,6 +1,6 @@
 # Template Profiles
 
-Template profiles provide named lint, test, and documentation baselines without
+Template profiles provide named lint, test, governance, and documentation baselines without
 changing goboot's explicit service composition model.
 
 Select a profile in the root configuration:
@@ -14,12 +14,16 @@ field is omitted, goboot uses `standard`.
 
 ## Baselines
 
-| Profile | Default tests | Test command | Go lint baseline |
-| ------- | ------------- | ------------ | ---------------- |
-| `minimal` | Standard library | Fast tests without race or coverage | Small correctness/security set; complexity 20 |
-| `standard` | Ginkgo/Gomega | Race detection and coverage | Full balanced set; complexity 10 |
-| `enterprise` | Ginkgo/Gomega | Race detection, shuffled order, coverage | Full strict set; complexity 8 |
-| `oss` | Ginkgo/Gomega | Race detection and atomic coverage | Full public-project set; complexity 10 |
+| Profile      | Default tests    | Test command                                     | Governance                         |
+| ------------ | ---------------- | ------------------------------------------------ | ---------------------------------- |
+| `minimal`    | Standard library | Fast tests without race or coverage              | Bug workflow                       |
+| `standard`   | Ginkgo/Gomega    | Race detection and coverage                      | Bug and feature workflows          |
+| `enterprise` | Ginkgo/Gomega    | Race detection, shuffled order, coverage         | Standard plus controlled changes   |
+| `oss`        | Ginkgo/Gomega    | Race detection and atomic coverage               | Standard plus documentation intake |
+
+Go lint baselines remain a small complexity-20 set for `minimal`, a balanced
+complexity-10 set for `standard` and `oss`, and a stricter complexity-8 set for
+`enterprise`.
 
 ## Precedence
 

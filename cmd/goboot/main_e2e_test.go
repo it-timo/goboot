@@ -100,6 +100,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		localBaseTemplates := filepath.Join(root, "templates", "local_base")
 		ciBaseTemplates := filepath.Join(root, "templates", "ci_base")
 		dockerBaseTemplates := filepath.Join(root, "templates", "docker_base")
+		governanceBaseTemplates := filepath.Join(root, "templates", "governance_base")
 
 		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
 		baseProjectContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_project.yml", map[string]string{
@@ -148,6 +149,13 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(err).NotTo(HaveOccurred())
 		writeConfig(baseDockerCfg, string(baseDockerContent))
 
+		baseGovernanceCfg := filepath.Join(tempDir, "base_governance.yml")
+		baseGovernanceContent, err := loadTestFixtureWithVars("cmd_goboot/base/governance.yml", map[string]string{
+			"TEMPLATES_GOVERNANCE_BASE": governanceBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseGovernanceCfg, string(baseGovernanceContent))
+
 		gobootCfg := filepath.Join(tempDir, "goboot.yml")
 		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/e2e.yml", map[string]string{
 			fixtureProjectName: projectName,
@@ -159,6 +167,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 			"BASE_TEST_CFG":    baseTestCfg,
 			"BASE_LOGGER_CFG":  baseLoggerCfg,
 			"BASE_DOCKER_CFG":  baseDockerCfg,
+			"BASE_GOVERNANCE_CFG": baseGovernanceCfg,
 			"BASE_LOCAL_CFG":   baseLocalCfg,
 			"BASE_CI_CFG":      baseCiCfg,
 		})
@@ -176,6 +185,12 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(filepath.Join(projectRoot, "Dockerfile")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "docker-compose.yml")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, ".dockerignore")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "CODEOWNERS")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "CONTRIBUTING.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "SECURITY.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "issue_templates", "Bug.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "issue_templates", "Feature.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "merge_request_templates", "Default.md")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "lint.sh")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "test.sh")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "docker.sh")).To(BeAnExistingFile())
@@ -254,6 +269,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		localBaseTemplates := filepath.Join(root, "templates", "local_base")
 		ciBaseTemplates := filepath.Join(root, "templates", "ci_base")
 		dockerBaseTemplates := filepath.Join(root, "templates", "docker_base")
+		governanceBaseTemplates := filepath.Join(root, "templates", "governance_base")
 
 		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
 		baseProjectContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_project.yml", map[string]string{
@@ -302,6 +318,13 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(err).NotTo(HaveOccurred())
 		writeConfig(baseDockerCfg, string(baseDockerContent))
 
+		baseGovernanceCfg := filepath.Join(tempDir, "base_governance.yml")
+		baseGovernanceContent, err := loadTestFixtureWithVars("cmd_goboot/base/governance.yml", map[string]string{
+			"TEMPLATES_GOVERNANCE_BASE": governanceBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseGovernanceCfg, string(baseGovernanceContent))
+
 		gobootCfg := filepath.Join(tempDir, "goboot.yml")
 		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/e2e.yml", map[string]string{
 			fixtureProjectName: projectName,
@@ -313,6 +336,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 			"BASE_TEST_CFG":    baseTestCfg,
 			"BASE_LOGGER_CFG":  baseLoggerCfg,
 			"BASE_DOCKER_CFG":  baseDockerCfg,
+			"BASE_GOVERNANCE_CFG": baseGovernanceCfg,
 			"BASE_LOCAL_CFG":   baseLocalCfg,
 			"BASE_CI_CFG":      baseCiCfg,
 		})
@@ -329,6 +353,8 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(filepath.Join(projectRoot, "Dockerfile")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "docker-compose.yml")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "docker.sh")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "CODEOWNERS")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "issue_templates", "Bug.md")).To(BeAnExistingFile())
 
 		// go style skips ginkgo suite generation.
 		_, err = os.Stat(filepath.Join(projectRoot, "pkg", "e2egostyle", "e2egostyle_suite_test.go"))

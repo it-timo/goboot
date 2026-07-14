@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.3.0)
+# 📁 Project Structure — `goboot` (v0.4.0)
 
-This document reflects the current repository structure for `goboot` at `v0.3.0`.
+This document reflects the current repository structure for `goboot` at `v0.4.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -18,6 +18,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `pkg/baseci/` — CI scaffolding service (GitLab/GitHub generation with policy modes)
 - `pkg/basedocker/` — CLI containerization service (Dockerfile, compose, dockerignore)
 - `pkg/baserelease/` — GoReleaser and provider release automation service
+- `pkg/basegovernance/` — Ownership, contribution, and security-policy service
 - `pkg/config/` — Config types and loading logic
 - `pkg/goboot/` — Core execution engine
 - `pkg/goboottypes/` — Shared constants and interfaces (service IDs, linter definitions, etc.)
@@ -34,6 +35,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `base_ci.yml` — CI scaffold config
 - `base_docker.yml` — Docker scaffold config
 - `base_release.yml` — Release automation config
+- `base_governance.yml` — Maintainer ownership and contribution-policy config
 
 ### `/templates/`
 
@@ -44,6 +46,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `ci_base/` — CI templates (GitLab and GitHub providers)
 - `docker_base/` — Dockerfile, compose, and dockerignore templates
 - `release_base/` — GoReleaser and release guide templates
+- `governance_base/` — Common and provider-native governance templates
 
 ### `/doc/adr/`
 
@@ -56,7 +59,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 
 ### `/.github/`
 
-- GitHub workflow files and optional sponsor metadata
+- GitHub workflow, issue, pull request, and sponsor metadata
 - Container workflow for building and smoke-testing the `goboot` image
 - Release workflow for tag-driven binary distribution
 
@@ -77,6 +80,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `doc/VERSIONING.md` — Semantic version strategy
 - `doc/WORKFLOW.md` — Project lifecycle & contributor expectations
 - `doc/TESTING.md` — Testing philosophy, commands, and coverage notes
+- `CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS` — Repository governance contracts
 - `LICENSE`, `NOTICE` — Legal OSS declarations
 - `.editorconfig`, `.gitignore`, `.gitattributes` — Development consistency
 - `Dockerfile`, `.dockerignore` — Container image definition for the `goboot` CLI
@@ -101,7 +105,6 @@ See [`ROADMAP.md`](../ROADMAP.md) for targeted milestones.
 
 - `test/` — Additional integration/e2e harnesses
 - `benchmarks/` — Performance regression tracking
-- Contribution templates
 
 ---
 
@@ -118,4 +121,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.3.0 — matches real files in the repository._
+_Last updated: v0.4.0 — matches real files in the repository._

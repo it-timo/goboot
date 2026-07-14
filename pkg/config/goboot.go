@@ -208,6 +208,8 @@ func createServiceConfig(id, projectName string) ServiceConfig {
 		return newBaseDockerConfig(projectName)
 	case goboottypes.ServiceNameBaseRelease:
 		return newBaseReleaseConfig(projectName)
+	case goboottypes.ServiceNameBaseGovernance:
+		return newBaseGovernanceConfig(projectName)
 	// Extend with more cases for additional service types.
 	default:
 		return nil

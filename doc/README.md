@@ -9,6 +9,7 @@ Use this folder as the main documentation hub after `README.md`.
 - [`containerization.md`](./containerization.md): Dockerfile, compose, and container CI behavior.
 - [`releasing.md`](./releasing.md): tag-driven binary release automation.
 - [`profiles.md`](./profiles.md): named lint, test, and documentation baselines.
+- [`governance.md`](./governance.md): generated ownership, contribution, and security policy.
 
 ## Architecture and Policies
 

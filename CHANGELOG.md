@@ -7,6 +7,23 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.4.0 — Governance & Contribution
+
+Added:
+
+- `base_governance` service with validated maintainer and default-branch inputs.
+- Shared `CODEOWNERS`, `CONTRIBUTING.md`, and `SECURITY.md` outputs.
+- GitHub issue forms and pull request templates.
+- GitLab issue and merge request templates.
+- Profile-aware governance baselines for minimal, standard, enterprise, and OSS projects.
+- Governance guide and ADR-038.
+
+Changed:
+
+- The default goboot configuration enables repository governance generation.
+- Contributor-facing security guidance directs vulnerability reports to private
+  provider channels instead of public issues.
+
 ### v0.3.0 — Template Profiles
 
 Added:

@@ -16,6 +16,7 @@ var (
 	_ goboottypes.ProfileReceiver = (*config.BaseProjectConfig)(nil)
 	_ goboottypes.ProfileReceiver = (*config.BaseLintConfig)(nil)
 	_ goboottypes.ProfileReceiver = (*config.BaseTestConfig)(nil)
+	_ goboottypes.ProfileReceiver = (*config.BaseGovernanceConfig)(nil)
 )
 
 const profileTestRepoPath = "github.com/test/testproject"
