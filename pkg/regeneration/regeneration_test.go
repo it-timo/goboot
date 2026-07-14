@@ -145,6 +145,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 		writeFile(targetProject, "README.md", "user edit\n", 0o644)
 		writeFile(stagedProject, "README.md", "replacement\n", 0o644)
+
 		request.Policy = regeneration.PolicyReplace
 
 		plan, err := regeneration.Apply(request)
@@ -160,6 +161,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 		writeFile(targetProject, "README.md", "user edit\n", 0o644)
 		writeFile(stagedProject, "README.md", "second\n", 0o644)
+
 		request.Policy = regeneration.PolicyPreserve
 
 		plan, err := regeneration.Apply(request)
@@ -184,6 +186,7 @@ var _ = Describe("Regeneration transactions", func() {
 
 	It("rejects deletion of a modified stale file", func() {
 		writeFile(stagedProject, "stale.txt", "stale\n", 0o644)
+
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 		writeFile(targetProject, "stale.txt", "user edit\n", 0o644)

@@ -22,6 +22,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const stagingProjectMode = 0o750
+
 var (
 	exitFunc               = os.Exit
 	outputWriter io.Writer = os.Stdout
@@ -122,6 +124,7 @@ func executeGeneration(opts cliOptions, cfg *config.GoBoot, logger zerolog.Logge
 	}
 
 	targetPath := cfg.TargetPath
+
 	stagingRoot, err := os.MkdirTemp("", "goboot-generation-*")
 	if err != nil {
 		return fmt.Errorf("failed to create generation staging directory: %w", err)
@@ -174,7 +177,7 @@ func generateStagedProject(opts cliOptions, cfg *config.GoBoot, logger zerolog.L
 		return fmt.Errorf("service execution failed: %w", err)
 	}
 
-	err = os.MkdirAll(filepath.Join(stagingRoot, cfg.ProjectName), 0o750)
+	err = os.MkdirAll(filepath.Join(stagingRoot, cfg.ProjectName), stagingProjectMode)
 	if err != nil {
 		return fmt.Errorf("failed to ensure staged project root: %w", err)
 	}

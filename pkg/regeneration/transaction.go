@@ -13,6 +13,7 @@ import (
 
 func applyTransaction(request Request, prepared preparedPlan) error {
 	targetParent := filepath.Dir(request.TargetProject)
+
 	err := os.MkdirAll(targetParent, goboottypes.DirPerm)
 	if err != nil {
 		return fmt.Errorf("failed to create target parent: %w", err)
