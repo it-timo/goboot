@@ -40,6 +40,7 @@ var _ = Describe("BaseSupplyChain", func() {
 
 	BeforeEach(func() {
 		var err error
+
 		targetDir, err = os.MkdirTemp("", "basesupplychain-target-*")
 		Expect(err).NotTo(HaveOccurred())
 		sourceDir, err = os.MkdirTemp("", "basesupplychain-source-*")
@@ -55,6 +56,7 @@ var _ = Describe("BaseSupplyChain", func() {
 		}
 		service = basesupplychain.NewBaseSupplyChain(targetDir)
 		registrar = &supplyChainRegistrar{lines: map[string][]string{}, files: map[string][]string{}}
+
 		Expect(os.WriteFile(
 			filepath.Join(sourceDir, "SUPPLY_CHAIN.md"+goboottypes.TemplateSuffix),
 			[]byte("# {{.ProjectName}} supply chain\n"),

@@ -8,6 +8,7 @@ import (
 )
 
 func TestBaseSupplyChain(t *testing.T) {
+	t.Parallel()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "BaseSupplyChain Suite")
 }

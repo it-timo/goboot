@@ -51,7 +51,7 @@ var _ = Describe("BaseSupplyChainConfig", func() {
 		Expect(supplyChain.Validate()).NotTo(Succeed())
 
 		supplyChain.AllowedLicenses = []string{supplyChainMITLicense}
-		supplyChain.GitProvider = "other"
+		supplyChain.GitProvider = unsupportedProvider
 		Expect(supplyChain.Validate()).NotTo(Succeed())
 	})
 })

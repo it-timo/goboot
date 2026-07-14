@@ -44,7 +44,7 @@ var _ = Describe("BaseReleaseConfig", func() {
 
 	Describe("When the setup is incorrect", func() {
 		It("rejects an unsupported provider", func() {
-			baseRelease.GitProvider = "other"
+			baseRelease.GitProvider = unsupportedProvider
 			Expect(baseRelease.Validate()).NotTo(Succeed())
 		})
 

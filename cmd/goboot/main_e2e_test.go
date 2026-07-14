@@ -218,7 +218,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(makefile).NotTo(ContainSubstring("{{"))
 
 		dockerfile := readFile(filepath.Join(projectRoot, "Dockerfile"))
-		Expect(dockerfile).To(ContainSubstring("FROM golang:1.26.3"))
+		Expect(dockerfile).To(ContainSubstring("FROM golang:1.26.5"))
 		Expect(dockerfile).To(ContainSubstring("COPY go.mod ./"))
 		Expect(dockerfile).NotTo(ContainSubstring("COPY go.mod go.sum"))
 		Expect(dockerfile).To(ContainSubstring("./cmd/e2eginkgo"))

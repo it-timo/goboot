@@ -51,7 +51,7 @@ var _ = Describe("BaseGovernanceConfig", func() {
 	})
 
 	It("rejects an unsupported provider or unsafe branch", func() {
-		governanceConfig.GitProvider = "other"
+		governanceConfig.GitProvider = unsupportedProvider
 		Expect(governanceConfig.Validate()).NotTo(Succeed())
 
 		governanceConfig.GitProvider = goboottypes.GitProviderGitHub

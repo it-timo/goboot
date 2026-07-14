@@ -157,7 +157,7 @@ func (gb *GoBoot) registerPreServices() error {
 
 // registerMainServices registers all non-pre services.
 //
-//nolint:cyclop // Flat switch is preferred for explicit control and traceability.
+//nolint:cyclop,funlen // Flat switch is preferred for explicit control and traceability.
 func (gb *GoBoot) registerMainServices() error {
 	for _, meta := range gb.cfg.Services {
 		if !meta.IsEnabled() {

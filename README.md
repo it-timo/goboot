@@ -72,7 +72,7 @@ You can follow the structural milestones in [`ROADMAP.md`](./ROADMAP.md).
 
 ### Requirements
 
-- [Go 1.26.3+](https://go.dev/doc/install)
+- [Go 1.26.5+](https://go.dev/doc/install)
 - [Make](https://www.gnu.org/software/make/) for `make` targets
 - [Task](https://taskfile.dev) for `task` targets and full `verify_intro`
 - [Docker](https://www.docker.com/) for containerized lint tooling

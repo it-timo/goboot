@@ -92,7 +92,7 @@ files it does not own.
 
 ```yaml
 imagePolicy: "balanced"
-goVersions: ["1.26.3"]
+goVersions: ["1.26.5"]
 autoBranches: ["main", "master"]
 ```
 
@@ -137,7 +137,7 @@ services:
 
 ```yaml
 sourcePath: "./templates/docker_base"
-goVersion: "1.26.3"
+goVersion: "1.26.5"
 runtimeImage: "gcr.io/distroless/static-debian12:nonroot"
 fileList:
   - dockerfile
