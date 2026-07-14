@@ -2,12 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"github.com/it-timo/goboot/pkg/config"
+	"github.com/it-timo/goboot/pkg/regeneration"
 )
 
 func withFakeGo() func() {
@@ -106,6 +110,7 @@ var _ = Describe("CLI entrypoint", func() {
 		err = run([]string{argConfig, configFile})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("service registration failed"))
+		Expect(commandExitCode(err)).To(Equal(exitGeneration))
 	})
 
 	It("returns error when service execution fails", func() {
@@ -212,6 +217,112 @@ var _ = Describe("CLI entrypoint", func() {
 		Expect(err).To(MatchError(ContainSubstring("invalid regeneration policy")))
 	})
 
+	It("validates configuration without generating output", func() {
+		tempDir := GinkgoT().TempDir()
+		configFile := filepath.Join(tempDir, "goboot.yml")
+		targetDir := filepath.Join(tempDir, "out")
+
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			fixtureProjectName: "CliValidate",
+			fixtureTargetDir:   targetDir,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
+
+		originalWriter := outputWriter
+		buffer := &bytes.Buffer{}
+
+		outputWriter = buffer
+		defer func() {
+			outputWriter = originalWriter
+		}()
+
+		err = run([]string{argConfig, configFile, "--validate"})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(targetDir).NotTo(BeAnExistingFile())
+		Expect(buffer.String()).To(Equal("configuration is valid.\n"))
+	})
+
+	It("emits one machine-readable validation result", func() {
+		tempDir := GinkgoT().TempDir()
+		configFile := filepath.Join(tempDir, "goboot.yml")
+
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			fixtureProjectName: "CliJSON",
+			fixtureTargetDir:   filepath.Join(tempDir, "out"),
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
+
+		originalWriter := outputWriter
+		buffer := &bytes.Buffer{}
+
+		outputWriter = buffer
+		defer func() {
+			outputWriter = originalWriter
+		}()
+
+		err = run([]string{argConfig, configFile, "--validate", "--output", "json"})
+		Expect(err).NotTo(HaveOccurred())
+
+		var result successResult
+		Expect(json.Unmarshal(buffer.Bytes(), &result)).To(Succeed())
+		Expect(result.Status).To(Equal("success"))
+		Expect(result.Operation).To(Equal(operationValidate))
+		Expect(result.Project).To(Equal("CliJSON"))
+	})
+
+	It("prints version without loading configuration", func() {
+		originalWriter := outputWriter
+		buffer := &bytes.Buffer{}
+
+		outputWriter = buffer
+		defer func() {
+			outputWriter = originalWriter
+		}()
+
+		err := run([]string{"--version"})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(buffer.String()).To(Equal("goboot " + version + "\n"))
+	})
+
+	DescribeTable("assigns stable exit codes",
+		func(args []string, expectedCode int) {
+			err := run(args)
+			Expect(commandExitCode(err)).To(Equal(expectedCode))
+		},
+		Entry("usage errors", []string{"--output", "xml"}, exitUsage),
+		Entry("configuration errors", []string{argConfig, "/nonexistent/path.yml"}, exitConfig),
+	)
+
+	It("assigns the dedicated conflict exit code and preserves the target", func() {
+		tempDir := GinkgoT().TempDir()
+		stagingRoot := filepath.Join(tempDir, "staging")
+		targetRoot := filepath.Join(tempDir, "target")
+		projectName := "ConflictProject"
+		stagedProject := filepath.Join(stagingRoot, projectName)
+		targetProject := filepath.Join(targetRoot, projectName)
+
+		Expect(os.MkdirAll(stagedProject, 0o755)).To(Succeed())
+		Expect(os.MkdirAll(targetProject, 0o755)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(stagedProject, "README.md"), []byte("generated\n"), 0o644)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(targetProject, "README.md"), []byte("user\n"), 0o644)).To(Succeed())
+
+		_, err := applyStagedProject(
+			cliOptions{},
+			&config.GoBoot{ProjectName: projectName},
+			regeneration.PolicyManaged,
+			stagingRoot,
+			targetRoot,
+		)
+		Expect(err).To(HaveOccurred())
+		Expect(commandExitCode(err)).To(Equal(exitConflict))
+
+		content, readErr := os.ReadFile(filepath.Join(targetProject, "README.md"))
+		Expect(readErr).NotTo(HaveOccurred())
+		Expect(string(content)).To(Equal("user\n"))
+	})
+
 	Describe("main", func() {
 		var (
 			originalArgs   []string
@@ -261,7 +372,7 @@ var _ = Describe("CLI entrypoint", func() {
 			Expect(info.IsDir()).To(BeTrue())
 		})
 
-		It("prints the error and exits with non-zero status on failure", func() {
+		It("prints a JSON error and exits with the stable config status", func() {
 			defer withFakeGo()()
 
 			buf := &bytes.Buffer{}
@@ -270,12 +381,16 @@ var _ = Describe("CLI entrypoint", func() {
 			var exitCode int
 
 			exitFunc = func(code int) { exitCode = code }
-			os.Args = []string{"goboot", argConfig, "/nonexistent/path.yml"}
+			os.Args = []string{"goboot", argConfig, "/nonexistent/path.yml", "--output", "json"}
 
 			main()
 
-			Expect(exitCode).To(Equal(1))
-			Expect(buf.String()).To(ContainSubstring("failed to initialize configuration"))
+			Expect(exitCode).To(Equal(exitConfig))
+
+			var result errorResult
+			Expect(json.Unmarshal(buf.Bytes(), &result)).To(Succeed())
+			Expect(result.Category).To(Equal(categoryConfig))
+			Expect(result.ExitCode).To(Equal(exitConfig))
 		})
 	})
 })

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_supplychain.schema.json",
+  "title": "goboot base_supplychain configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "govulncheckVersion": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "goLicensesVersion": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "allowedLicenses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

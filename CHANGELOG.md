@@ -7,6 +7,27 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.8.0 — Stable CLI & Configuration
+
+Added:
+
+- `--validate` for strict root and enabled-service configuration checks without
+  rendering, dependency resolution, or target changes.
+- Stable human and single-object JSON output selected with `--output`.
+- Documented exit codes for usage, configuration, generation, and regeneration
+  conflicts.
+- `--version` output that does not require a configuration file.
+- Draft 2020-12 JSON Schemas for the root file and all built-in service configs,
+  with YAML language-server modelines in committed examples.
+- Linux, macOS, and Windows CLI build and portable-contract CI coverage.
+- CLI/config migration policy and ADR-042.
+
+Changed:
+
+- The v1 candidate CLI and YAML field names are frozen; incompatible changes now
+  require a documented deprecation and migration window.
+- v0.7 regeneration is marked released and v0.8 is the active milestone.
+
 ### v0.7.0 — Regeneration Safety
 
 Added:

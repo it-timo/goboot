@@ -23,9 +23,9 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.7.0` is the active regeneration-safety milestone. It adds explicit file
-ownership, dry-run plans, user-edit conflict detection, and rollback-capable
-project transactions.
+`v0.8.0` is the active stable-interface milestone. It freezes the v1 candidate
+CLI and YAML field names, adds validation-only and JSON modes, publishes editor
+schemas, and verifies portable contracts on Linux, macOS, and Windows.
 
 ### Core Capabilities
 
@@ -57,6 +57,8 @@ image for mounted-workspace generation runs.
   costs, while opt-in bounded parallelism accelerates independent services.
 - **Safe Regeneration**: A versioned ownership manifest, explicit collision
   policies, isolated staging, and transactional apply protect user-modified files.
+- **Stable Automation Contract**: Validation-only execution, machine-readable
+  results, documented exit codes, and published YAML schemas support CI and editors.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -139,6 +141,8 @@ This repository uses:
   and profiling
 - [doc/regeneration.md](./doc/regeneration.md) for ownership, dry runs, conflict
   policies, and transactional updates
+- [doc/cli-config-contract.md](./doc/cli-config-contract.md) for stable flags,
+  JSON output, exit codes, schemas, and migration rules
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

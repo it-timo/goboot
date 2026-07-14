@@ -62,14 +62,14 @@ const (
 
 // Change describes one planned path outcome.
 type Change struct {
-	Path   string
-	Action Action
-	Reason string
+	Path   string `json:"path"`
+	Action Action `json:"action"`
+	Reason string `json:"reason"`
 }
 
 // Plan is a deterministic description of a regeneration transaction.
 type Plan struct {
-	Changes []Change
+	Changes []Change `json:"changes"`
 }
 
 // HasConflicts reports whether applying the plan would overwrite user work

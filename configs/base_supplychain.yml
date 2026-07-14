@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schemas/base_supplychain.schema.json
 # Supply-chain security policy and automation.
 sourcePath: "./templates/supplychain_base"
 

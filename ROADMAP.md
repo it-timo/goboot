@@ -139,9 +139,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-## In Progress
-
-### v0.7.0 — Regeneration Safety
+### v0.7.0 — Regeneration Safety (Released)
 
 - Generated ownership manifest with content and mode digests
 - Complete dry-run change plans
@@ -151,7 +149,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.8.0 — Stable CLI & Configuration
 
@@ -163,6 +161,8 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 - Linux, macOS, and Windows compatibility matrix
 
 ---
+
+## Planned Milestones
 
 ### v0.9.0 — Release Candidate Hardening
 

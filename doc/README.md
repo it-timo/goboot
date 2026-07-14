@@ -16,6 +16,8 @@ Use this folder as the main documentation hub after `README.md`.
   and profiling.
 - [`regeneration.md`](./regeneration.md): generated ownership, dry-run plans,
   collision policies, and transactional updates.
+- [`cli-config-contract.md`](./cli-config-contract.md): stable CLI, JSON output,
+  exit codes, schemas, compatibility, and migrations.
 
 ## Architecture and Policies
 

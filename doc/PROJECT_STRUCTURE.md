@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.7.0)
+# 📁 Project Structure — `goboot` (v0.8.0)
 
-This document reflects the current repository structure for `goboot` at `v0.7.0`.
+This document reflects the current repository structure for `goboot` at `v0.8.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -40,6 +40,11 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - `base_governance.yml` — Maintainer ownership and contribution-policy config
 - `base_supplychain.yml` — Supply-chain scanner versions and license policy
 
+### `/schemas/`
+
+- `goboot.schema.json` — Root YAML contract
+- `base_*.schema.json` — Built-in service YAML contracts and editor completion
+
 ### `/templates/`
 
 - `project_base/` — Project scaffolding templates
@@ -68,6 +73,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - Release workflow for tag-driven binary distribution
 - Security workflow for CodeQL, dependency policy, and SBOM generation
 - Performance workflow for pull-request benchmark evidence
+- Linux, macOS, and Windows compatibility workflow
 
 ### `/scripts/`
 
@@ -127,4 +133,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.7.0 — matches real files in the repository._
+_Last updated: v0.8.0 — matches real files in the repository._

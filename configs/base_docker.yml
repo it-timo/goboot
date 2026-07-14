@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schemas/base_docker.schema.json
 # Config for the `base_docker` service.
 # Safe to commit; no secrets.
 

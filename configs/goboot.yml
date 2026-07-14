@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schemas/goboot.schema.json
 # Root config for one goboot generation run.
 # Safe to commit; no secrets.
 # Service execution order is defined in code, not in this file.

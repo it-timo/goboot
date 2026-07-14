@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schemas/base_project.schema.json
 # Config for the `base_project` service.
 # Safe to commit; no secrets.
 

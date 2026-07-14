@@ -107,6 +107,7 @@ Accepted # or Proposed / Rejected / Superseded / Deprecated
 | [ADR-039](adr-039-explicit-supply-chain-security.md)   | Explicit Supply-Chain Security Service                        | security, ci, codeql, dependencies, sbom                                       |
 | [ADR-040](adr-040-bounded-parallel-generation.md)      | Bounded Parallel Generation with Measured Baselines           | performance, concurrency, benchmarks, determinism                              |
 | [ADR-041](adr-041-manifest-based-regeneration.md)      | Manifest-Based Transactional Regeneration                     | regeneration, ownership, filesystem, transactions, cli                         |
+| [ADR-042](adr-042-stable-cli-config-contract.md)       | Stable CLI and Configuration Contract                         | cli, config, schemas, compatibility, versioning                                |
 
 ---
 

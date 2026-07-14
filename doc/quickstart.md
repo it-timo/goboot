@@ -42,6 +42,18 @@ Set in `configs/goboot.yml`:
 go run ./cmd/goboot --config ./configs/goboot.yml
 ```
 
+Validate the root file and every enabled service config without generating:
+
+```bash
+go run ./cmd/goboot --config ./configs/goboot.yml --validate
+```
+
+For CI or editor automation, request one JSON object on stdout:
+
+```bash
+go run ./cmd/goboot --config ./configs/goboot.yml --validate --output json
+```
+
 ## 4. Check expected output
 
 If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expect:

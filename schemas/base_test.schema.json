@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/it-timo/goboot/main/schemas/base_test.schema.json",
+  "title": "goboot base_test configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourcePath": { "type": "string", "minLength": 1 },
+    "useStyle": { "enum": ["", "ginkgo", "go"] },
+    "testCmd": { "type": "string" }
+  }
+}
