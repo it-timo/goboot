@@ -8,11 +8,9 @@ sourcePath: "templates/test_base"
 
 # Test behavior.
 
-#  Use style for test files; currently only "ginkgo" and "go" are supported.
-useStyle: "ginkgo"
+#  Optional explicit style. Empty uses the root profile default.
+#  Supported explicit values are "ginkgo" and "go".
+useStyle: ""
 
-#  Command to run tests. If empty, goboot fills in the default command.
-testCmd: |-
-  go test -race -timeout=5m -coverprofile=coverage.txt ./... &&
-  go tool cover -func=coverage.txt &&
-  rm -f coverage.txt
+#  Optional explicit command. Empty uses the root profile baseline.
+testCmd: ""

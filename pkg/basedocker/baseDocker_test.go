@@ -65,7 +65,7 @@ var _ = Describe("BaseDocker Service", func() {
 			SourcePath:       sourceDir,
 			ProjectName:      "IntroProject",
 			LowerProjectName: "introproject",
-			GoVersion:        "1.26.3",
+			GoVersion:        "1.26.5",
 			RuntimeImage:     "gcr.io/distroless/static-debian12:nonroot",
 			BinaryName:       "introproject",
 			MainPackage:      "./cmd/introproject",

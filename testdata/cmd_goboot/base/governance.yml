@@ -1,0 +1,4 @@
+sourcePath: ${TEMPLATES_GOVERNANCE_BASE}
+maintainers:
+  - "@example/maintainers"
+defaultBranch: "main"

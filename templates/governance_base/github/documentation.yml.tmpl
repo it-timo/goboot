@@ -1,0 +1,25 @@
+name: Documentation improvement
+description: Report missing, unclear, or inaccurate documentation.
+title: "docs: "
+labels:
+  - documentation
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      placeholder: URL or repository path
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What needs improvement?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested change
+    validations:
+      required: false

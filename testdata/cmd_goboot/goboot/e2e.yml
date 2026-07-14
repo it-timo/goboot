@@ -18,6 +18,12 @@ services:
   - id: base_docker
     confPath: ${BASE_DOCKER_CFG}
     enabled: true
+  - id: base_governance
+    confPath: ${BASE_GOVERNANCE_CFG}
+    enabled: true
+  - id: base_supplychain
+    confPath: ${BASE_SUPPLYCHAIN_CFG}
+    enabled: true
   - id: base_local
     confPath: ${BASE_LOCAL_CFG}
     enabled: true

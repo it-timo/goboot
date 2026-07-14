@@ -9,7 +9,7 @@ sourcePath: "templates/project_base"
 # Toolchain versions.
 
 #  Go version used for local development, CI, and .tool-versions
-usedGoVersion: "1.26.3"
+usedGoVersion: "1.26.5"
 
 #  Optional Node.js version (for tooling, static site, doc generation, etc.)
 usedNodeVersion: "20"

@@ -1,0 +1,7 @@
+# Release automation for generated projects. Publishing is tag-driven.
+sourcePath: "./templates/release_base"
+binaryName: "introproject"
+mainPackage: "./cmd/introproject"
+formats:
+  - "tar.gz"
+  - "zip"

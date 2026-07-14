@@ -116,6 +116,9 @@ services:
   - id: "base_docker"
     confPath: "${PROJECT_ROOT}/configs/base_docker.yml"
     enabled: true
+  - id: "base_supplychain"
+    confPath: "${PROJECT_ROOT}/configs/base_supplychain.yml"
+    enabled: true
   - id: "base_local"
     confPath: "${PROJECT_ROOT}/configs/base_local.yml"
     enabled: true
@@ -179,9 +182,9 @@ validate_project_case() {
   run_step "${project_name}: ./scripts/lint.sh" "./scripts/lint.sh"
 
   if [[ "${git_provider}" == "gitlab" ]]; then
-    run_step "${project_name}: GitLab CI files exist" "test -f .gitlab-ci.yml && test -f .gitlab/ci/lint.yml && test -f .gitlab/ci/test.yml && test -f .gitlab/ci/build.yml && test -f .gitlab/ci/container.yml"
+    run_step "${project_name}: GitLab CI files exist" "test -f .gitlab-ci.yml && test -f .gitlab/ci/lint.yml && test -f .gitlab/ci/test.yml && test -f .gitlab/ci/build.yml && test -f .gitlab/ci/container.yml && test -f .gitlab/ci/security.yml && test -f SUPPLY_CHAIN.md"
   elif [[ "${git_provider}" == "github" ]]; then
-    run_step "${project_name}: GitHub CI files exist" "test -f .github/workflows/lint.yml && test -f .github/workflows/test.yml && test -f .github/workflows/build.yml && test -f .github/workflows/container.yml"
+    run_step "${project_name}: GitHub CI files exist" "test -f .github/workflows/lint.yml && test -f .github/workflows/test.yml && test -f .github/workflows/build.yml && test -f .github/workflows/container.yml && test -f .github/workflows/security.yml && test -f SUPPLY_CHAIN.md"
   fi
 
   if [[ "${test_style}" == "go" ]]; then

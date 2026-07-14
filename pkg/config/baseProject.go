@@ -31,6 +31,9 @@ type BaseProjectConfig struct {
 	// GitProvider selects provider-specific template behavior.
 	GitProvider string `yaml:"-"`
 
+	// Profile identifies the selected project baseline in generated documentation.
+	Profile string `yaml:"-"`
+
 	// UsedGoVersion is the Go version written into generated files.
 	UsedGoVersion string `yaml:"usedGoVersion"`
 
@@ -57,6 +60,11 @@ type BaseProjectConfig struct {
 
 	// Logger contains optional logger settings supplied by base_logger.
 	Logger goboottypes.LoggerSettings `yaml:"-"`
+}
+
+// SetProfile injects the validated template profile.
+func (bp *BaseProjectConfig) SetProfile(profile string) {
+	bp.Profile = profile
 }
 
 // newBaseProjectConfig creates a BaseProjectConfig with the given project name.

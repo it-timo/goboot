@@ -207,6 +207,9 @@ services:
   - id: "base_docker"
     confPath: "${PROJECT_ROOT}/configs/base_docker.yml"
     enabled: true
+  - id: "base_supplychain"
+    confPath: "${PROJECT_ROOT}/configs/base_supplychain.yml"
+    enabled: true
   - id: "base_local"
     confPath: "${PROJECT_ROOT}/configs/base_local.yml"
     enabled: true
@@ -361,7 +364,7 @@ prepull_gitlab_images() {
 
   require_cmd docker
 
-  files=(".gitlab/ci/lint.yml" ".gitlab/ci/build.yml" ".gitlab/ci/test.yml" ".gitlab/ci/versions.yml")
+  files=(".gitlab/ci/lint.yml" ".gitlab/ci/build.yml" ".gitlab/ci/test.yml" ".gitlab/ci/security.yml" ".gitlab/ci/versions.yml")
 
   for file in "${files[@]}"; do
     if [[ -f "${file}" ]]; then

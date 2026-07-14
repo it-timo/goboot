@@ -361,6 +361,8 @@ var _ = Describe("GoBoot Core Orchestration", func() {
 				Entry("base_local", goboottypes.ServiceNameBaseLocal),
 				Entry("base_logger", goboottypes.ServiceNameBaseLogger),
 				Entry("base_docker", goboottypes.ServiceNameBaseDocker),
+				Entry("base_governance", goboottypes.ServiceNameBaseGovernance),
+				Entry("base_supplychain", goboottypes.ServiceNameBaseSupplyChain),
 			)
 		})
 	})
