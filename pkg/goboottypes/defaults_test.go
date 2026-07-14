@@ -127,6 +127,15 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 		})
 	})
 
+	Describe("Template Profiles", func() {
+		It("matches the supported profile identifiers", func() {
+			Expect(goboottypes.ProfileMinimal).To(Equal("minimal"))
+			Expect(goboottypes.ProfileStandard).To(Equal("standard"))
+			Expect(goboottypes.ProfileEnterprise).To(Equal("enterprise"))
+			Expect(goboottypes.ProfileOSS).To(Equal("oss"))
+		})
+	})
+
 	Describe("Default Local Script Names", func() {
 		It("matches exact script name constants", func() {
 			Expect(goboottypes.ScriptNameMake).To(Equal("make"))

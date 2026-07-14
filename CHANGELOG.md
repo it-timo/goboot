@@ -7,6 +7,41 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.3.0 — Template Profiles
+
+Added:
+
+- Validated root `profile` selection with `minimal`, `standard`, `enterprise`,
+  and `oss` values.
+- Profile-specific Go lint baselines and cyclomatic-complexity thresholds.
+- Profile-default test styles and commands with explicit service overrides.
+- Generated `PROFILE.md` documenting the selected baseline.
+- Profile guide and ADR-037.
+
+Changed:
+
+- Omitted profiles default to `standard` for backward compatibility.
+- Generated project README and structure documentation identify the active
+  profile.
+
+### v0.2.1 — Release Automation
+
+Added:
+
+- `base_release` service with validated GoReleaser settings.
+- Tag-driven GitHub and GitLab release jobs for generated projects.
+- Cross-platform AMD64/ARM64 archives and checksum manifests.
+- Automated changelog generation from Git history.
+- GoReleaser configuration and release workflow for `goboot` itself.
+- Release guide and ADR-036.
+
+Changed:
+
+- `base_ci` can aggregate a release job in addition to build, test, lint, and
+  container jobs.
+- Version selection is explicitly derived from immutable semantic-version tags;
+  goboot does not guess or commit version changes.
+
 ### v0.2.0 — Containerization
 
 Added:

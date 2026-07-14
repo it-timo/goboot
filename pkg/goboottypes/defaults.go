@@ -19,6 +19,18 @@ const (
 		"mstruebing/editorconfig-checker:v3.6.1 -exclude '(\\.git|\\.idea|\\.vscode)'"
 )
 
+// Template profile IDs.
+const (
+	// ProfileMinimal selects the smallest practical lint and test baseline.
+	ProfileMinimal = "minimal"
+	// ProfileStandard selects the balanced default baseline.
+	ProfileStandard = "standard"
+	// ProfileEnterprise selects stricter team-oriented quality gates.
+	ProfileEnterprise = "enterprise"
+	// ProfileOSS selects public-project quality and documentation defaults.
+	ProfileOSS = "oss"
+)
+
 // Default test commands.
 const (
 	// DefaultGoTestCMD is the default command for running tests.
@@ -114,6 +126,8 @@ const (
 	CIFileBuild = "build.yml"
 	// CIFileContainer is the default name for the container CI job file.
 	CIFileContainer = "container.yml"
+	// CIFileRelease is the default name for the release CI job file.
+	CIFileRelease = "release.yml"
 )
 
 // Template source guardrails.

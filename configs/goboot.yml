@@ -18,6 +18,9 @@ repoUrl: "https://github.com/projects"
 #  Git provider (used for provider-specific templates)
 gitProvider: "gitlab"
 
+# Template baseline: minimal, standard, enterprise, or oss.
+profile: "standard"
+
 # Enabled services for this run.
 # Each entry needs: `id`, `confPath`, `enabled`.
 # Unknown IDs fail fast; disabled services are skipped.
@@ -37,6 +40,9 @@ services:
     enabled: true
   - id: "base_docker"
     confPath: "./configs/base_docker.yml"
+    enabled: true
+  - id: "base_release"
+    confPath: "./configs/base_release.yml"
     enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"

@@ -397,6 +397,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 			"README.md",
 			"ROADMAP.md",
 			"PROJECT_STRUCTURE.md",
+			"PROFILE.md",
 			"VERSIONING.md",
 			"WORKFLOW.md",
 			"go.mod",
@@ -418,6 +419,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(goMod).To(ContainSubstring("module example.com/x"))
 		Expect(goMod).NotTo(ContainSubstring("{{"))
 		Expect(readFile(filepath.Join(projectRoot, "README.md"))).NotTo(ContainSubstring("{{"))
+		Expect(readFile(filepath.Join(projectRoot, "PROFILE.md"))).To(ContainSubstring("standard"))
 	})
 
 	It("fails with a clear error when go mod tidy cannot resolve modules (proxy/path failure)", func() {
