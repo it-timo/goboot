@@ -286,6 +286,21 @@ var _ = Describe("CLI entrypoint", func() {
 		Expect(buffer.String()).To(Equal("goboot " + version + "\n"))
 	})
 
+	It("prints help successfully without loading configuration", func() {
+		originalWriter := outputWriter
+		buffer := &bytes.Buffer{}
+
+		outputWriter = buffer
+		defer func() {
+			outputWriter = originalWriter
+		}()
+
+		err := run([]string{"--help"})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(buffer.String()).To(ContainSubstring("Usage of goboot:"))
+		Expect(buffer.String()).To(ContainSubstring("-validate"))
+	})
+
 	DescribeTable("assigns stable exit codes",
 		func(args []string, expectedCode int) {
 			err := run(args)

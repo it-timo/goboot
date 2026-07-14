@@ -14,6 +14,7 @@ Goboot remains a flag-oriented command with these public operations:
 | Dry run | `--config PATH --dry-run` | None |
 | Validate | `--config PATH --validate` | None |
 | Version | `--version` | None |
+| Help | `--help` | None |
 
 Common flags are `--log-level` and `--output`. Generation additionally accepts
 `--regeneration-policy` and `--skip-go-mod-tidy`. Unsupported positional

@@ -72,6 +72,13 @@ func parseCLIOptions(args []string) (cliOptions, error) {
 
 	err := flagSet.Parse(args)
 	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			flagSet.SetOutput(outputWriter)
+			flagSet.Usage()
+
+			return cliOptions{}, flag.ErrHelp
+		}
+
 		return cliOptions{}, fmt.Errorf("failed to parse flags: %w", err)
 	}
 
@@ -108,6 +115,10 @@ func validateCLIOptions(opts cliOptions) error {
 func run(args []string) error {
 	// Step 0: Parse flags explicitly using a local FlagSet to avoid global state.
 	opts, err := parseCLIOptions(args)
+	if errors.Is(err, flag.ErrHelp) {
+		return nil
+	}
+
 	if err != nil {
 		return newCommandError(exitUsage, categoryUsage, requestedOperation(args), err, nil)
 	}
