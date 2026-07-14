@@ -55,7 +55,7 @@ chore: Prepare v0.0.1 release tag
 2. Run `make release_check`
 3. Update `.version`, `ROADMAP.md`, and release-facing docs
 4. Create and push an annotated semantic-version tag; provider CI runs
-   GoReleaser and publishes the binary release:
+    GoReleaser and publishes the binary release:
 
   ```bash
   git tag v0.1.1 -m "Release v0.1.1 — Adds structured logging and release hardening"
