@@ -69,8 +69,6 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ### v0.1.1 — Structured Logging & Release Hardening (Released)
 
-Current release.
-
 **Focus:** observability without noise
 
 - Replace `fmt` usage with structured logging
@@ -82,9 +80,9 @@ Current release.
 
 ---
 
-## In Progress
-
 ### v0.2.0 — Containerization
+
+Current release.
 
 **Focus:** deployment-ready outputs
 
@@ -95,13 +93,13 @@ Current release.
 
 ---
 
-## Planned Milestones
-
 ### v0.2.1 — Release Automation
 
-- GoReleaser integration
-- Automated versioning and changelogs
-- Binary distribution
+- GoReleaser v2 integration for goboot and generated projects
+- Explicit semantic versioning through immutable `v*` Git tags
+- Automated changelogs, archives, and checksum manifests
+- GitHub and GitLab release jobs generated through `base_ci`
+- Linux, macOS, and Windows binary distribution for AMD64 and ARM64
 
 ---
 
@@ -124,7 +122,7 @@ Current release.
 
 ---
 
-### v0.5.0 — Supply Chain Security
+### v0.5.0 — Supply Chain Security (Released)
 
 - CodeQL
 - License compliance scanning
@@ -133,12 +131,15 @@ Current release.
 
 ---
 
+## In Progress
+
 ### v0.6.0 — Performance & Scale
 
-- Template rendering benchmarks
-- Config parsing performance
-- Large-project generation profiling
-- Parallel execution optimizations
+- Template rendering and atomic-file benchmarks
+- 500-service config parsing benchmark
+- Large-project CPU and memory profiling workflow
+- Bounded parallel service execution with deterministic failure semantics
+- Thread-safe CI and local registries
 
 ---
 

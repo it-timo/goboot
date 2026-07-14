@@ -2,6 +2,7 @@ projectName: ${PROJECT_NAME}
 repoUrl: ${REPO_URL}
 targetPath: ${TARGET_DIR}
 gitProvider: ${GIT_PROVIDER}
+parallelism: 4
 services:
   - id: base_project
     confPath: ${BASE_PROJECT_CFG}
@@ -17,6 +18,12 @@ services:
     enabled: true
   - id: base_docker
     confPath: ${BASE_DOCKER_CFG}
+    enabled: true
+  - id: base_governance
+    confPath: ${BASE_GOVERNANCE_CFG}
+    enabled: true
+  - id: base_supplychain
+    confPath: ${BASE_SUPPLYCHAIN_CFG}
     enabled: true
   - id: base_local
     confPath: ${BASE_LOCAL_CFG}

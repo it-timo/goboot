@@ -115,7 +115,7 @@ func (bd *BaseDockerConfig) fillDefaults() {
 	bd.MainPackage = strings.TrimSpace(bd.MainPackage)
 
 	if strings.TrimSpace(bd.GoVersion) == "" {
-		bd.GoVersion = "1.26.3"
+		bd.GoVersion = "1.26.5"
 	}
 
 	if strings.TrimSpace(bd.RuntimeImage) == "" {

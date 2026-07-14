@@ -92,7 +92,7 @@ files it does not own.
 
 ```yaml
 imagePolicy: "balanced"
-goVersions: ["1.26.3"]
+goVersions: ["1.26.5"]
 autoBranches: ["main", "master"]
 ```
 
@@ -137,7 +137,7 @@ services:
 
 ```yaml
 sourcePath: "./templates/docker_base"
-goVersion: "1.26.3"
+goVersion: "1.26.5"
 runtimeImage: "gcr.io/distroless/static-debian12:nonroot"
 fileList:
   - dockerfile
@@ -164,3 +164,22 @@ does not indicate a missing service port.
 - expected service files exist for enabled services
 - generated checks run (`make lint`, `make test`, `make container-check` when
   Docker is enabled, and CI syntax where applicable)
+
+## Example 6: Template profiles
+
+### Input (`goboot.yml`)
+
+```yaml
+profile: minimal
+```
+
+### Expected output
+
+- generated `PROFILE.md` identifies the minimal baseline
+- stdlib tests are selected when `useStyle` is empty
+- the default test command is `go test ./...` when `testCmd` is empty
+- `.golangci.yml` contains the smaller correctness/security linter baseline
+
+Change the value to `standard`, `enterprise`, or `oss` for the corresponding
+baseline. Explicit `base_test.yml` values override profile defaults; service
+enablement remains controlled only by the root `services` list.

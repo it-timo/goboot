@@ -9,7 +9,7 @@ sourcePath: "./templates/docker_base"
 # Container build settings.
 
 #  Go version used by the Dockerfile build stage.
-goVersion: "1.26.3"
+goVersion: "1.26.5"
 
 #  Runtime image used by the final Dockerfile stage.
 runtimeImage: "gcr.io/distroless/static-debian12:nonroot"

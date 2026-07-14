@@ -1,0 +1,31 @@
+name: Controlled change request
+description: Propose a governed change with rollout and rollback details.
+title: "change: "
+labels:
+  - change-request
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective and scope
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk assessment
+      description: Describe compatibility, operational, security, and compliance impact.
+    validations:
+      required: true
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Validation and rollout plan
+    validations:
+      required: true
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback plan
+    validations:
+      required: true

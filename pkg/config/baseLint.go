@@ -25,6 +25,12 @@ type BaseLintConfig struct {
 
 	// AllowedPackages lists import exceptions for lint policies.
 	AllowedPackages []string `yaml:"allowedPackages"`
+
+	// Profile selects the generated Go lint baseline.
+	Profile string `yaml:"-"`
+
+	// CyclomaticComplexity is the profile-derived cyclop threshold.
+	CyclomaticComplexity int `yaml:"-"`
 }
 
 // Linter configures one linter entry.
@@ -57,6 +63,11 @@ func newBaseLintConfig(projectName string) *BaseLintConfig {
 // ID returns a stable identifier for this config.
 func (bl *BaseLintConfig) ID() string {
 	return goboottypes.ServiceNameBaseLint
+}
+
+// SetProfile injects the validated template profile.
+func (bl *BaseLintConfig) SetProfile(profile string) {
+	bl.Profile = profile
 }
 
 // ReadConfig loads base_lint YAML and derives RepoImportPath from repoURL.
@@ -98,8 +109,22 @@ func (bl *BaseLintConfig) Validate() error {
 	}
 
 	bl.fillNeededInfos()
+	bl.fillProfileSettings()
 
 	return nil
+}
+
+func (bl *BaseLintConfig) fillProfileSettings() {
+	switch bl.Profile {
+	case goboottypes.ProfileMinimal:
+		bl.CyclomaticComplexity = 20
+	case goboottypes.ProfileEnterprise:
+		bl.CyclomaticComplexity = 8
+	case goboottypes.ProfileOSS:
+		bl.CyclomaticComplexity = 10
+	default:
+		bl.CyclomaticComplexity = 10
+	}
 }
 
 func (bl *BaseLintConfig) validateLinters() error {

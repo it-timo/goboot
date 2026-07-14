@@ -2,6 +2,8 @@ package goboot
 
 import (
 	"errors"
+	"fmt"
+	"sync/atomic"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -87,7 +89,7 @@ var _ = Describe("serviceManager internals", func() {
 
 	BeforeEach(func() {
 		cfgMgr = config.NewConfigManager()
-		testManager = newServiceManager(cfgMgr, zerolog.Nop())
+		testManager = newServiceManager(cfgMgr, zerolog.Nop(), config.DefaultParallelism)
 	})
 
 	It("assigns configs and runs matching services", func() {
@@ -199,5 +201,74 @@ var _ = Describe("serviceManager internals", func() {
 		Expect(svc.configSet).To(BeTrue())
 		Expect(svc.runCalled).To(BeTrue())
 		Expect(svc.registrarSet).To(BeFalse())
+	})
+
+	It("bounds parallel regular-service execution", func() {
+		const (
+			serviceCount      = 3
+			workerParallelism = 2
+		)
+
+		parallelManager := newServiceManager(cfgMgr, zerolog.Nop(), workerParallelism)
+		started := make(chan struct{}, serviceCount)
+		release := make(chan struct{})
+		completed := make(chan error, 1)
+
+		var (
+			activeWorkers atomic.Int32
+			peakWorkers   atomic.Int32
+		)
+
+		for serviceIndex := range serviceCount {
+			serviceID := fmt.Sprintf("service-%d", serviceIndex)
+			Expect(cfgMgr.Register(&mockServiceConfig{id: serviceID})).To(Succeed())
+
+			service := &recordingService{
+				id: serviceID,
+				runHook: func() {
+					currentWorkers := activeWorkers.Add(1)
+					defer activeWorkers.Add(-1)
+
+					for currentWorkers > peakWorkers.Load() {
+						if peakWorkers.CompareAndSwap(peakWorkers.Load(), currentWorkers) {
+							break
+						}
+					}
+
+					started <- struct{}{}
+
+					<-release
+				},
+			}
+			Expect(parallelManager.register(service)).To(Succeed())
+		}
+
+		go func() {
+			completed <- parallelManager.runAll()
+		}()
+
+		for range workerParallelism {
+			Eventually(started).Should(Receive())
+		}
+
+		Expect(peakWorkers.Load()).To(Equal(int32(workerParallelism)))
+		close(release)
+		Eventually(completed).Should(Receive(BeNil()))
+		Expect(peakWorkers.Load()).To(Equal(int32(workerParallelism)))
+	})
+
+	It("reports parallel failures in stable service order", func() {
+		parallelManager := newServiceManager(cfgMgr, zerolog.Nop(), 2)
+
+		for _, serviceID := range []string{"zeta", "alpha"} {
+			Expect(cfgMgr.Register(&mockServiceConfig{id: serviceID})).To(Succeed())
+			Expect(parallelManager.register(&recordingService{
+				id:       serviceID,
+				runError: fmt.Errorf("%s failed", serviceID),
+			})).To(Succeed())
+		}
+
+		err := parallelManager.runAll()
+		Expect(err).To(MatchError(ContainSubstring(`failed to run service "alpha"`)))
 	})
 })

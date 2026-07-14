@@ -53,14 +53,14 @@ var _ = Describe("BaseDockerConfig", func() {
 		It("validates successfully and fills defaults", func() {
 			err := baseDocker.Validate()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(baseDocker.GoVersion).To(Equal("1.26.3"))
+			Expect(baseDocker.GoVersion).To(Equal("1.26.5"))
 			Expect(baseDocker.BinaryName).To(Equal("testproject"))
 			Expect(baseDocker.MainPackage).To(Equal("./cmd/testproject"))
 			Expect(baseDocker.ImageName).To(Equal("testproject:local"))
 		})
 
 		It("accepts explicit values", func() {
-			baseDocker.GoVersion = "1.26.3"
+			baseDocker.GoVersion = "1.26.5"
 			baseDocker.RuntimeImage = "alpine:3.22"
 			baseDocker.BinaryName = "app"
 			baseDocker.MainPackage = "./cmd/app"

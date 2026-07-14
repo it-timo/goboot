@@ -38,6 +38,7 @@ coverage.*
 badges/*
 !badges/coverage.json
 profile.*
+profiles/
 *.prof
 *.perf
 *.trace
