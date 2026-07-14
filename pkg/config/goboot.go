@@ -123,10 +123,35 @@ func (gb *GoBoot) readConfig() error {
 	return readYMLConfig(gb.configPath, gb)
 }
 
-// validateBase validates required root fields and enabled service paths.
-//
-//nolint:cyclop // flat logic preferred for clarity and extensibility.
+// validateBase validates root fields and execution settings.
 func (gb *GoBoot) validateBase() error {
+	err := gb.validateRequiredFields()
+	if err != nil {
+		return err
+	}
+
+	err = gb.validateProfile()
+	if err != nil {
+		return err
+	}
+
+	err = gb.validateParallelism()
+	if err != nil {
+		return err
+	}
+
+	err = validateProjectName(gb.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateRequiredFields validates root fields and enabled service paths.
+//
+//nolint:cyclop // flat logic keeps the required-field report comprehensive.
+func (gb *GoBoot) validateRequiredFields() error {
 	var missing []string
 
 	if strings.TrimSpace(gb.ProjectName) == "" {
@@ -171,21 +196,6 @@ func (gb *GoBoot) validateBase() error {
 
 	if len(missing) > 0 {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
-	}
-
-	err := gb.validateProfile()
-	if err != nil {
-		return err
-	}
-
-	err = gb.validateParallelism()
-	if err != nil {
-		return err
-	}
-
-	err = validateProjectName(gb.ProjectName)
-	if err != nil {
-		return err
 	}
 
 	return nil

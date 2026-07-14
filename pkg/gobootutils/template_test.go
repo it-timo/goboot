@@ -57,7 +57,7 @@ var _ = Describe("Template helpers (rendering)", func() {
 					ProjectName string
 					Version     string
 				}{
-					ProjectName: "goboot",
+					ProjectName: testProjectName,
 					Version:     "1.0.0",
 				}
 
@@ -182,7 +182,12 @@ var _ = Describe("Template helpers (rendering)", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(file.Close()).To(Succeed())
 
-				err = gobootutils.RenderTemplateToFile("cleanup", root, "cleanup.txt", struct{ Name string }{Name: "goboot"})
+				err = gobootutils.RenderTemplateToFile(
+					"cleanup",
+					root,
+					"cleanup.txt",
+					struct{ Name string }{Name: testProjectName},
+				)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = os.Stat(filepath.Join(tempDir, ".cleanup.txt.goboot-tmp"))

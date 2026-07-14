@@ -231,6 +231,7 @@ func (sm *serviceManager) assignConfigs() error {
 
 	for _, curID := range serviceIDs {
 		svc := sm.services[curID]
+
 		cfg, ok := sm.cfgMgr.GetRegistrar(curID)
 		if !ok {
 			cfg, ok = sm.cfgMgr.GetService(curID)

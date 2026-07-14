@@ -214,8 +214,10 @@ var _ = Describe("serviceManager internals", func() {
 		release := make(chan struct{})
 		completed := make(chan error, 1)
 
-		var activeWorkers atomic.Int32
-		var peakWorkers atomic.Int32
+		var (
+			activeWorkers atomic.Int32
+			peakWorkers   atomic.Int32
+		)
 
 		for serviceIndex := range serviceCount {
 			serviceID := fmt.Sprintf("service-%d", serviceIndex)
@@ -234,6 +236,7 @@ var _ = Describe("serviceManager internals", func() {
 					}
 
 					started <- struct{}{}
+
 					<-release
 				},
 			}

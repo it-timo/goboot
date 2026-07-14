@@ -9,6 +9,8 @@ import (
 	"github.com/it-timo/goboot/pkg/gobootutils"
 )
 
+const testProjectName = "goboot"
+
 type templateBenchmarkData struct {
 	Name    string
 	Command string
@@ -28,7 +30,7 @@ func BenchmarkExecuteTemplateText(benchmark *testing.B) {
 		benchmark.Run(testCase.name, func(benchmark *testing.B) {
 			rawTemplate := strings.Repeat("{{.Name}}: {{ oneLine .Command }}\n", testCase.lineCount)
 			data := templateBenchmarkData{
-				Name:    "goboot",
+				Name:    testProjectName,
 				Command: strings.Repeat("x", testCase.commandLen),
 			}
 
@@ -60,7 +62,7 @@ func BenchmarkRenderTemplateToFile(benchmark *testing.B) {
 	})
 
 	rawTemplate := strings.Repeat("project={{.Name}} command={{.Command}}\n", 128)
-	data := templateBenchmarkData{Name: "goboot", Command: "go test ./..."}
+	data := templateBenchmarkData{Name: testProjectName, Command: "go test ./..."}
 
 	benchmark.ReportAllocs()
 	benchmark.ResetTimer()
