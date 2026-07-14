@@ -99,14 +99,26 @@ func run(args []string) error {
 		return fmt.Errorf("failed to initialize configuration: %w", err)
 	}
 
-	policyRaw := cfg.RegenerationPolicy
-	if opts.regenerationPolicy != "" {
-		policyRaw = opts.regenerationPolicy
+	err = executeGeneration(opts, cfg, logger)
+	if err != nil {
+		return err
 	}
 
-	policy, err := regeneration.ParsePolicy(policyRaw)
+	logger.Info().
+		Str("config_path", opts.configPath).
+		Str("target_path", cfg.TargetPath).
+		Str("project_name", cfg.ProjectName).
+		Int64("duration_ms", time.Since(runStart).Milliseconds()).
+		Msg("goboot execution completed successfully")
+	writeOutputLine("goboot execution completed successfully.")
+
+	return nil
+}
+
+func executeGeneration(opts cliOptions, cfg *config.GoBoot, logger zerolog.Logger) error {
+	policy, err := requestedPolicy(opts.regenerationPolicy, cfg.RegenerationPolicy)
 	if err != nil {
-		return fmt.Errorf("invalid regeneration policy: %w", err)
+		return err
 	}
 
 	targetPath := cfg.TargetPath
@@ -126,33 +138,62 @@ func run(args []string) error {
 		cfg.TargetPath = targetPath
 	}()
 
-	// Step 2: Create a new goboot application instance for the isolated staging tree.
+	err = generateStagedProject(opts, cfg, logger, stagingRoot)
+	if err != nil {
+		return err
+	}
+
+	return applyStagedProject(opts, cfg, policy, stagingRoot, targetPath)
+}
+
+func requestedPolicy(override, configured string) (regeneration.Policy, error) {
+	policyRaw := configured
+	if override != "" {
+		policyRaw = override
+	}
+
+	policy, err := regeneration.ParsePolicy(policyRaw)
+	if err != nil {
+		return "", fmt.Errorf("invalid regeneration policy: %w", err)
+	}
+
+	return policy, nil
+}
+
+func generateStagedProject(opts cliOptions, cfg *config.GoBoot, logger zerolog.Logger, stagingRoot string) error {
+	// Create a new goboot application instance for the isolated staging tree.
 	app := goboot.NewGoBootWithLogger(cfg, logger.With().Str("component", "orchestrator").Logger())
 
-	// Step 3: Register all declared and enabled services.
-	err = app.RegisterServices()
+	err := app.RegisterServices()
 	if err != nil {
 		return fmt.Errorf("service registration failed: %w", err)
 	}
 
-	// Step 4: Execute all registered services.
 	err = app.RunServices()
 	if err != nil {
 		return fmt.Errorf("service execution failed: %w", err)
 	}
 
-	err = os.MkdirAll(filepath.Join(stagingRoot, cfg.ProjectName), 0o755)
+	err = os.MkdirAll(filepath.Join(stagingRoot, cfg.ProjectName), 0o750)
 	if err != nil {
 		return fmt.Errorf("failed to ensure staged project root: %w", err)
 	}
 
-	// Step 5: Run go mod tidy if the go.mod file exists and the user did not opt out.
 	err = app.RunGoModTidy(!opts.skipGoModTidy)
 	if err != nil {
 		return fmt.Errorf("failed to run go mod tidy: %w", err)
 	}
 
-	// Step 6: Compare staged output with the target and commit it transactionally.
+	return nil
+}
+
+func applyStagedProject(
+	opts cliOptions,
+	cfg *config.GoBoot,
+	policy regeneration.Policy,
+	stagingRoot string,
+	targetPath string,
+) error {
 	plan, err := regeneration.Apply(regeneration.Request{
 		StagedProject:    filepath.Join(stagingRoot, cfg.ProjectName),
 		TargetProject:    filepath.Join(targetPath, cfg.ProjectName),
@@ -172,17 +213,7 @@ func run(args []string) error {
 
 	if opts.dryRun {
 		writeOutputLine("goboot dry run completed without changing the target project.")
-
-		return nil
 	}
-
-	logger.Info().
-		Str("config_path", opts.configPath).
-		Str("target_path", targetPath).
-		Str("project_name", cfg.ProjectName).
-		Int64("duration_ms", time.Since(runStart).Milliseconds()).
-		Msg("goboot execution completed successfully")
-	writeOutputLine("goboot execution completed successfully.")
 
 	return nil
 }

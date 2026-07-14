@@ -30,7 +30,23 @@ func applyTransaction(request Request, prepared preparedPlan) error {
 		}
 	}()
 
-	err = setCandidateMode(candidatePath, request.StagedProject, request.TargetProject)
+	err = prepareCandidate(request, prepared, candidatePath)
+	if err != nil {
+		return err
+	}
+
+	err = swapProject(candidatePath, request.TargetProject)
+	if err != nil {
+		return err
+	}
+
+	committed = true
+
+	return nil
+}
+
+func prepareCandidate(request Request, prepared preparedPlan, candidatePath string) error {
+	err := setCandidateMode(candidatePath, request.StagedProject, request.TargetProject)
 	if err != nil {
 		return err
 	}
@@ -56,13 +72,6 @@ func applyTransaction(request Request, prepared preparedPlan) error {
 	if err != nil {
 		return fmt.Errorf("failed to set ownership manifest mode: %w", err)
 	}
-
-	err = swapProject(candidatePath, request.TargetProject)
-	if err != nil {
-		return err
-	}
-
-	committed = true
 
 	return nil
 }
@@ -123,7 +132,7 @@ func applyChanges(candidatePath, stagedProject string, plan Plan) error {
 }
 
 func copyTree(sourceRoot, targetRoot string) error {
-	return filepath.WalkDir(sourceRoot, func(sourcePath string, entry fs.DirEntry, walkErr error) error {
+	err := filepath.WalkDir(sourceRoot, func(sourcePath string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
@@ -134,7 +143,7 @@ func copyTree(sourceRoot, targetRoot string) error {
 
 		relativePath, err := filepath.Rel(sourceRoot, sourcePath)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to resolve copied project path: %w", err)
 		}
 
 		if relativePath == "." {
@@ -142,13 +151,19 @@ func copyTree(sourceRoot, targetRoot string) error {
 		}
 
 		targetPath := filepath.Join(targetRoot, relativePath)
+
 		info, err := entry.Info()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to inspect copied project entry: %w", err)
 		}
 
 		if entry.IsDir() {
-			return os.MkdirAll(targetPath, info.Mode().Perm())
+			err = os.MkdirAll(targetPath, info.Mode().Perm())
+			if err != nil {
+				return fmt.Errorf("failed to create copied project directory: %w", err)
+			}
+
+			return nil
 		}
 
 		if !info.Mode().IsRegular() {
@@ -157,24 +172,29 @@ func copyTree(sourceRoot, targetRoot string) error {
 
 		return copyFile(sourcePath, targetPath)
 	})
+	if err != nil {
+		return fmt.Errorf("failed to walk copied project tree: %w", err)
+	}
+
+	return nil
 }
 
 func copyFile(sourcePath, targetPath string) error {
 	err := os.MkdirAll(filepath.Dir(targetPath), goboottypes.DirPerm)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create copied file parent: %w", err)
 	}
 
 	source, err := os.Open(sourcePath) // #nosec G304 -- paths are confined to validated transaction trees.
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open copied source file: %w", err)
 	}
 
 	info, err := source.Stat()
 	if err != nil {
 		_ = source.Close()
 
-		return err
+		return fmt.Errorf("failed to inspect copied source file: %w", err)
 	}
 
 	// #nosec G304 -- target is confined to the transaction tree.
@@ -182,7 +202,7 @@ func copyFile(sourcePath, targetPath string) error {
 	if err != nil {
 		_ = source.Close()
 
-		return err
+		return fmt.Errorf("failed to open copied target file: %w", err)
 	}
 
 	_, copyErr := io.Copy(target, source)
@@ -190,18 +210,23 @@ func copyFile(sourcePath, targetPath string) error {
 	targetCloseErr := target.Close()
 
 	if copyErr != nil {
-		return copyErr
+		return fmt.Errorf("failed to copy file contents: %w", copyErr)
 	}
 
 	if sourceCloseErr != nil {
-		return sourceCloseErr
+		return fmt.Errorf("failed to close copied source file: %w", sourceCloseErr)
 	}
 
 	if targetCloseErr != nil {
-		return targetCloseErr
+		return fmt.Errorf("failed to close copied target file: %w", targetCloseErr)
 	}
 
-	return os.Chmod(targetPath, info.Mode().Perm())
+	err = os.Chmod(targetPath, info.Mode().Perm())
+	if err != nil {
+		return fmt.Errorf("failed to set copied target mode: %w", err)
+	}
+
+	return nil
 }
 
 func swapProject(candidatePath, targetProject string) error {
@@ -228,7 +253,7 @@ func swapProject(candidatePath, targetProject string) error {
 	if err != nil {
 		rollbackErr := os.Rename(backupPath, targetProject)
 		if rollbackErr != nil {
-			return fmt.Errorf("failed to commit transaction: %w; rollback also failed: %v", err, rollbackErr)
+			return fmt.Errorf("failed to commit transaction and rollback: %w", errors.Join(err, rollbackErr))
 		}
 
 		return fmt.Errorf("failed to commit transaction; previous project restored: %w", err)

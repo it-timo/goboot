@@ -15,12 +15,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const maximumManifestMode = 0o777
+
 func readManifest(projectPath string) (*Manifest, error) {
 	manifestPath := filepath.Join(projectPath, ManifestFileName)
+
 	content, err := os.ReadFile(manifestPath) // #nosec G304 -- projectPath is validated by the caller.
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
+			return &Manifest{}, nil
 		}
 
 		return nil, fmt.Errorf("failed to read regeneration manifest: %w", err)
@@ -67,7 +70,7 @@ func validateManifest(manifest Manifest) error {
 			return fmt.Errorf("invalid SHA-256 for manifest path %q", file.Path)
 		}
 
-		if file.Mode > 0o777 {
+		if file.Mode > maximumManifestMode {
 			return fmt.Errorf("invalid file mode for manifest path %q: %o", file.Path, file.Mode)
 		}
 	}

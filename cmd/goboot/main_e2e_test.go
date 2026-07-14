@@ -520,8 +520,7 @@ exit 0
 		Expect(err.Error()).To(ContainSubstring("failed to run go mod tidy"))
 		Expect(err.Error()).To(ContainSubstring("exit status 1"))
 
-		Expect(projectRoot).To(BeADirectory())
-		Expect(filepath.Join(projectRoot, "go.mod")).To(BeAnExistingFile())
+		Expect(projectRoot).NotTo(BeAnExistingFile())
 	})
 
 	It("fails fast when template content is not parseable", func() {

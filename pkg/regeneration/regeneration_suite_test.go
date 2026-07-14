@@ -8,6 +8,8 @@ import (
 )
 
 func TestRegeneration(t *testing.T) {
+	t.Parallel()
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Regeneration Suite")
 }

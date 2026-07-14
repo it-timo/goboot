@@ -53,6 +53,7 @@ func prepare(request Request) (preparedPlan, error) {
 	if err != nil {
 		return preparedPlan{}, err
 	}
+
 	request.Policy = policy
 
 	err = validateProjectPaths(request.StagedProject, request.TargetProject)
@@ -76,6 +77,7 @@ func prepare(request Request) (preparedPlan, error) {
 	}
 
 	plan, ownedFiles := buildPlan(desired, current, manifestFileMap(previousManifest), policy)
+
 	typeConflicts, err := pathTypeConflicts(request.StagedProject, request.TargetProject)
 	if err != nil {
 		return preparedPlan{}, err
@@ -121,7 +123,8 @@ func mergeTypeConflicts(plan Plan, conflicts []Change) Plan {
 		}
 	}
 
-	plan.Changes = append(filtered, conflicts...)
+	filtered = append(filtered, conflicts...)
+	plan.Changes = filtered
 
 	return plan
 }
@@ -129,12 +132,12 @@ func mergeTypeConflicts(plan Plan, conflicts []Change) Plan {
 func pathTypeConflicts(stagedProject, targetProject string) ([]Change, error) {
 	desiredTypes, err := scanPathTypes(stagedProject)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to inspect staged path types: %w", err)
 	}
 
 	currentTypes, err := scanOptionalPathTypes(targetProject)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to inspect target path types: %w", err)
 	}
 
 	var conflicts []Change
@@ -162,7 +165,7 @@ func scanOptionalPathTypes(projectPath string) (map[string]bool, error) {
 			return map[string]bool{}, nil
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("failed to inspect optional target path types: %w", err)
 	}
 
 	return scanPathTypes(projectPath)
@@ -178,7 +181,7 @@ func scanPathTypes(projectPath string) (map[string]bool, error) {
 
 		relativePath, err := filepath.Rel(projectPath, path)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to resolve project path type: %w", err)
 		}
 
 		if relativePath == "." || relativePath == ManifestFileName {
@@ -190,7 +193,7 @@ func scanPathTypes(projectPath string) (map[string]bool, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to scan project path types: %w", err)
 	}
 
 	return pathTypes, nil
@@ -242,7 +245,7 @@ func scanOptionalProject(projectPath string) (map[string]fileState, error) {
 			return map[string]fileState{}, nil
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("failed to inspect optional target project: %w", err)
 	}
 
 	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
@@ -270,7 +273,7 @@ func scanProject(projectPath string) (map[string]fileState, error) {
 
 		info, err := entry.Info()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to inspect project entry: %w", err)
 		}
 
 		if !info.Mode().IsRegular() {
@@ -279,7 +282,7 @@ func scanProject(projectPath string) (map[string]fileState, error) {
 
 		relativePath, err := filepath.Rel(projectPath, path)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to resolve project file path: %w", err)
 		}
 
 		if relativePath == ManifestFileName {
@@ -296,7 +299,7 @@ func scanProject(projectPath string) (map[string]fileState, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to walk project tree: %w", err)
 	}
 
 	return files, nil
@@ -305,7 +308,7 @@ func scanProject(projectPath string) (map[string]fileState, error) {
 func fileDigest(path string) (string, error) {
 	file, err := os.Open(path) // #nosec G304 -- paths are discovered under validated project roots.
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to open project file for hashing: %w", err)
 	}
 
 	hash := sha256.New()
@@ -313,11 +316,11 @@ func fileDigest(path string) (string, error) {
 	closeErr := file.Close()
 
 	if copyErr != nil {
-		return "", copyErr
+		return "", fmt.Errorf("failed to hash project file: %w", copyErr)
 	}
 
 	if closeErr != nil {
-		return "", closeErr
+		return "", fmt.Errorf("failed to close hashed project file: %w", closeErr)
 	}
 
 	return hex.EncodeToString(hash.Sum(nil)), nil
@@ -410,19 +413,30 @@ func planDesiredPath(
 		return &Change{Path: path, Action: ActionUpdate, Reason: "previously generated file is unchanged by the user"}, true
 	}
 
-	reason := "existing file is not owned by goboot"
+	reason := desiredPathConflictReason(previouslyOwned)
+
+	return policyChange(path, reason, policy)
+}
+
+func desiredPathConflictReason(previouslyOwned bool) string {
 	if previouslyOwned {
-		reason = "previously generated file was modified after generation"
+		return "previously generated file was modified after generation"
 	}
 
+	return "existing file is not owned by goboot"
+}
+
+func policyChange(path, reason string, policy Policy) (*Change, bool) {
 	switch policy {
 	case PolicyReplace:
 		return &Change{Path: path, Action: ActionUpdate, Reason: reason + "; replace policy selected"}, true
 	case PolicyPreserve:
 		return &Change{Path: path, Action: ActionPreserve, Reason: reason + "; preserve policy selected"}, false
-	default:
+	case PolicyManaged:
 		return &Change{Path: path, Action: ActionConflict, Reason: reason}, false
 	}
+
+	return &Change{Path: path, Action: ActionConflict, Reason: reason}, false
 }
 
 func planStalePath(

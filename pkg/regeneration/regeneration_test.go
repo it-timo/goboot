@@ -48,6 +48,7 @@ var _ = Describe("Regeneration transactions", func() {
 		tempDir = GinkgoT().TempDir()
 		stagedProject = filepath.Join(tempDir, "staged", "Example")
 		targetProject = filepath.Join(tempDir, "target", "Example")
+
 		Expect(os.MkdirAll(stagedProject, 0o755)).To(Succeed())
 
 		request = regeneration.Request{
@@ -105,6 +106,7 @@ var _ = Describe("Regeneration transactions", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		writeFile(stagedProject, "README.md", "second\n", 0o644)
+
 		plan, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(plan.Count(regeneration.ActionUpdate)).To(Equal(2))
@@ -129,6 +131,7 @@ var _ = Describe("Regeneration transactions", func() {
 		writeFile(stagedProject, "scripts/check.sh", "#!/bin/sh\n", 0o755)
 		_, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
+
 		Expect(os.Chmod(filepath.Join(targetProject, "scripts", "check.sh"), 0o644)).To(Succeed())
 
 		_, err = regeneration.Apply(request)

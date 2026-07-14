@@ -184,6 +184,7 @@ var _ = Describe("CLI entrypoint", func() {
 
 		originalWriter := outputWriter
 		buffer := &bytes.Buffer{}
+
 		outputWriter = buffer
 		defer func() {
 			outputWriter = originalWriter

@@ -105,6 +105,7 @@ func (plan Plan) String() string {
 		output.WriteString(strings.ToUpper(string(change.Action)))
 		_ = output.WriteByte('\t')
 		output.WriteString(change.Path)
+
 		if change.Reason != "" {
 			_ = output.WriteByte('\t')
 			output.WriteString(change.Reason)
@@ -113,7 +114,8 @@ func (plan Plan) String() string {
 		_ = output.WriteByte('\n')
 	}
 
-	output.WriteString(fmt.Sprintf(
+	_, _ = fmt.Fprintf(
+		&output,
 		"summary: create=%d update=%d delete=%d preserve=%d conflict=%d unchanged=%d",
 		plan.Count(ActionCreate),
 		plan.Count(ActionUpdate),
@@ -121,7 +123,7 @@ func (plan Plan) String() string {
 		plan.Count(ActionPreserve),
 		plan.Count(ActionConflict),
 		plan.Count(ActionUnchanged),
-	))
+	)
 
 	return output.String()
 }
