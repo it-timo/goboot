@@ -22,17 +22,15 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.2.0` is the active containerization milestone.
-It builds on the `v0.1.x` CI and logging foundation with Dockerfile,
-docker-compose, local Docker helper commands, and provider CI container jobs for
-generated CLI-style Go projects, plus a container image path for the `goboot`
-generator CLI itself.
+`v0.4.0` is the active governance milestone. It adds provider-aware contribution
+templates, ownership rules, and private vulnerability-reporting guidance while
+keeping the selected template profile explicit.
 
 ### Core Capabilities
 
 - **Modular Service Architecture**: Logic is split into isolated services
 (`base_project`, `base_lint`, `base_test`, `base_logger`, `base_docker`,
-`base_local`, `base_ci`) with strict contracts.
+`base_release`, `base_governance`, `base_local`, `base_ci`) with strict contracts.
 - **Containerized Lint Tooling**: Lint jobs run via Docker by default, while CI simulation uses host tools (`act`, `gitlab-ci-local`).
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
@@ -44,6 +42,13 @@ Dockerfile, compose file, `.dockerignore`, local Docker commands, and CI image
 build validation through `base_docker`.
 - **Containerized Generator**: The `goboot` CLI itself can be built as a Docker
 image for mounted-workspace generation runs.
+- **Tag-Driven Releases**: GoReleaser produces Linux, macOS, and Windows binary
+  archives and checksums from explicit semantic-version tags.
+- **Explicit Profiles**: Named project baselines adjust owned lint/test defaults
+  without silently enabling services or overriding explicit service values.
+- **Repository Governance**: Generated GitHub and GitLab projects receive
+  profile-aware issue/change templates, CODEOWNERS, contribution guidance, and
+  a private-first security policy.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -117,6 +122,9 @@ This repository uses:
 - [doc/WORKFLOW.md](./doc/WORKFLOW.md) to define long-term contribution and CI logic
 - [doc/ci.md](./doc/ci.md) for CI policy modes and provider-specific generated CI behavior
 - [doc/containerization.md](./doc/containerization.md) for generated Docker behavior
+- [doc/releasing.md](./doc/releasing.md) for tag-driven release behavior
+- [doc/profiles.md](./doc/profiles.md) for template profile behavior
+- [doc/governance.md](./doc/governance.md) for generated contribution and security policy
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

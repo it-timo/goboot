@@ -83,6 +83,10 @@ tasks:
             { test "$status" -eq 0 || test "$status" -eq 1; } && test -s /tmp/goboot-help
           '
 
+  goreleaser:check:
+    desc: Validate the GoReleaser configuration
+    cmd: '{{.DOCKER_RUN_CMD}} goreleaser/goreleaser:{{.GORELEASER_VERSION}} check'
+
   lint:
     desc: Run linters
     cmds:

@@ -127,6 +127,15 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 		})
 	})
 
+	Describe("Template Profiles", func() {
+		It("matches the supported profile identifiers", func() {
+			Expect(goboottypes.ProfileMinimal).To(Equal("minimal"))
+			Expect(goboottypes.ProfileStandard).To(Equal("standard"))
+			Expect(goboottypes.ProfileEnterprise).To(Equal("enterprise"))
+			Expect(goboottypes.ProfileOSS).To(Equal("oss"))
+		})
+	})
+
 	Describe("Default Local Script Names", func() {
 		It("matches exact script name constants", func() {
 			Expect(goboottypes.ScriptNameMake).To(Equal("make"))
@@ -157,6 +166,9 @@ var _ = Describe("Types Package - Defaults and Constants", func() {
 			Expect(goboottypes.ServiceNameBaseTest).To(Equal("base_test"))
 			Expect(goboottypes.ServiceNameBaseCI).To(Equal("base_ci"))
 			Expect(goboottypes.ServiceNameBaseLogger).To(Equal("base_logger"))
+			Expect(goboottypes.ServiceNameBaseDocker).To(Equal("base_docker"))
+			Expect(goboottypes.ServiceNameBaseRelease).To(Equal("base_release"))
+			Expect(goboottypes.ServiceNameBaseGovernance).To(Equal("base_governance"))
 		})
 	})
 

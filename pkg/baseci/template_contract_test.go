@@ -82,4 +82,21 @@ var _ = Describe("CI template render-field contract", func() {
 		sort.Strings(violations)
 		Expect(violations).To(BeEmpty(), "unexpected template render fields:\n%s", strings.Join(violations, "\n"))
 	})
+
+	It("clears the GoReleaser image entrypoint for GitLab Docker executors", func() {
+		root := baseCIRepoRoot(GinkgoT())
+		templatePath := filepath.Join(
+			root,
+			"templates",
+			"ci_base",
+			"gitlab",
+			".gitlab",
+			"ci",
+			"release.yml.tmpl",
+		)
+
+		content, err := os.ReadFile(templatePath)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(content)).To(ContainSubstring("entrypoint: [\"\"]"))
+	})
 })

@@ -12,10 +12,12 @@ import (
 	"path/filepath"
 
 	"github.com/it-timo/goboot/pkg/baseci"
+	"github.com/it-timo/goboot/pkg/basegovernance"
 	"github.com/it-timo/goboot/pkg/basedocker"
 	"github.com/it-timo/goboot/pkg/baselint"
 	"github.com/it-timo/goboot/pkg/baselocal"
 	"github.com/it-timo/goboot/pkg/baselogger"
+	"github.com/it-timo/goboot/pkg/baserelease"
 	"github.com/it-timo/goboot/pkg/baseproject"
 	"github.com/it-timo/goboot/pkg/basetest"
 	"github.com/it-timo/goboot/pkg/config"
@@ -192,6 +194,16 @@ func (gb *GoBoot) registerMainServices() error {
 			err := gb.ServiceMgr.register(basedocker.NewBaseDocker(gb.cfg.TargetPath))
 			if err != nil {
 				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseDocker, err)
+			}
+		case goboottypes.ServiceNameBaseRelease:
+			err := gb.ServiceMgr.register(baserelease.NewBaseRelease(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseRelease, err)
+			}
+		case goboottypes.ServiceNameBaseGovernance:
+			err := gb.ServiceMgr.register(basegovernance.NewBaseGovernance(gb.cfg.TargetPath))
+			if err != nil {
+				return fmt.Errorf("failed to register %s service: %w", goboottypes.ServiceNameBaseGovernance, err)
 			}
 		// Future services can be added here.
 		default:
