@@ -18,6 +18,8 @@ var (
 	_ goboottypes.ProfileReceiver = (*config.BaseTestConfig)(nil)
 )
 
+const profileTestRepoPath = "github.com/test/testproject"
+
 var _ = Describe("Template profiles", func() {
 	Describe("When everything works as expected", func() {
 		It("applies profile-specific test defaults", func() {
@@ -36,7 +38,7 @@ var _ = Describe("Template profiles", func() {
 				testConfig := &config.BaseTestConfig{
 					SourcePath:     "templates/test_base",
 					ProjectName:    testProjectName,
-					RepoImportPath: "github.com/test/testproject",
+					RepoImportPath: profileTestRepoPath,
 				}
 				testConfig.SetProfile(curCase.profile)
 
@@ -58,7 +60,7 @@ var _ = Describe("Template profiles", func() {
 				lintConfig := &config.BaseLintConfig{
 					SourcePath:     "templates/lint_base",
 					ProjectName:    testProjectName,
-					RepoImportPath: "github.com/test/testproject",
+					RepoImportPath: profileTestRepoPath,
 					Linters: map[string]*config.Linter{
 						goboottypes.LinterGo: {Enabled: true},
 					},
@@ -74,7 +76,7 @@ var _ = Describe("Template profiles", func() {
 			testConfig := &config.BaseTestConfig{
 				SourcePath:     "templates/test_base",
 				ProjectName:    testProjectName,
-				RepoImportPath: "github.com/test/testproject",
+				RepoImportPath: profileTestRepoPath,
 				UseStyle:       goboottypes.TestStyleGo,
 				TestCMD:        "go test -count=1 ./...",
 			}
@@ -93,7 +95,7 @@ var _ = Describe("Template profiles", func() {
 			lintConfig := &config.BaseLintConfig{
 				SourcePath:     "templates/lint_base",
 				ProjectName:    testProjectName,
-				RepoImportPath: "github.com/test/testproject",
+				RepoImportPath: profileTestRepoPath,
 				Linters: map[string]*config.Linter{
 					goboottypes.LinterGo: {Enabled: true},
 				},

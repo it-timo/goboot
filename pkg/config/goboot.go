@@ -161,6 +161,20 @@ func (gb *GoBoot) validateBase() error {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missing, ", "))
 	}
 
+	err := gb.validateProfile()
+	if err != nil {
+		return err
+	}
+
+	err = validateProjectName(gb.ProjectName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (gb *GoBoot) validateProfile() error {
 	gb.Profile = strings.ToLower(strings.TrimSpace(gb.Profile))
 	if gb.Profile == "" {
 		gb.Profile = goboottypes.ProfileStandard
@@ -169,17 +183,10 @@ func (gb *GoBoot) validateBase() error {
 	switch gb.Profile {
 	case goboottypes.ProfileMinimal, goboottypes.ProfileStandard,
 		goboottypes.ProfileEnterprise, goboottypes.ProfileOSS:
-		// Supported profile.
+		return nil
 	default:
 		return fmt.Errorf("unsupported profile: %q", gb.Profile)
 	}
-
-	err := validateProjectName(gb.ProjectName)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // createServiceConfig maps a service ID to its concrete config implementation.
