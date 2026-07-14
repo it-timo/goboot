@@ -18,7 +18,7 @@ As `goboot` evolves, this workflow will expand (see [`ROADMAP.md`](../ROADMAP.md
 | Tooling       | `Makefile`, `Taskfile.yml`, and `scripts/` for common tasks                                                        |
 | Linting       | Dockerized `golangci-lint`, `yamllint`, `checkmake`, `markdownlint`, `shellcheck`, `shfmt`, `editorconfig-checker` |
 | Testing       | BDD-style suites with Ginkgo/Gomega via `make test` (race + coverage)                                              |
-| Profiles      | Explicit `minimal`, `standard`, `enterprise`, or `oss` scaffold baseline                                          |
+| Profiles      | Explicit `minimal`, `standard`, `enterprise`, or `oss` scaffold baseline                                           |
 | Philosophy    | No runtime magic, minimal indirection, deterministic scaffolding                                                   |
 
 ---

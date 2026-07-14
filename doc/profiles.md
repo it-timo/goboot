@@ -15,7 +15,7 @@ field is omitted, goboot uses `standard`.
 ## Baselines
 
 | Profile | Default tests | Test command | Go lint baseline |
-|---------|---------------|--------------|------------------|
+| ------- | ------------- | ------------ | ---------------- |
 | `minimal` | Standard library | Fast tests without race or coverage | Small correctness/security set; complexity 20 |
 | `standard` | Ginkgo/Gomega | Race detection and coverage | Full balanced set; complexity 10 |
 | `enterprise` | Ginkgo/Gomega | Race detection, shuffled order, coverage | Full strict set; complexity 8 |
