@@ -21,6 +21,10 @@ gitProvider: "gitlab"
 # Template baseline: minimal, standard, enterprise, or oss.
 profile: "standard"
 
+# Maximum number of independent services that may run concurrently.
+# Use 1 for serial execution; supported range is 1-32.
+parallelism: 4
+
 # Enabled services for this run.
 # Each entry needs: `id`, `confPath`, `enabled`.
 # Unknown IDs fail fast; disabled services are skipped.

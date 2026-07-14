@@ -33,6 +33,7 @@ Set in `configs/goboot.yml`:
 - `gitProvider: "gitlab"`
 - `targetPath: "/tmp/goboot-demo"`
 - `profile: "standard"`
+- `parallelism: 4` for bounded concurrent service generation, or `1` for serial execution
 
 ## 3. Run goboot
 
@@ -71,6 +72,10 @@ approval enforcement, and private vulnerability reporting remain administrator s
 
 `base_supplychain` registers CI controls with `base_ci`. GitHub includes CodeQL;
 GitLab receives the portable vulnerability, license, and SBOM controls.
+
+`parallelism` affects only independent services. Project initialization remains
+first, and aggregate CI/local rendering remains last. Omit it to retain serial
+execution.
 
 ## 5. Iterate safely
 

@@ -105,6 +105,7 @@ Accepted # or Proposed / Rejected / Superseded / Deprecated
 | [ADR-037](adr-037-explicit-template-profiles.md)       | Explicit Template Profiles                                    | profiles, config, templates, linting, testing                                  |
 | [ADR-038](adr-038-provider-aware-governance.md)        | Provider-Aware Governance as an Explicit Service              | governance, templates, security, github, gitlab                                |
 | [ADR-039](adr-039-explicit-supply-chain-security.md)   | Explicit Supply-Chain Security Service                        | security, ci, codeql, dependencies, sbom                                       |
+| [ADR-040](adr-040-bounded-parallel-generation.md)      | Bounded Parallel Generation with Measured Baselines           | performance, concurrency, benchmarks, determinism                              |
 
 ---
 

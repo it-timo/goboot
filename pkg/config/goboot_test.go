@@ -59,6 +59,46 @@ var _ = Describe("GoBoot Configuration Orchestrator", func() {
 		})
 	})
 
+	Describe("parallelism", func() {
+		writeRootConfig := func(value string) {
+			yamlContent := "projectName: \"ParallelProject\"\n" +
+				"targetPath: \"/tmp/parallel-project\"\n" +
+				value +
+				"services: []\n"
+
+			Expect(os.WriteFile(configPath, []byte(yamlContent), 0o644)).To(Succeed())
+		}
+
+		It("defaults to serial execution when omitted", func() {
+			writeRootConfig("")
+
+			goBoot = config.NewGoBoot(configPath)
+			Expect(goBoot.Init()).To(Succeed())
+			Expect(goBoot.Parallelism).To(Equal(config.DefaultParallelism))
+		})
+
+		It("accepts bounded parallel execution", func() {
+			writeRootConfig("parallelism: 4\n")
+
+			goBoot = config.NewGoBoot(configPath)
+			Expect(goBoot.Init()).To(Succeed())
+			Expect(goBoot.Parallelism).To(Equal(4))
+		})
+
+		DescribeTable("rejects unsafe parallelism values",
+			func(value string) {
+				writeRootConfig("parallelism: " + value + "\n")
+
+				goBoot = config.NewGoBoot(configPath)
+				err := goBoot.Init()
+				Expect(err).To(MatchError(ContainSubstring("parallelism must be between")))
+			},
+			Entry("zero", "0"),
+			Entry("negative", "-1"),
+			Entry("above the maximum", "33"),
+		)
+	})
+
 	Describe("Init", func() {
 		Context("with valid configuration", func() {
 			BeforeEach(func() {

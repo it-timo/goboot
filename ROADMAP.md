@@ -122,9 +122,7 @@ Current release.
 
 ---
 
-## In Progress
-
-### v0.5.0 — Supply Chain Security
+### v0.5.0 — Supply Chain Security (Released)
 
 - CodeQL
 - License compliance scanning
@@ -133,14 +131,15 @@ Current release.
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.6.0 — Performance & Scale
 
-- Template rendering benchmarks
-- Config parsing performance
-- Large-project generation profiling
-- Parallel execution optimizations
+- Template rendering and atomic-file benchmarks
+- 500-service config parsing benchmark
+- Large-project CPU and memory profiling workflow
+- Bounded parallel service execution with deterministic failure semantics
+- Thread-safe CI and local registries
 
 ---
 

@@ -2,6 +2,7 @@ projectName: ${PROJECT_NAME}
 repoUrl: ${REPO_URL}
 targetPath: ${TARGET_DIR}
 gitProvider: ${GIT_PROVIDER}
+parallelism: 4
 services:
   - id: base_project
     confPath: ${BASE_PROJECT_CFG}

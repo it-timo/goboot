@@ -12,6 +12,8 @@ Use this folder as the main documentation hub after `README.md`.
 - [`governance.md`](./governance.md): generated ownership, contribution, and security policy.
 - [`supply-chain-security.md`](./supply-chain-security.md): generated source,
   dependency, license, and SBOM controls.
+- [`performance.md`](./performance.md): bounded service execution, benchmarks,
+  and profiling.
 
 ## Architecture and Policies
 

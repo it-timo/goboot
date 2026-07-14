@@ -44,9 +44,11 @@ GOBOOT_IMAGE := goboot:$(VERSION)
 COVER_FILE := coverage.txt
 MIN_COVERAGE := 80
 TEST_PKGS := $$(go list ./... | grep -v '/test/noauto' | grep -v '/templates')
+BENCH_TIME ?= 1s
+PROFILE_DIR ?= profiles
 
 # .PHONY declares non-file targets to always run when invoked
-.PHONY: all build docker_build docker_smoke clean test lint release release_check goreleaser_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
+.PHONY: all build docker_build docker_smoke clean test benchmark profile_generation lint release release_check goreleaser_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
 
 #  ----------------------------------------
 #  Default target (runs when `make` is called with no args)
@@ -80,6 +82,15 @@ clean:
 test:
 	@echo "Running tests..."
 	./scripts/test.sh
+
+benchmark:
+	@echo "Running performance benchmarks..."
+	go test ./... -run '^$$' -bench . -benchmem -benchtime="$(BENCH_TIME)"
+
+profile_generation:
+	@echo "Profiling large-project template generation..."
+	mkdir -p "$(PROFILE_DIR)"
+	go test ./pkg/gobootutils -run '^$$' -bench '^BenchmarkLargeProjectRendering$$' -benchtime="$(BENCH_TIME)" -cpuprofile="$(PROFILE_DIR)/generation-cpu.out" -memprofile="$(PROFILE_DIR)/generation-memory.out"
 
 #  ----------------------------------------
 #  Run linters
@@ -166,6 +177,8 @@ help_project:
 
 help_check:
 	@echo "  make test               Run project tests"
+	@echo "  make benchmark          Run performance benchmarks (BENCH_TIME=1s)"
+	@echo "  make profile_generation Write CPU and memory profiles to profiles/"
 	@echo "  make lint               Run static code analysis"
 
 help_lint:

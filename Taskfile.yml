@@ -117,6 +117,22 @@ tasks:
       - ./scripts/check_coverage.sh "{{.TEST_COVER_FILE}}" "{{.MIN_COVERAGE}}"
       - rm -f "{{.TEST_COVER_FILE}}"
 
+  benchmark:
+    desc: Run performance benchmarks
+    cmd: go test ./... -run '^$' -bench . -benchmem -benchtime=1s
+
+  profile:generation:
+    desc: Write CPU and memory profiles for large-project template generation
+    cmds:
+      - mkdir -p profiles
+      - >-
+        go test ./pkg/gobootutils
+        -run '^$'
+        -bench '^BenchmarkLargeProjectRendering$'
+        -benchtime=1s
+        -cpuprofile=profiles/generation-cpu.out
+        -memprofile=profiles/generation-memory.out
+
   version:
     desc: Print current version
     cmd: 'echo "Current version: {{.VERSION}}"'

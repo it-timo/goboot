@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.5.0)
+# 📁 Project Structure — `goboot` (v0.6.0)
 
-This document reflects the current repository structure for `goboot` at `v0.5.0`.
+This document reflects the current repository structure for `goboot` at `v0.6.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -66,6 +66,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - Container workflow for building and smoke-testing the `goboot` image
 - Release workflow for tag-driven binary distribution
 - Security workflow for CodeQL, dependency policy, and SBOM generation
+- Performance workflow for pull-request benchmark evidence
 
 ### `/scripts/`
 
@@ -75,6 +76,7 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 ### Tests
 
 - BDD test suites (Ginkgo/Gomega) co-located with packages, covering services, utilities, and secure FS handling
+- Co-located Go benchmarks for templates, config parsing, and service execution
 - Testing guide at [`doc/TESTING.md`](./TESTING.md)
 
 ### Top-Level Files
@@ -108,7 +110,6 @@ These directories are **not yet introduced** but are part of the intended long-t
 See [`ROADMAP.md`](../ROADMAP.md) for targeted milestones.
 
 - `test/` — Additional integration/e2e harnesses
-- `benchmarks/` — Performance regression tracking
 
 ---
 
@@ -125,4 +126,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.5.0 — matches real files in the repository._
+_Last updated: v0.6.0 — matches real files in the repository._

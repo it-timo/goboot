@@ -7,6 +7,25 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.6.0 — Performance & Scale
+
+Added:
+
+- Template execution, atomic file rendering, large-project rendering, config
+  parsing, and service orchestration benchmarks.
+- Pull-request performance workflow with retained benchmark result artifacts.
+- Local Make and Task targets for benchmark execution and CPU/memory profiles.
+- Performance guide and ADR-040.
+
+Changed:
+
+- Root configs can opt into bounded regular-service concurrency with
+  `parallelism`; omitted values preserve serial execution.
+- Regular services are scheduled in stable ID order and parallel failures are
+  selected deterministically after the batch completes.
+- Shared CI and local registries are safe for concurrent producers and copy
+  registered command slices.
+
 ### v0.5.0 — Supply Chain Security
 
 Added:

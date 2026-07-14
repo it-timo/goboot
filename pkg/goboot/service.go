@@ -2,6 +2,8 @@ package goboot
 
 import (
 	"fmt"
+	"sort"
+	"sync"
 	"time"
 
 	"github.com/it-timo/goboot/pkg/config"
@@ -39,11 +41,18 @@ type serviceManager struct {
 	// subsequentServiceIDs run after regular services.
 	subsequentServiceIDs []string
 
+	// parallelism bounds concurrent regular-service execution.
+	parallelism int
+
 	log zerolog.Logger
 }
 
 // newServiceManager creates a service manager bound to cfgMgr.
-func newServiceManager(cfgMgr *config.Manager, logger zerolog.Logger) *serviceManager {
+func newServiceManager(cfgMgr *config.Manager, logger zerolog.Logger, parallelism int) *serviceManager {
+	if parallelism < config.DefaultParallelism {
+		parallelism = config.DefaultParallelism
+	}
+
 	return &serviceManager{
 		services: make(map[string]Service),
 		cfgMgr:   cfgMgr,
@@ -56,7 +65,8 @@ func newServiceManager(cfgMgr *config.Manager, logger zerolog.Logger) *serviceMa
 			goboottypes.ServiceNameBaseLocal, // required to render aggregated local scripts.
 			// Future subsequent services can be added here.
 		},
-		log: logger,
+		parallelism: parallelism,
+		log:         logger,
 	}
 }
 
@@ -80,7 +90,10 @@ func (sm *serviceManager) register(service Service) error {
 // runAll assigns configs and executes services in prior -> regular -> subsequent order.
 // Services without config are skipped.
 func (sm *serviceManager) runAll() error {
-	sm.log.Info().Int("service_count", len(sm.services)).Msg("starting service manager run")
+	sm.log.Info().
+		Int("service_count", len(sm.services)).
+		Int("parallelism", sm.parallelism).
+		Msg("starting service manager run")
 
 	err := sm.assignConfigs()
 	if err != nil {
@@ -106,20 +119,44 @@ func (sm *serviceManager) runAll() error {
 }
 
 func (sm *serviceManager) runRegularServices() error {
-	for curID, svc := range sm.services {
-		if sm.isPriorService(curID) || sm.isSubsequentService(curID) {
+	serviceIDs := sm.regularServiceIDs()
+	if sm.parallelism == config.DefaultParallelism || len(serviceIDs) < 2 {
+		return sm.runRegularServicesSerial(serviceIDs)
+	}
+
+	return sm.runRegularServicesParallel(serviceIDs)
+}
+
+type serviceRunResult struct {
+	serviceID string
+	err       error
+}
+
+func (sm *serviceManager) regularServiceIDs() []string {
+	serviceIDs := make([]string, 0, len(sm.services))
+
+	for serviceID := range sm.services {
+		if sm.isPriorService(serviceID) || sm.isSubsequentService(serviceID) {
 			continue
 		}
 
-		if !sm.hasConfig(curID) {
-			sm.log.Debug().Str("service_id", curID).Msg("service skipped because no configuration was loaded")
+		if !sm.hasConfig(serviceID) {
+			sm.log.Debug().Str("service_id", serviceID).Msg("service skipped because no configuration was loaded")
 
 			continue
 		}
 
-		sm.injectRegistrars(curID, svc)
+		serviceIDs = append(serviceIDs, serviceID)
+	}
 
-		err := sm.runService(curID, svc, "service")
+	sort.Strings(serviceIDs)
+
+	return serviceIDs
+}
+
+func (sm *serviceManager) runRegularServicesSerial(serviceIDs []string) error {
+	for _, serviceID := range serviceIDs {
+		err := sm.runRegularService(serviceID)
 		if err != nil {
 			return err
 		}
@@ -128,9 +165,72 @@ func (sm *serviceManager) runRegularServices() error {
 	return nil
 }
 
+func (sm *serviceManager) runRegularServicesParallel(serviceIDs []string) error {
+	workerCount := min(sm.parallelism, len(serviceIDs))
+	workQueue := make(chan string, len(serviceIDs))
+	results := make(chan serviceRunResult, len(serviceIDs))
+
+	for _, serviceID := range serviceIDs {
+		workQueue <- serviceID
+	}
+
+	close(workQueue)
+
+	var workers sync.WaitGroup
+
+	for range workerCount {
+		workers.Add(1)
+
+		go func() {
+			defer workers.Done()
+
+			for serviceID := range workQueue {
+				results <- serviceRunResult{
+					serviceID: serviceID,
+					err:       sm.runRegularService(serviceID),
+				}
+			}
+		}()
+	}
+
+	workers.Wait()
+	close(results)
+
+	errorsByService := make(map[string]error)
+
+	for runResult := range results {
+		if runResult.err != nil {
+			errorsByService[runResult.serviceID] = runResult.err
+		}
+	}
+
+	for _, serviceID := range serviceIDs {
+		if err := errorsByService[serviceID]; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (sm *serviceManager) runRegularService(serviceID string) error {
+	service := sm.services[serviceID]
+	sm.injectRegistrars(serviceID, service)
+
+	return sm.runService(serviceID, service, "service")
+}
+
 // assignConfigs calls SetConfig for each registered service with loaded config.
 func (sm *serviceManager) assignConfigs() error {
-	for curID, svc := range sm.services {
+	serviceIDs := make([]string, 0, len(sm.services))
+	for serviceID := range sm.services {
+		serviceIDs = append(serviceIDs, serviceID)
+	}
+
+	sort.Strings(serviceIDs)
+
+	for _, curID := range serviceIDs {
+		svc := sm.services[curID]
 		cfg, ok := sm.cfgMgr.GetRegistrar(curID)
 		if !ok {
 			cfg, ok = sm.cfgMgr.GetService(curID)

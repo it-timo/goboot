@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 
 	"github.com/it-timo/goboot/pkg/config"
 	"github.com/it-timo/goboot/pkg/goboottypes"
@@ -22,6 +23,7 @@ type BaseLocal struct {
 	targetDir string
 	root      *os.Root
 	log       zerolog.Logger
+	registry  sync.Mutex
 	scriptRegistry
 }
 
@@ -112,6 +114,9 @@ func (b *BaseLocal) Run() error {
 
 // RegisterLines stores commands for enabled output types (make/task/commit).
 func (b *BaseLocal) RegisterLines(name string, lines []string) error {
+	b.registry.Lock()
+	defer b.registry.Unlock()
+
 	for _, entry := range b.cfg.FileList {
 		switch entry {
 		case goboottypes.ScriptNameMake:
@@ -120,21 +125,21 @@ func (b *BaseLocal) RegisterLines(name string, lines []string) error {
 				return fmt.Errorf("service %q already registered in make", name)
 			}
 
-			b.MakeScripts[name] = lines
+			b.MakeScripts[name] = append([]string(nil), lines...)
 		case goboottypes.ScriptNameTask:
 			_, exist := b.TaskScripts[name]
 			if exist {
 				return fmt.Errorf("service %q already registered in task", name)
 			}
 
-			b.TaskScripts[name] = lines
+			b.TaskScripts[name] = append([]string(nil), lines...)
 		case goboottypes.ScriptNameCommit:
 			_, exist := b.CommitScripts[name]
 			if exist {
 				return fmt.Errorf("service %q already registered in commit", name)
 			}
 
-			b.CommitScripts[name] = lines
+			b.CommitScripts[name] = append([]string(nil), lines...)
 		default: // do nothing if no script files are not enabled.
 		}
 	}
@@ -144,6 +149,9 @@ func (b *BaseLocal) RegisterLines(name string, lines []string) error {
 
 // RegisterFile stores script file commands when script output is enabled.
 func (b *BaseLocal) RegisterFile(name string, lines []string) error {
+	b.registry.Lock()
+	defer b.registry.Unlock()
+
 	for _, entry := range b.cfg.FileList {
 		switch entry {
 		case goboottypes.ScriptNameScript:
@@ -152,7 +160,7 @@ func (b *BaseLocal) RegisterFile(name string, lines []string) error {
 				return fmt.Errorf("file %q already registered in scripts", name)
 			}
 
-			b.ScriptFiles[name] = lines
+			b.ScriptFiles[name] = append([]string(nil), lines...)
 		default: // Skip unknown or disabled script directory entries.
 		}
 	}

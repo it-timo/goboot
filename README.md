@@ -23,8 +23,8 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.5.0` is the active supply-chain security milestone. It adds CodeQL,
-dependency vulnerability and license policy checks, and CycloneDX SBOM artifacts.
+`v0.6.0` is the active performance and scale milestone. It adds measured
+generation baselines, repeatable profiling, and bounded parallel service execution.
 
 ### Core Capabilities
 
@@ -52,6 +52,8 @@ image for mounted-workspace generation runs.
   a private-first security policy.
 - **Supply-Chain Security**: Generated CI enforces pinned vulnerability and
   license checks, emits CycloneDX SBOM artifacts, and adds CodeQL on GitHub.
+- **Measured Scale**: Template, config, and service benchmarks track generator
+  costs, while opt-in bounded parallelism accelerates independent services.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -130,6 +132,8 @@ This repository uses:
 - [doc/governance.md](./doc/governance.md) for generated contribution and security policy
 - [doc/supply-chain-security.md](./doc/supply-chain-security.md) for generated
   source, dependency, license, and SBOM controls
+- [doc/performance.md](./doc/performance.md) for parallel execution, benchmarks,
+  and profiling
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time

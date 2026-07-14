@@ -43,9 +43,13 @@ func NewGoBoot(config *config.GoBoot) *GoBoot {
 // NewGoBootWithLogger returns a GoBoot wired to the provided config and logger.
 func NewGoBootWithLogger(config *config.GoBoot, logger zerolog.Logger) *GoBoot {
 	return &GoBoot{
-		cfg:        config,
-		log:        logger,
-		ServiceMgr: newServiceManager(config.ConfManager, logger.With().Str("subcomponent", "service_manager").Logger()),
+		cfg: config,
+		log: logger,
+		ServiceMgr: newServiceManager(
+			config.ConfManager,
+			logger.With().Str("subcomponent", "service_manager").Logger(),
+			config.Parallelism,
+		),
 	}
 }
 

@@ -20,6 +20,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	// DefaultParallelism preserves serial service execution for existing configs.
+	DefaultParallelism = 1
+	// MaxParallelism bounds concurrent service work to avoid resource exhaustion.
+	MaxParallelism = 32
+)
+
 // GoBoot holds root config values and the config manager for a scaffold run.
 type GoBoot struct {
 	// configPath points to the main goboot YAML file.
@@ -37,6 +44,9 @@ type GoBoot struct {
 	// Profile selects the generated lint, test, and documentation baseline.
 	Profile string `yaml:"profile"`
 
+	// Parallelism bounds concurrent execution of independent services.
+	Parallelism int `yaml:"parallelism"`
+
 	// TargetPath is the directory that receives generated output.
 	TargetPath string `yaml:"targetPath"`
 
@@ -53,6 +63,7 @@ type GoBoot struct {
 func NewGoBoot(confPath string) *GoBoot {
 	return &GoBoot{
 		configPath:  confPath,
+		Parallelism: DefaultParallelism,
 		ConfManager: NewConfigManager(),
 		logger:      zerolog.Nop(),
 	}
@@ -167,9 +178,22 @@ func (gb *GoBoot) validateBase() error {
 		return err
 	}
 
+	err = gb.validateParallelism()
+	if err != nil {
+		return err
+	}
+
 	err = validateProjectName(gb.ProjectName)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (gb *GoBoot) validateParallelism() error {
+	if gb.Parallelism < DefaultParallelism || gb.Parallelism > MaxParallelism {
+		return fmt.Errorf("parallelism must be between 1 and %d: %d", MaxParallelism, gb.Parallelism)
 	}
 
 	return nil
