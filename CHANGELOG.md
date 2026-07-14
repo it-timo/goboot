@@ -24,6 +24,8 @@ Changed:
 - GitLab pipelines include a security stage before release automation.
 - The root and generated-project Go baseline is 1.26.5, which includes the fix
   for GO-2026-4970.
+- The root security workflow complements the repository's existing CodeQL
+  default setup instead of attempting a conflicting advanced upload.
 
 ### v0.4.0 — Governance & Contribution
 

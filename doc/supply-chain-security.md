@@ -40,6 +40,11 @@ should be reviewed like source changes rather than applied as CI exceptions.
 
 - CodeQL requires GitHub code-scanning support and the workflow's
   `security-events: write` permission.
+- GitHub default CodeQL setup and an advanced CodeQL workflow cannot run
+  together. New generated projects use the advanced workflow; repositories
+  with default setup already enabled must keep one setup and remove the other.
+- The goboot repository itself keeps GitHub default setup. Its checked-in
+  `security.yml` runs the portable dependency policy and SBOM controls only.
 - GitLab does not receive a fake CodeQL substitute. Its portable controls remain
   vulnerability, license, and SBOM scanning.
 - Generated SBOMs are build artifacts; publishing or signing release assets is a
