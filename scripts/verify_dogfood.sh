@@ -13,7 +13,10 @@ cleanup() {
 trap cleanup EXIT
 
 if [[ "${BINARY}" != /* ]]; then
-  BINARY="$(cd "$(dirname "${BINARY}")" && pwd)/$(basename "${BINARY}")"
+  binary_dir="$(dirname "${BINARY}")"
+  binary_name="$(basename "${BINARY}")"
+  binary_dir="$(cd "${binary_dir}" && pwd)"
+  BINARY="${binary_dir}/${binary_name}"
 fi
 
 CONFIG_FILE="${TEMP_ROOT}/goboot.yml"
