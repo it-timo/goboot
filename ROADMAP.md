@@ -113,8 +113,6 @@ Current release.
 
 ---
 
-## In Progress
-
 ### v0.4.0 — Governance & Contribution
 
 - Issue / PR templates
@@ -124,7 +122,7 @@ Current release.
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.5.0 — Supply Chain Security
 
@@ -134,6 +132,8 @@ Current release.
 - SBOM generation
 
 ---
+
+## Planned Milestones
 
 ### v0.6.0 — Performance & Scale
 

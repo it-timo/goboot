@@ -128,6 +128,8 @@ const (
 	CIFileContainer = "container.yml"
 	// CIFileRelease is the default name for the release CI job file.
 	CIFileRelease = "release.yml"
+	// CIFileSecurity is the default name for the supply-chain security CI job file.
+	CIFileSecurity = "security.yml"
 )
 
 // Template source guardrails.

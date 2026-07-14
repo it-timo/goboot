@@ -10,6 +10,8 @@ Use this folder as the main documentation hub after `README.md`.
 - [`releasing.md`](./releasing.md): tag-driven binary release automation.
 - [`profiles.md`](./profiles.md): named lint, test, and documentation baselines.
 - [`governance.md`](./governance.md): generated ownership, contribution, and security policy.
+- [`supply-chain-security.md`](./supply-chain-security.md): generated source,
+  dependency, license, and SBOM controls.
 
 ## Architecture and Policies
 

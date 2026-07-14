@@ -99,4 +99,24 @@ var _ = Describe("CI template render-field contract", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(content)).To(ContainSubstring("entrypoint: [\"\"]"))
 	})
+
+	It("pins security actions and clears the Syft GitLab entrypoint", func() {
+		root := baseCIRepoRoot(GinkgoT())
+		githubTemplate, err := os.ReadFile(filepath.Join(
+			root, "templates", "ci_base", "github", ".github", "workflows", "security.yml.tmpl",
+		))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(githubTemplate)).To(ContainSubstring(
+			"github/codeql-action/init@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a",
+		))
+		Expect(string(githubTemplate)).To(ContainSubstring(
+			"anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610",
+		))
+
+		gitlabTemplate, err := os.ReadFile(filepath.Join(
+			root, "templates", "ci_base", "gitlab", ".gitlab", "ci", "security.yml.tmpl",
+		))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(gitlabTemplate)).To(ContainSubstring("entrypoint: [\"\"]"))
+	})
 })

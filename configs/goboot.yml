@@ -47,6 +47,9 @@ services:
   - id: "base_governance"
     confPath: "./configs/base_governance.yml"
     enabled: true
+  - id: "base_supplychain"
+    confPath: "./configs/base_supplychain.yml"
+    enabled: true
   - id: "base_local"
     confPath: "./configs/base_local.yml"
     enabled: true

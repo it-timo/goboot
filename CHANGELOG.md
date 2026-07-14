@@ -7,6 +7,22 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.5.0 — Supply Chain Security
+
+Added:
+
+- `base_supplychain` service with validated, pinned scanner versions and an
+  explicit dependency-license allowlist.
+- Generated GitHub CodeQL, vulnerability, license, and CycloneDX SBOM jobs.
+- Generated GitLab vulnerability, license, and CycloneDX SBOM jobs.
+- `SUPPLY_CHAIN.md` policy output for generated repositories.
+- Supply-chain security guide and ADR-039.
+
+Changed:
+
+- The default goboot configuration enables supply-chain security generation.
+- GitLab pipelines include a security stage before release automation.
+
 ### v0.4.0 — Governance & Contribution
 
 Added:

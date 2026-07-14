@@ -1,0 +1,24 @@
+# Supply-Chain Security
+
+{{.ProjectName}} runs automated source, dependency, license, and artifact checks.
+
+## Controls
+
+- Vulnerabilities: `govulncheck {{.GovulncheckVersion}}` analyzes reachable Go vulnerabilities.
+- Licenses: `go-licenses {{.GoLicensesVersion}}` enforces the approved dependency policy.
+- SBOM: CI emits a CycloneDX JSON software bill of materials as a build artifact.
+{{ if eq .GitProvider "github" }}
+- Source analysis: GitHub CodeQL scans Go source on pushes and pull requests.
+{{ else }}
+- Source analysis: CodeQL is GitHub-specific; GitLab runs the portable vulnerability,
+  license, and SBOM controls from this baseline.
+{{ end }}
+
+## Allowed dependency licenses
+
+{{ range .AllowedLicenses }}
+- `{{.}}`
+{{ end }}
+
+Tool and action versions are pinned. Review version changes and policy exceptions through
+the normal contribution process; do not bypass a failing security job.

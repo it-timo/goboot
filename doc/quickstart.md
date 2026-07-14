@@ -22,6 +22,7 @@ Start from:
 - `configs/base_docker.yml`
 - `configs/base_release.yml`
 - `configs/base_governance.yml`
+- `configs/base_supplychain.yml`
 - `configs/base_local.yml`
 - `configs/base_ci.yml`
 
@@ -56,6 +57,8 @@ If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expec
   `/tmp/goboot-demo/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
 - `/tmp/goboot-demo/IntroProject/CODEOWNERS`, `CONTRIBUTING.md`, and
   provider-native contribution templates (when `base_governance` enabled)
+- `/tmp/goboot-demo/IntroProject/SUPPLY_CHAIN.md` and a provider-native
+  `security.yml` pipeline (when `base_supplychain` and `base_ci` are enabled)
 
 `base_logger` does not overwrite project files directly. It provides validated logger
 settings to `base_project`, which owns the generated runtime code.
@@ -65,6 +68,9 @@ the project is a network service, so compose port mappings are empty by default.
 
 `base_governance` writes policy files only. Provider-side branch protection,
 approval enforcement, and private vulnerability reporting remain administrator settings.
+
+`base_supplychain` registers CI controls with `base_ci`. GitHub includes CodeQL;
+GitLab receives the portable vulnerability, license, and SBOM controls.
 
 ## 5. Iterate safely
 

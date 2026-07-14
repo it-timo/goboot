@@ -1,0 +1,14 @@
+# Supply-chain security policy and automation.
+sourcePath: "./templates/supplychain_base"
+
+# Tool versions are pinned for reproducible policy checks.
+govulncheckVersion: "v1.1.4"
+goLicensesVersion: "v2.0.1"
+
+# SPDX-style license identifiers accepted for Go dependencies.
+allowedLicenses:
+  - "Apache-2.0"
+  - "BSD-2-Clause"
+  - "BSD-3-Clause"
+  - "ISC"
+  - "MIT"

@@ -7,6 +7,7 @@ A modular, versioned scaffold for reproducible Go project generation.
 [![Test](https://github.com/it-timo/goboot/actions/workflows/test.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
 [![Lint](https://github.com/it-timo/goboot/actions/workflows/lint.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/lint.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/it-timo/goboot/main/badges/coverage.json)](https://github.com/it-timo/goboot/actions/workflows/test.yml)
+[![Security](https://github.com/it-timo/goboot/actions/workflows/security.yml/badge.svg)](https://github.com/it-timo/goboot/actions/workflows/security.yml)
 
 ---
 
@@ -22,15 +23,15 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.4.0` is the active governance milestone. It adds provider-aware contribution
-templates, ownership rules, and private vulnerability-reporting guidance while
-keeping the selected template profile explicit.
+`v0.5.0` is the active supply-chain security milestone. It adds CodeQL,
+dependency vulnerability and license policy checks, and CycloneDX SBOM artifacts.
 
 ### Core Capabilities
 
 - **Modular Service Architecture**: Logic is split into isolated services
 (`base_project`, `base_lint`, `base_test`, `base_logger`, `base_docker`,
-`base_release`, `base_governance`, `base_local`, `base_ci`) with strict contracts.
+`base_release`, `base_governance`, `base_supplychain`, `base_local`, `base_ci`)
+with strict contracts.
 - **Containerized Lint Tooling**: Lint jobs run via Docker by default, while CI simulation uses host tools (`act`, `gitlab-ci-local`).
 - **Secure Scaffolding**: Built-in protection against path traversal and strict root confinement.
 - **BDD Testing**: Full Ginkgo/Gomega suite covering core packages and E2E flows.
@@ -49,6 +50,8 @@ image for mounted-workspace generation runs.
 - **Repository Governance**: Generated GitHub and GitLab projects receive
   profile-aware issue/change templates, CODEOWNERS, contribution guidance, and
   a private-first security policy.
+- **Supply-Chain Security**: Generated CI enforces pinned vulnerability and
+  license checks, emits CycloneDX SBOM artifacts, and adds CodeQL on GitHub.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -125,6 +128,8 @@ This repository uses:
 - [doc/releasing.md](./doc/releasing.md) for tag-driven release behavior
 - [doc/profiles.md](./doc/profiles.md) for template profile behavior
 - [doc/governance.md](./doc/governance.md) for generated contribution and security policy
+- [doc/supply-chain-security.md](./doc/supply-chain-security.md) for generated
+  source, dependency, license, and SBOM controls
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time
