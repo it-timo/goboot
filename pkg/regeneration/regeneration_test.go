@@ -65,6 +65,9 @@ var _ = Describe("Regeneration transactions", func() {
 		writeFile(stagedProject, "README.md", "generated\n", 0o644)
 		writeFile(stagedProject, "scripts/check.sh", "#!/bin/sh\n", 0o755)
 
+		stagedInfo, err := os.Stat(filepath.Join(stagedProject, "scripts", "check.sh"))
+		Expect(err).NotTo(HaveOccurred())
+
 		plan, err := regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(plan.Count(regeneration.ActionCreate)).To(Equal(3))
@@ -77,7 +80,7 @@ var _ = Describe("Regeneration transactions", func() {
 		Expect(manifest.Files).To(HaveLen(2))
 		Expect(manifest.Files[0].Path).To(Equal("README.md"))
 		Expect(manifest.Files[1].Path).To(Equal(filepath.Join("scripts", "check.sh")))
-		Expect(manifest.Files[1].Mode).To(Equal(uint32(0o755)))
+		Expect(manifest.Files[1].Mode).To(Equal(uint32(stagedInfo.Mode().Perm())))
 	})
 
 	It("produces a dry-run plan without creating the target", func() {
@@ -131,6 +134,10 @@ var _ = Describe("Regeneration transactions", func() {
 	})
 
 	It("detects user changes to an owned file mode", func() {
+		if runtime.GOOS == "windows" {
+			Skip("Windows does not preserve POSIX permission bits")
+		}
+
 		writeFile(stagedProject, "scripts/check.sh", "#!/bin/sh\n", 0o755)
 
 		_, err := regeneration.Apply(request)
@@ -210,13 +217,16 @@ var _ = Describe("Regeneration transactions", func() {
 		writeFile(targetProject, "notes.txt", "user owned\n", 0o600)
 		writeFile(stagedProject, "README.md", "generated\n", 0o644)
 
-		_, err := regeneration.Apply(request)
+		originalInfo, err := os.Stat(filepath.Join(targetProject, "notes.txt"))
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = regeneration.Apply(request)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(readFile(targetProject, "notes.txt")).To(Equal("user owned\n"))
 
 		info, err := os.Stat(filepath.Join(targetProject, "notes.txt"))
 		Expect(err).NotTo(HaveOccurred())
-		Expect(info.Mode().Perm()).To(Equal(os.FileMode(0o600)))
+		Expect(info.Mode().Perm()).To(Equal(originalInfo.Mode().Perm()))
 	})
 
 	It("rejects a malformed ownership manifest without changing the project", func() {
