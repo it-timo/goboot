@@ -10,6 +10,7 @@ import (
 
 const (
 	argConfig          = "--config"
+	missingConfigPath  = "/nonexistent/path.yml"
 	fixtureProjectName = "PROJECT_NAME"
 	fixtureTargetDir   = "TARGET_DIR"
 	fixtureSourceDir   = "SOURCE_DIR"

@@ -68,7 +68,7 @@ var _ = Describe("CLI entrypoint", func() {
 	})
 
 	It("returns error for missing config file", func() {
-		err := run([]string{argConfig, "/nonexistent/path.yml"})
+		err := run([]string{argConfig, missingConfigPath})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("failed to initialize configuration"))
 	})
@@ -237,7 +237,7 @@ var _ = Describe("CLI entrypoint", func() {
 			outputWriter = originalWriter
 		}()
 
-		err = run([]string{argConfig, configFile, "--validate"})
+		err = run([]string{argConfig, configFile, argValidate})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(targetDir).NotTo(BeAnExistingFile())
 		Expect(buffer.String()).To(Equal("configuration is valid.\n"))
@@ -262,7 +262,7 @@ var _ = Describe("CLI entrypoint", func() {
 			outputWriter = originalWriter
 		}()
 
-		err = run([]string{argConfig, configFile, "--validate", "--output", "json"})
+		err = run([]string{argConfig, configFile, argValidate, argOutput, "json"})
 		Expect(err).NotTo(HaveOccurred())
 
 		var result successResult
@@ -307,7 +307,7 @@ var _ = Describe("CLI entrypoint", func() {
 			Expect(commandExitCode(err)).To(Equal(expectedCode))
 		},
 		Entry("usage errors", []string{"--output", "xml"}, exitUsage),
-		Entry("configuration errors", []string{argConfig, "/nonexistent/path.yml"}, exitConfig),
+		Entry("configuration errors", []string{argConfig, missingConfigPath}, exitConfig),
 	)
 
 	It("assigns the dedicated conflict exit code and preserves the target", func() {
@@ -396,7 +396,7 @@ var _ = Describe("CLI entrypoint", func() {
 			var exitCode int
 
 			exitFunc = func(code int) { exitCode = code }
-			os.Args = []string{"goboot", argConfig, "/nonexistent/path.yml", "--output", "json"}
+			os.Args = []string{"goboot", argConfig, missingConfigPath, argOutput, "json"}
 
 			main()
 

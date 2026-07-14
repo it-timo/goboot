@@ -42,12 +42,12 @@ Error JSON results contain:
 
 - `status`: `error`
 - `operation` and `version`
-- numeric `exit_code`
+- numeric `exitCode`
 - `category`: `internal`, `usage`, `config`, `generation`, or `conflict`
 - `message`
 - an optional conflict `plan`
 
-Consumers should branch on `status`, `category`, and `exit_code`, not message
+Consumers should branch on `status`, `category`, and `exitCode`, not message
 text. New optional JSON fields may be added without a breaking change.
 
 ## Exit codes

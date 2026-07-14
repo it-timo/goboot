@@ -23,7 +23,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const stagingProjectMode = 0o750
+const (
+	stagingProjectMode = 0o750
+	flagOutput         = "output"
+	flagValidate       = "validate"
+	argOutput          = "--" + flagOutput
+	argValidate        = "--" + flagValidate
+)
 
 var (
 	exitFunc               = os.Exit
@@ -58,7 +64,7 @@ func parseCLIOptions(args []string) (cliOptions, error) {
 
 	flagSet.StringVar(&opts.configPath, "config", opts.configPath, "Path to the goboot config file")
 	flagSet.StringVar(&opts.logLevel, "log-level", opts.logLevel, "Log level: debug|info|warn|error")
-	flagSet.StringVar(&opts.outputFormat, "output", "human", "Output format: human|json")
+	flagSet.StringVar(&opts.outputFormat, flagOutput, "human", "Output format: human|json")
 	flagSet.StringVar(
 		&opts.regenerationPolicy,
 		"regeneration-policy",
@@ -67,7 +73,7 @@ func parseCLIOptions(args []string) (cliOptions, error) {
 	)
 	flagSet.BoolVar(&opts.dryRun, "dry-run", false, "Plan generation without changing the target project")
 	flagSet.BoolVar(&opts.skipGoModTidy, "skip-go-mod-tidy", false, "Skip running go mod tidy after generation")
-	flagSet.BoolVar(&opts.validateOnly, "validate", false, "Validate root and service configs without generation")
+	flagSet.BoolVar(&opts.validateOnly, flagValidate, false, "Validate root and service configs without generation")
 	flagSet.BoolVar(&opts.showVersion, "version", false, "Print the goboot version and exit")
 
 	err := flagSet.Parse(args)
@@ -100,15 +106,19 @@ func validateCLIOptions(opts cliOptions) error {
 		return err
 	}
 
-	if opts.showVersion && (opts.validateOnly || opts.dryRun || opts.skipGoModTidy || opts.regenerationPolicy != "") {
+	if opts.showVersion && (opts.validateOnly || hasGenerationOptions(opts)) {
 		return errors.New("--version cannot be combined with generation or validation flags")
 	}
 
-	if opts.validateOnly && (opts.dryRun || opts.skipGoModTidy || opts.regenerationPolicy != "") {
+	if opts.validateOnly && hasGenerationOptions(opts) {
 		return errors.New("--validate cannot be combined with generation-only flags")
 	}
 
 	return nil
+}
+
+func hasGenerationOptions(opts cliOptions) bool {
+	return opts.dryRun || opts.skipGoModTidy || opts.regenerationPolicy != ""
 }
 
 // run executes the whole goboot CLI with config load, app init, service registration and execution.
@@ -123,6 +133,10 @@ func run(args []string) error {
 		return newCommandError(exitUsage, categoryUsage, requestedOperation(args), err, nil)
 	}
 
+	return runCommand(opts)
+}
+
+func runCommand(opts cliOptions) error {
 	if opts.showVersion {
 		writeSuccess(opts, successResult{
 			Operation: operationVersion,
@@ -145,8 +159,6 @@ func run(args []string) error {
 	log.Logger = logger
 	logger.Info().Str("log_level", opts.logLevel).Msg("logger configured")
 
-	runStart := time.Now()
-
 	// Step 1: Load and validate goboot configuration from YAML.
 	cfg := config.NewGoBoot(opts.configPath)
 	cfg.SetLogger(logger.With().Str("component", "config").Logger())
@@ -168,6 +180,12 @@ func run(args []string) error {
 
 		return nil
 	}
+
+	return runGenerationCommand(opts, cfg, logger)
+}
+
+func runGenerationCommand(opts cliOptions, cfg *config.GoBoot, logger zerolog.Logger) error {
+	runStart := time.Now()
 
 	plan, err := executeGeneration(opts, cfg, logger)
 	if err != nil {
@@ -311,6 +329,7 @@ func applyStagedProject(
 		applyErr := fmt.Errorf("failed to apply generation transaction: %w", err)
 		code := exitGeneration
 		category := categoryGeneration
+
 		if regeneration.IsConflict(err) {
 			code = exitConflict
 			category = categoryConflict

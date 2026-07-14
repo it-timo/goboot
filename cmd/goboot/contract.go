@@ -85,7 +85,7 @@ type errorResult struct {
 	Status    string             `json:"status"`
 	Operation string             `json:"operation"`
 	Version   string             `json:"version"`
-	ExitCode  int                `json:"exit_code"`
+	ExitCode  int                `json:"exitCode"`
 	Category  string             `json:"category"`
 	Message   string             `json:"message"`
 	Plan      *regeneration.Plan `json:"plan,omitempty"`
@@ -123,7 +123,7 @@ func requestedOperation(args []string) string {
 		switch arg {
 		case "--version":
 			return operationVersion
-		case "--validate":
+		case argValidate:
 			return operationValidate
 		case "--dry-run":
 			return operationDryRun
@@ -139,7 +139,7 @@ func requestedOutputFormat(args []string) outputFormat {
 			return outputJSON
 		}
 
-		if arg == "--output" && index+1 < len(args) && strings.EqualFold(args[index+1], string(outputJSON)) {
+		if arg == argOutput && index+1 < len(args) && strings.EqualFold(args[index+1], string(outputJSON)) {
 			return outputJSON
 		}
 	}
@@ -207,7 +207,7 @@ func writeCommandError(args []string, err error) {
 func writeJSON(value any) {
 	content, err := json.Marshal(value)
 	if err != nil {
-		writeOutputLine(`{"status":"error","exit_code":1,"category":"internal","message":"failed to encode output"}`)
+		writeOutputLine(`{"status":"error","exitCode":1,"category":"internal","message":"failed to encode output"}`)
 
 		return
 	}
