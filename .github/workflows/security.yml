@@ -13,6 +13,27 @@ permissions:
   contents: read
 
 jobs:
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        # Used commit SHA for actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Initialize CodeQL
+        # Used commit SHA for github/codeql-action/init@v4.36.3
+        uses: github/codeql-action/init@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a
+        with:
+          languages: go
+          build-mode: autobuild
+      - name: Analyze
+        # Used commit SHA for github/codeql-action/analyze@v4.36.3
+        uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a
+
   dependency-policy:
     name: Dependency policy
     runs-on: ubuntu-24.04
