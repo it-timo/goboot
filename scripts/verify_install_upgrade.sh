@@ -31,7 +31,7 @@ test "${BASELINE_DIGEST}" != "${CANDIDATE_DIGEST}"
 "${INSTALL_ROOT}/goboot" --help >/dev/null
 
 cd "${REPO_ROOT}"
-"${INSTALL_ROOT}/goboot" --config ./configs/goboot.yml --validate --output json \
-  | grep -q '"status":"success"'
+"${INSTALL_ROOT}/goboot" --config ./configs/goboot.yml --validate --output json |
+  grep -q '"status":"success"'
 
 echo "Baseline-to-candidate installation upgrade passed."
