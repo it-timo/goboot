@@ -25,7 +25,7 @@ layered rollout of features, tooling, and project hygiene.
 | `v0.4.x`      | Governance: contribution workflow, CODEOWNERS, security docs   |
 | `v0.5.x`      | Supply chain & security checks                                 |
 | `v0.6.x`      | Benchmarking & performance                                     |
-| `v0.7.x`      | Safe regeneration, ownership, and transactional apply         |
+| `v0.7.x`      | Safe regeneration, ownership, and transactional apply          |
 | `v0.8.x`      | Stable CLI and configuration contracts                         |
 | `v0.9.x`      | Release-candidate hardening and adoption evidence              |
 | `v1.0.0`+     | Stable public CLI with backward compatibility guarantees       |
