@@ -12,14 +12,14 @@ The `Release Candidate` workflow runs on every pull request and requires:
 1. A current candidate binary built with the repository's pinned Go version.
 2. Replacement of a binary built from the pull request base revision.
 3. Successful `--version`, `--help`, and JSON configuration validation after
-   replacement.
+    replacement.
 4. Two complete generations from the committed goboot configuration with
-   byte-identical outputs.
+    byte-identical outputs.
 5. A GoReleaser snapshot for every supported OS and architecture.
 6. Valid SHA-256 checksums, archive extraction, executable smoke tests, and an
-   SBOM for each release archive.
+    SBOM for each release archive.
 7. A documentation audit covering the public CLI, performance, regeneration,
-   release, supply-chain, and threat-model contracts with no stale status claim.
+    release, supply-chain, and threat-model contracts with no stale status claim.
 
 The normal test workflow also compares base-project output paths with the
 checked-in `testdata/golden/base_project.paths` contract. Intentional output
