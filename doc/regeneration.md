@@ -78,9 +78,9 @@ For a successful non-dry run, goboot:
 5. applies generated creates, updates, and deletions to the candidate
 6. writes the new ownership manifest
 7. moves the current project to a temporary backup and renames the candidate
-   into place
+    into place
 8. restores the backup if the commit rename fails, then removes successful
-   transaction artifacts
+    transaction artifacts
 
 The real project is not edited file by file. A portable two-rename swap has a
 brief interval between moving the old tree and installing the candidate, but the
