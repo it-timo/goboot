@@ -23,9 +23,9 @@ clear service boundaries, and auditable generation behavior.
 
 ## 📁 Current State
 
-`v0.8.0` is the active stable-interface milestone. It freezes the v1 candidate
-CLI and YAML field names, adds validation-only and JSON modes, publishes editor
-schemas, and verifies portable contracts on Linux, macOS, and Windows.
+`v0.9.0` is the active release-candidate milestone. It freezes generated output
+evidence, dogfoods the real repository configuration, verifies installation and
+upgrades, and publishes signed, attested release artifacts with SBOMs.
 
 ### Core Capabilities
 
@@ -59,6 +59,8 @@ image for mounted-workspace generation runs.
   policies, isolated staging, and transactional apply protect user-modified files.
 - **Stable Automation Contract**: Validation-only execution, machine-readable
   results, documented exit codes, and published YAML schemas support CI and editors.
+- **Release-Candidate Evidence**: Golden output, repeat-generation dogfooding,
+  upgrade checks, signed checksums and binaries, provenance, and release SBOMs.
 For file layout details, see [`doc/PROJECT_STRUCTURE.md`](./doc/PROJECT_STRUCTURE.md).
 
 ---
@@ -143,6 +145,10 @@ This repository uses:
   policies, and transactional updates
 - [doc/cli-config-contract.md](./doc/cli-config-contract.md) for stable flags,
   JSON output, exit codes, schemas, and migration rules
+- [doc/release-candidate.md](./doc/release-candidate.md) for golden output,
+  installation, upgrade, dogfood, and v1 candidate gates
+- [doc/threat-model.md](./doc/threat-model.md) for security boundaries and
+  residual risks
 - [doc/quickstart.md](./doc/quickstart.md) for first-run usage without reading internals
 - [doc/examples.md](./doc/examples.md) for concrete config-to-output scenarios
 - [doc/PROJECT_STRUCTURE.md](./doc/PROJECT_STRUCTURE.md) to track how the folder layout evolves over time
@@ -174,8 +180,8 @@ Includes attribution in [NOTICE](./NOTICE) (if applicable).
 
 ## 🚧 Status
 
-`goboot` is **pre-alpha** and intended for structural exploration and reproducible setup.
-It is not yet suitable as a production generator baseline.
+`goboot` is **pre-1.0** and undergoing release-candidate hardening. Its public
+contract is intentionally conservative, but it is not yet the stable v1 baseline.
 
 ---
 

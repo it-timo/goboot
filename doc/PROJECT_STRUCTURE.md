@@ -1,6 +1,6 @@
-# 📁 Project Structure — `goboot` (v0.8.0)
+# 📁 Project Structure — `goboot` (v0.9.0)
 
-This document reflects the current repository structure for `goboot` at `v0.8.0`.
+This document reflects the current repository structure for `goboot` at `v0.9.0`.
 It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMAP.md).
 
 ## ✅ Implemented Directories and Files
@@ -74,11 +74,20 @@ It documents what exists now; planned additions live in [`ROADMAP.md`](../ROADMA
 - Security workflow for CodeQL, dependency policy, and SBOM generation
 - Performance workflow for pull-request benchmark evidence
 - Linux, macOS, and Windows compatibility workflow
+- Release-candidate installation, upgrade, dogfood, archive, and SBOM workflow
 
 ### `/scripts/`
 
+- `verify_dogfood.sh` — repeat generation from the real committed configuration
+- `verify_install_upgrade.sh` — baseline binary replacement acceptance
+- `verify_release_artifacts.sh` — checksum, SBOM, extraction, and binary smoke gate
+- `verify_docs.sh` — release-candidate documentation coverage audit
 - Developer and verification scripts (`lint.sh`, `test.sh`, `verify_introproject.sh`,
   `verify_ci_canary.sh`)
+
+### `/testdata/golden/`
+
+- `base_project.paths` — reviewed generated-output shape contract
 
 ### Tests
 
@@ -133,4 +142,4 @@ without overwhelming new contributors or hiding logic behind automation.
 
 ---
 
-_Last updated: v0.8.0 — matches real files in the repository._
+_Last updated: v0.9.0 — matches real files in the repository._

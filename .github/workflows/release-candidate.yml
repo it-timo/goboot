@@ -1,0 +1,59 @@
+name: Release Candidate
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-candidate:
+    name: RC hardening
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        # Used commit SHA for actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        # Used commit SHA for actions/setup-go@v6.4.0
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version-file: go.mod
+      - name: Install Syft
+        # Used commit SHA for anchore/sbom-action@v0.24.0
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
+      - name: Build release candidate
+        run: |
+          mkdir -p bin
+          go build -ldflags="-X main.version=v0.9.0-rc" -o bin/goboot ./cmd/goboot
+      - name: Verify installation and upgrade
+        env:
+          BASELINE_REF: ${{ github.event.pull_request.base.sha || 'HEAD^' }}
+        run: ./scripts/verify_install_upgrade.sh "${BASELINE_REF}"
+      - name: Dogfood committed configuration
+        run: ./scripts/verify_dogfood.sh ./bin/goboot
+      - name: Audit release-candidate documentation
+        run: ./scripts/verify_docs.sh
+      - name: Build snapshot release
+        # Used commit SHA for goreleaser/goreleaser-action@v6.4.0
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --snapshot --clean --skip=sign
+      - name: Verify release artifacts
+        run: ./scripts/verify_release_artifacts.sh ./dist
+      - name: Upload release-candidate evidence
+        if: ${{ github.actor != 'nektos/act' }}
+        # Used commit SHA for actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-candidate-evidence
+          path: |
+            dist/checksums.txt
+            dist/*.sbom.json
+          retention-days: 14

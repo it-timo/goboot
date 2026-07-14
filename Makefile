@@ -48,7 +48,7 @@ BENCH_TIME ?= 1s
 PROFILE_DIR ?= profiles
 
 # .PHONY declares non-file targets to always run when invoked
-.PHONY: all build docker_build docker_smoke clean test benchmark profile_generation lint release release_check goreleaser_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary
+.PHONY: all build docker_build docker_smoke clean test benchmark profile_generation lint release release_check goreleaser_check version help lint_go lint_yaml lint_checkmake lint_md lint_sh fmtcheck_sh lint_editorconfig verify_intro verify_ci_canary verify_dogfood verify_install_upgrade verify_docs
 
 #  ----------------------------------------
 #  Default target (runs when `make` is called with no args)
@@ -68,7 +68,7 @@ docker_build:
 
 docker_smoke: docker_build
 	@echo "Running $(PROJECT) container smoke test..."
-	docker run --rm --entrypoint sh "$(GOBOOT_IMAGE)" -c 'status=0; goboot -h >/tmp/goboot-help 2>&1 || status=$$?; { test "$$status" -eq 0 || test "$$status" -eq 1; } && test -s /tmp/goboot-help'
+	docker run --rm --entrypoint sh "$(GOBOOT_IMAGE)" -c 'goboot -h >/tmp/goboot-help 2>&1 && test -s /tmp/goboot-help'
 
 #  ----------------------------------------
 #  Clean build/test artifacts
@@ -137,6 +137,18 @@ verify_ci_canary:
 	@echo "Running canary CI verification flow..."
 	./scripts/verify_ci_canary.sh --provider=both
 
+verify_dogfood: build
+	@echo "Running goboot dogfood generation twice..."
+	./scripts/verify_dogfood.sh ./bin/goboot
+
+verify_install_upgrade:
+	@echo "Testing baseline-to-candidate binary replacement..."
+	./scripts/verify_install_upgrade.sh
+
+verify_docs:
+	@echo "Auditing release-candidate documentation..."
+	./scripts/verify_docs.sh
+
 #  ----------------------------------------
 #  Release the project
 #  ----------------------------------------
@@ -144,7 +156,7 @@ goreleaser_check:
 	@echo "Validating GoReleaser configuration..."
 	$(GORELEASER_CHECK)
 
-release_check: all docker_smoke goreleaser_check
+release_check: all docker_smoke goreleaser_check verify_dogfood verify_install_upgrade verify_docs
 
 release: release_check
 	@echo "Release checks passed for $(PROJECT) version: $(VERSION)"
@@ -174,6 +186,9 @@ help_project:
 	@echo "  make docker_smoke       Build and smoke-test the goboot container image"
 	@echo "  make release            Run the full local release check sequence"
 	@echo "  make goreleaser_check   Validate the GoReleaser configuration"
+	@echo "  make verify_dogfood     Generate from committed configs twice and compare output"
+	@echo "  make verify_install_upgrade Test replacement of a baseline binary"
+	@echo "  make verify_docs        Audit release-candidate documentation coverage"
 
 help_check:
 	@echo "  make test               Run project tests"

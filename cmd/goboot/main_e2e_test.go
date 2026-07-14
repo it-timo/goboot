@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -78,6 +79,40 @@ func assertFilesNotExist(root string, relPaths []string) {
 	for _, relPath := range relPaths {
 		Expect(filepath.Join(root, filepath.FromSlash(relPath))).NotTo(BeAnExistingFile())
 	}
+}
+
+func generatedFilePaths(root string) []string {
+	paths := make([]string, 0)
+
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+
+		if entry.IsDir() {
+			return nil
+		}
+
+		relativePath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+
+		paths = append(paths, filepath.ToSlash(relativePath))
+
+		return nil
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	sort.Strings(paths)
+
+	return paths
+}
+
+func goldenFilePaths(root, name string) []string {
+	content := strings.TrimSpace(readFile(filepath.Join(root, "testdata", "golden", name)))
+
+	return strings.Split(content, "\n")
 }
 
 var _ = Describe("End-to-end goboot runs", func() {
@@ -437,6 +472,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		writeConfig(gobootCfg, string(gobootContent))
 
 		Expect(run([]string{argConfig, gobootCfg})).To(Succeed())
+		Expect(generatedFilePaths(projectRoot)).To(Equal(goldenFilePaths(root, "base_project.paths")))
 
 		assertFilesExist(projectRoot, []string{
 			"LICENSE",

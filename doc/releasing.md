@@ -16,7 +16,9 @@ The service writes:
   `.github/workflows/release.yml` or `.gitlab/ci/release.yml`
 
 Linux, macOS, and Windows binaries are built for AMD64 and ARM64. Release notes
-are derived from Git history and archives include a checksum manifest.
+are derived from Git history. Archives include SHA-256 checksums and SBOMs;
+binaries and the checksum manifest receive keyless Sigstore bundles, and GitHub
+publishes build-provenance attestations for the release assets.
 
 ## Creating a Release
 
@@ -37,6 +39,19 @@ Test the configuration without publishing:
 ```bash
 goreleaser check
 goreleaser release --snapshot --clean
+```
+
+Snapshot acceptance, installation, upgrade, and dogfood procedures are defined
+in [`release-candidate.md`](./release-candidate.md). Snapshot builds skip signing
+because pull requests do not receive release identity; real tag releases require
+OIDC signing and attestation permissions.
+
+After downloading a release, verify the checksum bundle and provenance:
+
+```bash
+cosign verify-blob --bundle checksums.txt.sigstore.json checksums.txt
+gh attestation verify goboot_VERSION_linux_amd64.tar.gz -R it-timo/goboot
+sha256sum --check checksums.txt
 ```
 
 Tags are immutable release inputs. Correct mistakes with a new patch version;

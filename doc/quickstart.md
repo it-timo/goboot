@@ -115,5 +115,5 @@ before using the destructive `replace` policy.
 
 ## Notes
 
-- `goboot` is pre-alpha and intentionally explicit.
+- `goboot` is pre-1.0 and intentionally explicit.
 - The goal is deterministic scaffolding, not one-click hidden behavior.

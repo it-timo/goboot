@@ -7,6 +7,26 @@ The project follows semantic versioning during the pre-1.0 rollout described in
 
 ## Unreleased
 
+### v0.9.0 — Release Candidate Hardening
+
+Added:
+
+- Checked-in golden generated-path contract for base-project output.
+- Real committed-configuration dogfood generation with byte-identical repeat
+  verification.
+- Release-candidate workflow covering baseline upgrades, snapshot installation,
+  archive checksums, executable smoke tests, and release SBOMs.
+- Keyless Sigstore bundles for release binaries and checksums plus GitHub build
+  provenance attestations.
+- Documented measured performance limits, threat model, candidate procedure, and
+  ADR-043.
+
+Changed:
+
+- Container help smoke tests now require the stable successful help exit status.
+- The local release gate includes dogfood and baseline-to-candidate upgrade tests.
+- v0.8 stable CLI/configuration is marked released and v0.9 is active.
+
 ### v0.8.0 — Stable CLI & Configuration
 
 Added:

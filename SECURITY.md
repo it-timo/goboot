@@ -15,3 +15,6 @@ channel. If it is unavailable, contact the repository owner privately through Gi
 Include the affected version, reproduction steps, impact, and any known mitigation.
 The maintainer will acknowledge a complete report as soon as practical and
 coordinate disclosure after a fix or mitigation is available.
+
+The repository trust boundaries, security invariants, residual risks, and audit
+cadence are documented in [`doc/threat-model.md`](./doc/threat-model.md).

@@ -149,9 +149,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-## In Progress
-
-### v0.8.0 — Stable CLI & Configuration
+### v0.8.0 — Stable CLI & Configuration (Released)
 
 - Freeze the v1 CLI and YAML schema
 - Configuration validation without generation
@@ -162,7 +160,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-## Planned Milestones
+## In Progress
 
 ### v0.9.0 — Release Candidate Hardening
 
@@ -175,7 +173,7 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ---
 
-## 1.0 Vision
+## Planned Milestones
 
 ### v1.0.0 — Stable Public Release
 

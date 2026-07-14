@@ -18,6 +18,10 @@ Use this folder as the main documentation hub after `README.md`.
   collision policies, and transactional updates.
 - [`cli-config-contract.md`](./cli-config-contract.md): stable CLI, JSON output,
   exit codes, schemas, compatibility, and migrations.
+- [`release-candidate.md`](./release-candidate.md): golden output, dogfooding,
+  installation, upgrade, signed assets, and v1 candidate acceptance.
+- [`threat-model.md`](./threat-model.md): trust boundaries, threats, controls,
+  residual risks, and security invariants.
 
 ## Architecture and Policies
 
