@@ -10,11 +10,11 @@ configuration, and narrowly owned services over hidden defaults.
 3. Keep the change focused and add tests for observable behavior.
 4. Run the full local quality gates:
 
-   ```bash
-   make lint
-   make test
-   make build
-   ```
+    ```bash
+    make lint
+    make test
+    make build
+    ```
 
 Changes to generated output should include the relevant template, config,
 service tests, end-to-end assertions, documentation, and an ADR when they alter
