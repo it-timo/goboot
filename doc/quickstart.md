@@ -20,6 +20,9 @@ Start from:
 - `configs/base_test.yml`
 - `configs/base_logger.yml`
 - `configs/base_docker.yml`
+- `configs/base_release.yml`
+- `configs/base_governance.yml`
+- `configs/base_supplychain.yml`
 - `configs/base_local.yml`
 - `configs/base_ci.yml`
 
@@ -29,6 +32,9 @@ Set in `configs/goboot.yml`:
 - `repoUrl: "https://github.com/projects"`
 - `gitProvider: "gitlab"`
 - `targetPath: "/tmp/goboot-demo"`
+- `profile: "standard"`
+- `parallelism: 4` for bounded concurrent service generation, or `1` for serial execution
+- `regenerationPolicy: "managed"` to protect existing user-modified files
 
 ## 3. Run goboot
 
@@ -42,6 +48,7 @@ If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expec
 
 - `/tmp/goboot-demo/IntroProject/go.mod`
 - `/tmp/goboot-demo/IntroProject/README.md`
+- `/tmp/goboot-demo/IntroProject/PROFILE.md`
 - `/tmp/goboot-demo/IntroProject/Makefile` (when `base_local` enabled)
 - `/tmp/goboot-demo/IntroProject/scripts/lint.sh` (when `base_local` + lint registration enabled)
 - `/tmp/goboot-demo/IntroProject/.golangci.yml` (when `base_lint` enabled)
@@ -50,6 +57,10 @@ If `projectName` is `IntroProject` and `targetPath` is `/tmp/goboot-demo`, expec
   `/tmp/goboot-demo/IntroProject/docker-compose.yml` (when `base_docker` enabled)
 - `/tmp/goboot-demo/IntroProject/.github/workflows/*.yml` or
   `/tmp/goboot-demo/IntroProject/.gitlab-ci.yml` (when `base_ci` enabled)
+- `/tmp/goboot-demo/IntroProject/CODEOWNERS`, `CONTRIBUTING.md`, and
+  provider-native contribution templates (when `base_governance` enabled)
+- `/tmp/goboot-demo/IntroProject/SUPPLY_CHAIN.md` and a provider-native
+  `security.yml` pipeline (when `base_supplychain` and `base_ci` are enabled)
 
 `base_logger` does not overwrite project files directly. It provides validated logger
 settings to `base_project`, which owns the generated runtime code.
@@ -57,17 +68,38 @@ settings to `base_project`, which owns the generated runtime code.
 `base_docker` packages the generated CLI-style application. It does not assume
 the project is a network service, so compose port mappings are empty by default.
 
+`base_governance` writes policy files only. Provider-side branch protection,
+approval enforcement, and private vulnerability reporting remain administrator settings.
+
+`base_supplychain` registers CI controls with `base_ci`. GitHub includes CodeQL;
+GitLab receives the portable vulnerability, license, and SBOM controls.
+
+`parallelism` affects only independent services. Project initialization remains
+first, and aggregate CI/local rendering remains last. Omit it to retain serial
+execution.
+
 ## 5. Iterate safely
 
-Change one config at a time, regenerate, and diff output.
+Preview changes before regenerating:
+
+```bash
+go run ./cmd/goboot --config ./configs/goboot.yml --dry-run
+```
+
+Change one config at a time, preview, regenerate, and diff output.
 
 Suggested loop:
 
 1. edit one config field
-2. run `go run ./cmd/goboot --config ...`
-3. inspect generated files
-4. run generated project checks (`make lint`, `make test`, and
+2. run with `--dry-run` and resolve any conflicts
+3. run `go run ./cmd/goboot --config ...`
+4. inspect generated files and `.goboot-manifest.yml`
+5. run generated project checks (`make lint`, `make test`, and
     `make container-check` when Docker is enabled)
+
+Commit `.goboot-manifest.yml`; it records which exact file versions goboot may
+safely update on the next managed run. See [`regeneration.md`](./regeneration.md)
+before using the destructive `replace` policy.
 
 ## Notes
 

@@ -10,6 +10,17 @@ linters:
 
   #  Remove or adjust linters to suit the codebase and development style.
   enable:
+{{ if eq .Profile "minimal" }}
+    #  Minimal profile: compiler-adjacent correctness and security checks.
+    - bodyclose
+    - errcheck
+    - errorlint
+    - gosec
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+{{ else }}
     #  Security and correctness-focused linters
     - asasalint
     - asciicheck
@@ -123,9 +134,12 @@ linters:
     - wrapcheck
     - wsl_v5
     - zerologlint
+{{ end }}
 
   # Custom linter configurations.
   settings:
+    cyclop:
+      max-complexity: {{.CyclomaticComplexity}}
     depguard:
       rules:
         main:

@@ -1,5 +1,5 @@
 sourcePath: ./templates/project
-usedGoVersion: "1.26.3"
+usedGoVersion: "1.26.5"
 usedNodeVersion: "20.12.0"
 releaseCurrentWindow: Q2 2025
 releaseUpcomingWindow: Q4 2025

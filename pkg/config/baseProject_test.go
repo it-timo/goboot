@@ -25,7 +25,7 @@ var _ = Describe("BaseProjectConfig", func() {
 			ProjectURL:            testPath,
 			RepoPath:              "github.com/user/testproject",
 			ProjectName:           "testproject",
-			UsedGoVersion:         "1.26.3",
+			UsedGoVersion:         "1.26.5",
 			UsedNodeVersion:       "20.11.0",
 			ReleaseCurrentWindow:  "Q1 2025",
 			ReleaseUpcomingWindow: "Q3 2025",
@@ -267,7 +267,7 @@ var _ = Describe("BaseProjectConfig", func() {
 				Expect(newConfig.ProjectURL).To(Equal(testPath))
 				Expect(newConfig.RepoPath).To(Equal("github.com/user/testproject"))
 				Expect(newConfig.ProjectName).To(Equal("testproject"))
-				Expect(newConfig.UsedGoVersion).To(Equal("1.26.3"))
+				Expect(newConfig.UsedGoVersion).To(Equal("1.26.5"))
 				Expect(newConfig.UsedNodeVersion).To(Equal("20.12.0"))
 				Expect(newConfig.ReleaseCurrentWindow).To(Equal("Q2 2025"))
 				Expect(newConfig.ReleaseUpcomingWindow).To(Equal("Q4 2025"))

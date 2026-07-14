@@ -59,6 +59,7 @@ func assertGeneratedGitLabCIValid(projectRoot string) {
 	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "test.yml"))
 	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "build.yml"))
 	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "container.yml"))
+	parseYAMLFile(filepath.Join(projectRoot, ".gitlab/ci", "security.yml"))
 }
 
 func assertYAMLFilesValid(projectRoot string, relPaths []string) {
@@ -100,6 +101,8 @@ var _ = Describe("End-to-end goboot runs", func() {
 		localBaseTemplates := filepath.Join(root, "templates", "local_base")
 		ciBaseTemplates := filepath.Join(root, "templates", "ci_base")
 		dockerBaseTemplates := filepath.Join(root, "templates", "docker_base")
+		governanceBaseTemplates := filepath.Join(root, "templates", "governance_base")
+		supplyChainBaseTemplates := filepath.Join(root, "templates", "supplychain_base")
 
 		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
 		baseProjectContent, err := loadTestFixtureWithVars("cmd_goboot/base/ginkgo/base_project.yml", map[string]string{
@@ -148,19 +151,35 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(err).NotTo(HaveOccurred())
 		writeConfig(baseDockerCfg, string(baseDockerContent))
 
+		baseGovernanceCfg := filepath.Join(tempDir, "base_governance.yml")
+		baseGovernanceContent, err := loadTestFixtureWithVars("cmd_goboot/base/governance.yml", map[string]string{
+			"TEMPLATES_GOVERNANCE_BASE": governanceBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseGovernanceCfg, string(baseGovernanceContent))
+
+		baseSupplyChainCfg := filepath.Join(tempDir, "base_supplychain.yml")
+		baseSupplyChainContent, err := loadTestFixtureWithVars("cmd_goboot/base/supplychain.yml", map[string]string{
+			"TEMPLATES_SUPPLYCHAIN_BASE": supplyChainBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseSupplyChainCfg, string(baseSupplyChainContent))
+
 		gobootCfg := filepath.Join(tempDir, "goboot.yml")
 		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/e2e.yml", map[string]string{
-			fixtureProjectName: projectName,
-			"GIT_PROVIDER":     gitProvider,
-			"REPO_URL":         repoURL,
-			fixtureTargetDir:   targetDir,
-			"BASE_PROJECT_CFG": baseProjectCfg,
-			"BASE_LINT_CFG":    baseLintCfg,
-			"BASE_TEST_CFG":    baseTestCfg,
-			"BASE_LOGGER_CFG":  baseLoggerCfg,
-			"BASE_DOCKER_CFG":  baseDockerCfg,
-			"BASE_LOCAL_CFG":   baseLocalCfg,
-			"BASE_CI_CFG":      baseCiCfg,
+			fixtureProjectName:     projectName,
+			"GIT_PROVIDER":         gitProvider,
+			"REPO_URL":             repoURL,
+			fixtureTargetDir:       targetDir,
+			"BASE_PROJECT_CFG":     baseProjectCfg,
+			"BASE_LINT_CFG":        baseLintCfg,
+			"BASE_TEST_CFG":        baseTestCfg,
+			"BASE_LOGGER_CFG":      baseLoggerCfg,
+			"BASE_DOCKER_CFG":      baseDockerCfg,
+			"BASE_GOVERNANCE_CFG":  baseGovernanceCfg,
+			"BASE_SUPPLYCHAIN_CFG": baseSupplyChainCfg,
+			"BASE_LOCAL_CFG":       baseLocalCfg,
+			"BASE_CI_CFG":          baseCiCfg,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		writeConfig(gobootCfg, string(gobootContent))
@@ -176,6 +195,13 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(filepath.Join(projectRoot, "Dockerfile")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "docker-compose.yml")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, ".dockerignore")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "CODEOWNERS")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "CONTRIBUTING.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "SECURITY.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "SUPPLY_CHAIN.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "issue_templates", "Bug.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "issue_templates", "Feature.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "merge_request_templates", "Default.md")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "lint.sh")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "test.sh")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "docker.sh")).To(BeAnExistingFile())
@@ -192,7 +218,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(makefile).NotTo(ContainSubstring("{{"))
 
 		dockerfile := readFile(filepath.Join(projectRoot, "Dockerfile"))
-		Expect(dockerfile).To(ContainSubstring("FROM golang:1.26.3"))
+		Expect(dockerfile).To(ContainSubstring("FROM golang:1.26.5"))
 		Expect(dockerfile).To(ContainSubstring("COPY go.mod ./"))
 		Expect(dockerfile).NotTo(ContainSubstring("COPY go.mod go.sum"))
 		Expect(dockerfile).To(ContainSubstring("./cmd/e2eginkgo"))
@@ -254,6 +280,8 @@ var _ = Describe("End-to-end goboot runs", func() {
 		localBaseTemplates := filepath.Join(root, "templates", "local_base")
 		ciBaseTemplates := filepath.Join(root, "templates", "ci_base")
 		dockerBaseTemplates := filepath.Join(root, "templates", "docker_base")
+		governanceBaseTemplates := filepath.Join(root, "templates", "governance_base")
+		supplyChainBaseTemplates := filepath.Join(root, "templates", "supplychain_base")
 
 		baseProjectCfg := filepath.Join(tempDir, "base_project.yml")
 		baseProjectContent, err := loadTestFixtureWithVars("cmd_goboot/base/go/base_project.yml", map[string]string{
@@ -302,19 +330,35 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(err).NotTo(HaveOccurred())
 		writeConfig(baseDockerCfg, string(baseDockerContent))
 
+		baseGovernanceCfg := filepath.Join(tempDir, "base_governance.yml")
+		baseGovernanceContent, err := loadTestFixtureWithVars("cmd_goboot/base/governance.yml", map[string]string{
+			"TEMPLATES_GOVERNANCE_BASE": governanceBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseGovernanceCfg, string(baseGovernanceContent))
+
+		baseSupplyChainCfg := filepath.Join(tempDir, "base_supplychain.yml")
+		baseSupplyChainContent, err := loadTestFixtureWithVars("cmd_goboot/base/supplychain.yml", map[string]string{
+			"TEMPLATES_SUPPLYCHAIN_BASE": supplyChainBaseTemplates,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		writeConfig(baseSupplyChainCfg, string(baseSupplyChainContent))
+
 		gobootCfg := filepath.Join(tempDir, "goboot.yml")
 		gobootContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/e2e.yml", map[string]string{
-			fixtureProjectName: projectName,
-			"GIT_PROVIDER":     gitProvider,
-			"REPO_URL":         repoURL,
-			fixtureTargetDir:   targetDir,
-			"BASE_PROJECT_CFG": baseProjectCfg,
-			"BASE_LINT_CFG":    baseLintCfg,
-			"BASE_TEST_CFG":    baseTestCfg,
-			"BASE_LOGGER_CFG":  baseLoggerCfg,
-			"BASE_DOCKER_CFG":  baseDockerCfg,
-			"BASE_LOCAL_CFG":   baseLocalCfg,
-			"BASE_CI_CFG":      baseCiCfg,
+			fixtureProjectName:     projectName,
+			"GIT_PROVIDER":         gitProvider,
+			"REPO_URL":             repoURL,
+			fixtureTargetDir:       targetDir,
+			"BASE_PROJECT_CFG":     baseProjectCfg,
+			"BASE_LINT_CFG":        baseLintCfg,
+			"BASE_TEST_CFG":        baseTestCfg,
+			"BASE_LOGGER_CFG":      baseLoggerCfg,
+			"BASE_DOCKER_CFG":      baseDockerCfg,
+			"BASE_GOVERNANCE_CFG":  baseGovernanceCfg,
+			"BASE_SUPPLYCHAIN_CFG": baseSupplyChainCfg,
+			"BASE_LOCAL_CFG":       baseLocalCfg,
+			"BASE_CI_CFG":          baseCiCfg,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		writeConfig(gobootCfg, string(gobootContent))
@@ -329,6 +373,9 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(filepath.Join(projectRoot, "Dockerfile")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "docker-compose.yml")).To(BeAnExistingFile())
 		Expect(filepath.Join(projectRoot, "scripts", "docker.sh")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "CODEOWNERS")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, "SUPPLY_CHAIN.md")).To(BeAnExistingFile())
+		Expect(filepath.Join(projectRoot, ".gitlab", "issue_templates", "Bug.md")).To(BeAnExistingFile())
 
 		// go style skips ginkgo suite generation.
 		_, err = os.Stat(filepath.Join(projectRoot, "pkg", "e2egostyle", "e2egostyle_suite_test.go"))
@@ -397,6 +444,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 			"README.md",
 			"ROADMAP.md",
 			"PROJECT_STRUCTURE.md",
+			"PROFILE.md",
 			"VERSIONING.md",
 			"WORKFLOW.md",
 			"go.mod",
@@ -418,6 +466,7 @@ var _ = Describe("End-to-end goboot runs", func() {
 		Expect(goMod).To(ContainSubstring("module example.com/x"))
 		Expect(goMod).NotTo(ContainSubstring("{{"))
 		Expect(readFile(filepath.Join(projectRoot, "README.md"))).NotTo(ContainSubstring("{{"))
+		Expect(readFile(filepath.Join(projectRoot, "PROFILE.md"))).To(ContainSubstring("standard"))
 	})
 
 	It("fails with a clear error when go mod tidy cannot resolve modules (proxy/path failure)", func() {
@@ -471,8 +520,7 @@ exit 0
 		Expect(err.Error()).To(ContainSubstring("failed to run go mod tidy"))
 		Expect(err.Error()).To(ContainSubstring("exit status 1"))
 
-		Expect(projectRoot).To(BeADirectory())
-		Expect(filepath.Join(projectRoot, "go.mod")).To(BeAnExistingFile())
+		Expect(projectRoot).NotTo(BeAnExistingFile())
 	})
 
 	It("fails fast when template content is not parseable", func() {
@@ -531,8 +579,8 @@ exit 0
 
 		err = run([]string{argConfig, configFile})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("service registration failed"))
-		Expect(err.Error()).To(ContainSubstring("failed to create target directory"))
+		Expect(err.Error()).To(ContainSubstring("failed to apply generation transaction"))
+		Expect(err.Error()).To(ContainSubstring("failed to create target parent"))
 	})
 
 	It("fails when an enabled lint template file is missing", func() {

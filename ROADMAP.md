@@ -69,8 +69,6 @@ Generated projects are expected to be **lint-clean and test-passing on the first
 
 ### v0.1.1 — Structured Logging & Release Hardening (Released)
 
-Current release.
-
 **Focus:** observability without noise
 
 - Replace `fmt` usage with structured logging
@@ -81,8 +79,6 @@ Current release.
 - Release checks aligned across Make, Task, pre-commit, and CI canaries
 
 ---
-
-## In Progress
 
 ### v0.2.0 — Containerization
 
@@ -95,13 +91,13 @@ Current release.
 
 ---
 
-## Planned Milestones
-
 ### v0.2.1 — Release Automation
 
-- GoReleaser integration
-- Automated versioning and changelogs
-- Binary distribution
+- GoReleaser v2 integration for goboot and generated projects
+- Explicit semantic versioning through immutable `v*` Git tags
+- Automated changelogs, archives, and checksum manifests
+- GitHub and GitLab release jobs generated through `base_ci`
+- Linux, macOS, and Windows binary distribution for AMD64 and ARM64
 
 ---
 
@@ -124,7 +120,7 @@ Current release.
 
 ---
 
-### v0.5.0 — Supply Chain Security
+### v0.5.0 — Supply Chain Security (Released)
 
 - CodeQL
 - License compliance scanning
@@ -133,12 +129,49 @@ Current release.
 
 ---
 
-### v0.6.0 — Performance & Scale
+### v0.6.0 — Performance & Scale (Released)
 
-- Template rendering benchmarks
-- Config parsing performance
-- Large-project generation profiling
-- Parallel execution optimizations
+- Template rendering and atomic-file benchmarks
+- 500-service config parsing benchmark
+- Large-project CPU and memory profiling workflow
+- Bounded parallel service execution with deterministic failure semantics
+- Thread-safe CI and local registries
+
+---
+
+## In Progress
+
+### v0.7.0 — Regeneration Safety
+
+- Generated ownership manifest with content and mode digests
+- Complete dry-run change plans
+- Managed, replace, and preserve policies
+- User-modification and stale-file conflict detection
+- Isolated staging and rollback-capable project transactions
+
+---
+
+## Planned Milestones
+
+### v0.8.0 — Stable CLI & Configuration
+
+- Freeze the v1 CLI and YAML schema
+- Configuration validation without generation
+- Published schemas and editor completion
+- Deprecation and migration policy
+- Stable exit codes and machine-readable output
+- Linux, macOS, and Windows compatibility matrix
+
+---
+
+### v0.9.0 — Release Candidate Hardening
+
+- Golden-output regression suite
+- Signed binaries, provenance, checksums, and release SBOM
+- Installation and upgrade testing
+- Documented performance limits
+- Threat-model and documentation audit
+- Real-repository dogfooding and v1 release candidates
 
 ---
 

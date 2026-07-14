@@ -134,18 +134,11 @@ func (b *BaseTest) Run() error {
 	return nil
 }
 
-// createNewTestSetup renders paths first, then file contents, inside b.root.
+// createNewTestSetup copies and renders files owned by the test template source.
 func (b *BaseTest) createNewTestSetup() error {
-	// Step 1: Copy from host template into root.
 	err := b.walkAndApply(os.DirFS(b.cfg.SourcePath), b.renderPath)
 	if err != nil {
-		return fmt.Errorf("failed to render path: %w", err)
-	}
-
-	// Step 2: Render file contents in the copied structure.
-	err = b.walkAndApply(b.root.FS(), b.renderContent)
-	if err != nil {
-		return fmt.Errorf("failed to render content: %w", err)
+		return fmt.Errorf("failed to render test templates: %w", err)
 	}
 
 	return nil
@@ -172,8 +165,7 @@ func (b *BaseTest) walkAndApply(fsys fs.FS, handler func(path string, d fs.DirEn
 	return nil
 }
 
-// renderPath renders a template-relative path and copies file bytes into b.root.
-// File content templating is handled later by renderContent.
+// renderPath renders a template-relative path, copies it, and renders its content.
 func (b *BaseTest) renderPath(relTemplatePath string, dirEntry fs.DirEntry) error {
 	// Render the target path using template logic (e.g. "cmd/{{project_name}}/main.go").
 	renderedPath, err := gobootutils.ExecuteTemplateText("relpath", relTemplatePath, b.cfg)
@@ -219,18 +211,9 @@ func (b *BaseTest) renderPath(relTemplatePath string, dirEntry fs.DirEntry) erro
 		return fmt.Errorf("failed to write template file %q: %w", renderedPath, err)
 	}
 
-	return nil
-}
-
-// renderContent renders non-directory file content in b.root with BaseTest config.
-func (b *BaseTest) renderContent(path string, dirEntry fs.DirEntry) error {
-	if dirEntry.IsDir() {
-		return nil
-	}
-
-	err := gobootutils.RenderTemplateToFile("test_file", b.root, path, b.cfg)
+	err = gobootutils.RenderTemplateToFile("test_file", b.root, renderedPath, b.cfg)
 	if err != nil {
-		return fmt.Errorf("failed to render template to file: %w", err)
+		return fmt.Errorf("failed to render test template %q: %w", renderedPath, err)
 	}
 
 	return nil

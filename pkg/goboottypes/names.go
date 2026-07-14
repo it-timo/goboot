@@ -19,4 +19,10 @@ const (
 	ServiceNameBaseLogger = "base_logger"
 	// ServiceNameBaseDocker identifies the containerization generator.
 	ServiceNameBaseDocker = "base_docker"
+	// ServiceNameBaseRelease identifies the release automation generator.
+	ServiceNameBaseRelease = "base_release"
+	// ServiceNameBaseGovernance identifies the governance generator.
+	ServiceNameBaseGovernance = "base_governance"
+	// ServiceNameBaseSupplyChain identifies the supply-chain security generator.
+	ServiceNameBaseSupplyChain = "base_supplychain"
 )

@@ -170,6 +170,48 @@ var _ = Describe("CLI entrypoint", func() {
 		Expect(err).To(Succeed())
 	})
 
+	It("prints a dry-run plan without changing the target", func() {
+		tempDir := GinkgoT().TempDir()
+		configFile := filepath.Join(tempDir, "goboot.yml")
+		targetDir := filepath.Join(tempDir, "out")
+
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			fixtureProjectName: "CliDryRun",
+			fixtureTargetDir:   targetDir,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
+
+		originalWriter := outputWriter
+		buffer := &bytes.Buffer{}
+
+		outputWriter = buffer
+		defer func() {
+			outputWriter = originalWriter
+		}()
+
+		err = run([]string{argConfig, configFile, "--dry-run"})
+		Expect(err).To(Succeed())
+		Expect(targetDir).NotTo(BeAnExistingFile())
+		Expect(buffer.String()).To(ContainSubstring("CREATE\t.goboot-manifest.yml"))
+		Expect(buffer.String()).To(ContainSubstring("dry run completed"))
+	})
+
+	It("rejects an invalid regeneration-policy override", func() {
+		tempDir := GinkgoT().TempDir()
+		configFile := filepath.Join(tempDir, "goboot.yml")
+
+		yamlContent, err := loadTestFixtureWithVars("cmd_goboot/goboot/minimal.yml", map[string]string{
+			fixtureProjectName: "CliPolicy",
+			fixtureTargetDir:   filepath.Join(tempDir, "out"),
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.WriteFile(configFile, yamlContent, 0o644)).To(Succeed())
+
+		err = run([]string{argConfig, configFile, "--regeneration-policy", "merge"})
+		Expect(err).To(MatchError(ContainSubstring("invalid regeneration policy")))
+	})
+
 	Describe("main", func() {
 		var (
 			originalArgs   []string

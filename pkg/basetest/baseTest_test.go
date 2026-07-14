@@ -233,6 +233,21 @@ var _ = Describe("BaseTest", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(content)).To(Equal("# MyProject Tests"))
 			})
+
+			It("does not render files outside the test template source", func() {
+				projectRoot := filepath.Join(tmpUserDir, "MyProject")
+				Expect(os.MkdirAll(projectRoot, 0o755)).To(Succeed())
+
+				unrelatedPath := filepath.Join(projectRoot, "unrelated.txt")
+				unrelatedContent := []byte("owner={{.ProjectName}}")
+				Expect(os.WriteFile(unrelatedPath, unrelatedContent, 0o644)).To(Succeed())
+
+				Expect(baseTest.Run()).To(Succeed())
+
+				content, err := os.ReadFile(unrelatedPath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(content).To(Equal(unrelatedContent))
+			})
 		})
 
 		Context("with directory structure and path templates", func() {
