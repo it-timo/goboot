@@ -253,6 +253,29 @@ var _ = Describe("BaseLint Service", func() {
 			})
 		})
 
+		It("registers enabled linter commands in deterministic name order", func() {
+			createTemplate(".golangci.yml", "go")
+			createTemplate(".yamllint.yml", "yaml")
+
+			validConfig.Linters = map[string]*config.Linter{
+				goboottypes.LinterYAML:   {Enabled: true, Cmd: commandYAMLLint},
+				goboottypes.LinterGo:     {Enabled: true, Cmd: commandGoLint},
+				goboottypes.LinterEditor: {Enabled: true, Cmd: "editor-cmd"},
+			}
+
+			Expect(baseLint.SetConfig(validConfig)).To(Succeed())
+
+			registrar := &recordingRegistrar{}
+			baseLint.SetScriptReceiver(registrar)
+
+			Expect(baseLint.Run()).To(Succeed())
+			Expect(registrar.linesCalls[goboottypes.ServiceNameBaseLint]).To(Equal([]string{
+				"editor-cmd",
+				commandGoLint,
+				commandYAMLLint,
+			}))
+		})
+
 		It("registers CI jobs for enabled linters only", func() {
 			assertRegistersEnabledCommands(goboottypes.CIFileLint, func(reg *recordingRegistrar) {
 				baseLint.SetCIReceiver(reg)
